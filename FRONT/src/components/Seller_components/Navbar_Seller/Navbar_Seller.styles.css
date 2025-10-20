@@ -1,0 +1,128 @@
+.navbar-seller {
+  /* fixed height so pages can reserve space below */
+  --seller-navbar-height: 72px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: var(--seller-navbar-height);
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(253, 198, 182);
+  color: #000000;
+  font-weight: bold;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.navbar-seller-center {
+  display: flex;
+  list-style: none;
+  gap: 30px;
+  text-decoration: none;
+}
+
+.navbar-seller-center li {
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.navbar-seller-center li:hover {
+  color: #9b59b6;
+  transform: scale(1.05);
+}
+
+.navbar-seller-right {
+  position: relative;
+}
+
+.login-icon-seller {
+  font-size: 24px;
+  cursor: pointer;
+  transition: transform 0.3s, color 0.3s;
+}
+
+.login-icon-seller:hover {
+  color: #9b59b6;
+  transform: scale(1.2);
+}
+
+.link-navbar-seller {
+  text-decoration: none;
+  color: black;
+}
+
+.link-navbar-seller:hover {
+  color: #9b59b6;
+}
+
+/* push common page sections below the fixed navbar when navbar is present */
+.navbar-seller ~ .overlay,
+.navbar-seller ~ .order-form-section,
+.navbar-seller ~ .nc-form-section,
+.navbar-seller ~ .page-content {
+  margin-top: calc(var(--seller-navbar-height) + 12px);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  width: 220px;
+  padding: 15px;
+  z-index: 200;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.user-info {
+  margin-bottom: 10px;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0;
+  color: #333;
+}
+
+.user-email {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.dropdown-link {
+  display: block;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.dropdown-link:hover {
+  color: #9b59b6;
+  transform: translateX(3px);
+}
+.navbar-seller-left{
+  text-decoration: none;
+  color: #000000;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,59 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 20px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  transition: background-color 0.3s ease;
+  color: white;
+}
+
+.navbar-left {
+  font-size: 24px;
+  font-weight: bold;
+  text-decoration: none;
+  color: aliceblue;
+}
+
+.navbar-left:hover {
+  color: #9b59b6;
+  cursor: pointer;
+}
+
+
+.navbar-center {
+  display: flex;
+  list-style: none;
+  gap: 30px;
+}
+
+.navbar-center li {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.navbar-scrolled {
+  background-color: rgba(20, 20, 20, 0.85);
+}
+.navbar-right .login-icon {
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  transition: color 0.3s;
+}
+
+.navbar-right .login-icon:hover {
+  color: #9b59b6;
+}
+.navbar-center li a {
+  text-decoration: none;
+  color: white;
+  transition: color 0.3s;
+}
+
+.navbar-center li a:hover {
+  color: #9b59b6;
+}

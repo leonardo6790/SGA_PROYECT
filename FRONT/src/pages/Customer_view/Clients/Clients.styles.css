@@ -1,0 +1,138 @@
+.clients-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin-top: 80px;
+  font-family: 'Arial', sans-serif;
+  background-color: #fdf6f3;
+  padding: 40px 40px;
+}
+
+.clients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clients-title {
+  font-size: 32px;
+  color: #333;
+  font-weight: bold;
+}
+
+.search-input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 250px;
+}
+
+.clients-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 10px 0 20px 0;
+}
+
+.clients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.client-header {
+  display: flex;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+.client-header span {
+  flex: 1;
+  text-align: center;
+}
+
+.client-card {
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.client-body {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.client-field {
+  flex: 1;
+  padding: 5px 10px;
+  text-align: center;
+  border-right: 1px solid #ccc;
+}
+
+.client-field:last-child {
+  border-right: none;
+}
+
+.client-buttons {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.update-btn {
+  padding: 6px 12px;
+  border: none;
+  background-color: #3498db;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  padding: 6px 12px;
+  border: none;
+  background-color: #e74c3c;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.edit-modal {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-modal input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.edit-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

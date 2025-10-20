@@ -1,0 +1,96 @@
+.footer {
+  background-color: #121212ee; /* Fondo oscuro elegante */
+  color: #f5f5f5; 
+  padding: 60px 20px 30px;
+  font-family: 'Arial', sans-serif;
+}
+
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 50px;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.footer-logo h2 {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #9b59b6; /* Morado elegante */
+}
+
+.footer-logo p {
+  font-size: 1rem;
+  color: #cccccc;
+  line-height: 1.6;
+}
+
+.footer-links h3,
+.footer-social h3 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 10px;
+}
+
+.footer-links a {
+  color: #bbbbbb;
+  text-decoration: none;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.footer-links a:hover {
+  color: #9b59b6;
+  transform: translateX(5px);
+}
+
+.footer-social .social-icons a {
+  color: #bbbbbb;
+  margin-right: 15px;
+  font-size: 1.4rem;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.footer-social .social-icons a:hover {
+  color: #9b59b6;
+  transform: scale(1.2);
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 0.9rem;
+  color: #777777;
+  border-top: 1px solid #333333;
+  padding-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-social {
+    margin-top: 20px;
+  }
+
+  .footer-social .social-icons a {
+    margin-right: 12px;
+  }
+}
