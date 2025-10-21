@@ -14,5 +14,7 @@ public class AlquilerDto {
     private Date fechaRetiro;
     private Date fechaEntrega;
     private Date fechaAlquiler;
+    private Integer totalAlquiler;
     private Integer numDocUsuario;
+    
 }

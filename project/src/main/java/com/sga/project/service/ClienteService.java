@@ -10,4 +10,5 @@ public interface ClienteService {
     public ClientesDto saveCliente (ClientesDto clientesDto);
     public List<ClientesDto> getListClientes();
     public void deleteCliente(Integer documCli);
+    public ClientesDto updateCliente (ClientesDto clientesDto);
 }

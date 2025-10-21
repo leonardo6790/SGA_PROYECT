@@ -40,6 +40,9 @@ public class Alquiler {
     @NotNull
     private Date fechaAlq;
 
+    @NotNull
+    private Integer totalAlq;
+
 
     @ManyToOne (fetch = FetchType.LAZY)
 

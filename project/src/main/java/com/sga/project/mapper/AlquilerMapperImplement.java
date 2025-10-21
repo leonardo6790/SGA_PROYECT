@@ -27,6 +27,7 @@ import jakarta.persistence.EntityNotFoundException;
     alquiler.setFechaRet(alquilerDto.getFechaRetiro());
     alquiler.setFechaEnt(alquilerDto.getFechaEntrega());
     alquiler.setFechaAlq(alquilerDto.getFechaAlquiler());
+    alquiler.setTotalAlq(alquilerDto.getTotalAlquiler());
 
 
     Usuario usu = usuRepo.findById(alquilerDto.getNumDocUsuario())
@@ -47,6 +48,7 @@ import jakarta.persistence.EntityNotFoundException;
         alquiler.getFechaRet(),
         alquiler.getFechaEnt(),
         alquiler.getFechaAlq(),
+        alquiler.getTotalAlq(),
         alquiler.getUsuario() != null ? alquiler.getUsuario().getNumDoc() : null
     );
 

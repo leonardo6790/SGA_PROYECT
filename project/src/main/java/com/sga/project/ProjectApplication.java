@@ -1,5 +1,7 @@
 package com.sga.project;
 
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -31,6 +33,24 @@ public class ProjectApplication {
 			PasswordEncoder passwordEncoder) {
 		return args -> {
 			System.out.println("=== Inicializando base de datos ===");
+
+			// 0. Limpiar roles duplicados si existen
+			System.out.println("Verificando datos duplicados...");
+			try {
+				List<Rol> rolesAdmin = rolRepo.findAll().stream()
+						.filter(r -> "ADMIN".equals(r.getNomRol()))
+						.toList();
+				
+				if (rolesAdmin.size() > 1) {
+					System.out.println("⚠️  Detectados roles duplicados. Limpiando toda la base de datos...");
+					// Eliminar todos los usuarios y roles para empezar limpio
+					usuarioRepo.deleteAll();
+					rolRepo.deleteAll();
+					System.out.println("✅ Datos de usuarios y roles limpiados");
+				}
+			} catch (Exception e) {
+				System.out.println("Verificación completada: " + e.getMessage());
+			}
 
 			// 1. Crear tipos de documento si no existen
 			if (tipoDocRepo.count() == 0) {
@@ -67,28 +87,53 @@ public class ProjectApplication {
 			}
 
 			// 3. Crear roles si no existen
-			Rol adminRol = rolRepo.findByNomRol("ADMIN").orElseGet(() -> {
-				System.out.println("Creando rol ADMIN...");
-				Rol newRol = new Rol();
-				newRol.setNomRol("ADMIN");
-				return rolRepo.save(newRol);
-			});
-
-			Rol vendedorRol = rolRepo.findByNomRol("VENDEDOR").orElseGet(() -> {
-				System.out.println("Creando rol VENDEDOR...");
-				Rol newRol = new Rol();
-				newRol.setNomRol("VENDEDOR");
-				return rolRepo.save(newRol);
-			});
-
-			rolRepo.findByNomRol("CLIENTE").orElseGet(() -> {
-				System.out.println("Creando rol CLIENTE...");
-				Rol newRol = new Rol();
-				newRol.setNomRol("CLIENTE");
-				return rolRepo.save(newRol);
-			});
-
-			System.out.println("✅ Roles creados");
+			System.out.println("Creando o verificando roles...");
+			Rol adminRol;
+			Rol vendedorRol;
+			Rol clienteRol;
+			
+			try {
+				// Intentar buscar roles existentes
+				List<Rol> allRoles = rolRepo.findAll();
+				
+				// Buscar ADMIN
+				adminRol = allRoles.stream()
+						.filter(r -> "ADMIN".equals(r.getNomRol()))
+						.findFirst()
+						.orElseGet(() -> {
+							System.out.println("Creando rol ADMIN...");
+							Rol newRol = new Rol();
+							newRol.setNomRol("ADMIN");
+							return rolRepo.save(newRol);
+						});
+				
+				// Buscar VENDEDOR
+				vendedorRol = allRoles.stream()
+						.filter(r -> "VENDEDOR".equals(r.getNomRol()))
+						.findFirst()
+						.orElseGet(() -> {
+							System.out.println("Creando rol VENDEDOR...");
+							Rol newRol = new Rol();
+							newRol.setNomRol("VENDEDOR");
+							return rolRepo.save(newRol);
+						});
+				
+				// Buscar CLIENTE
+				clienteRol = allRoles.stream()
+						.filter(r -> "CLIENTE".equals(r.getNomRol()))
+						.findFirst()
+						.orElseGet(() -> {
+							System.out.println("Creando rol CLIENTE...");
+							Rol newRol = new Rol();
+							newRol.setNomRol("CLIENTE");
+							return rolRepo.save(newRol);
+						});
+				
+				System.out.println("✅ Roles verificados/creados");
+			} catch (Exception e) {
+				System.out.println("Error al gestionar roles: " + e.getMessage());
+				throw e;
+			}
 
 			// 4. Verificar si ya existen los usuarios
 			if (usuarioRepo.findByCorreoElec("admin@ejemplo.com").isPresent()) {

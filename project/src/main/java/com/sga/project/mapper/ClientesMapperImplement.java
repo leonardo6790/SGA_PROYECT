@@ -6,19 +6,11 @@ import com.sga.project.dto.ClientesDto;
 import com.sga.project.models.Barrio;
 import com.sga.project.models.Clientes;
 import com.sga.project.models.TipoDoc;
-import com.sga.project.repositoryes.BarrioRepositoryes;
-import com.sga.project.repositoryes.TipoDocRepositoryes;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @Component
 public class ClientesMapperImplement implements ClientesMapper {
-    private final BarrioRepositoryes br;
-    private final TipoDocRepositoryes tr;
 
-    public ClientesMapperImplement(BarrioRepositoryes br, TipoDocRepositoryes tr){
-        this.br = br;
-        this.tr = tr;
+    public ClientesMapperImplement(){
     }
 
     @Override
@@ -35,13 +27,19 @@ public class ClientesMapperImplement implements ClientesMapper {
         clientes.setDireccion(clientesDto.getDireCli());
         clientes.setNumTel(clientesDto.getNumeroCli());
 
-        Barrio barrio = br.findById(clientesDto.getBarrioId())
-        .orElseThrow(() -> new EntityNotFoundException("barrio no encontrado"));
-        clientes.setBarrio(barrio);
+        // Solo crear referencias lazy sin hacer consultas aquí
+        if (clientesDto.getBarrioId() != null) {
+            Barrio barrio = new Barrio();
+            barrio.setId_barrio(clientesDto.getBarrioId());
+            clientes.setBarrio(barrio);
+        }
 
-        TipoDoc tipoDoc = tr.findById(clientesDto.getTipoDocId())
-        .orElseThrow(() -> new EntityNotFoundException("tipo de documento no encontrado"));
-        clientes.setTipoDoc(tipoDoc);
+        if (clientesDto.getTipoDocId() != null) {
+            TipoDoc tipoDoc = new TipoDoc();
+            tipoDoc.setId_tipoDoc(clientesDto.getTipoDocId());
+            clientes.setTipoDoc(tipoDoc);
+        }
+        
         return clientes;
     }
 

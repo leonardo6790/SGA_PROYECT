@@ -31,7 +31,6 @@ function AppContent() {
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/sign-in" element={<SignIn />} />
 
-        {/* Seller routes protected */}
         <Route
           path="/home-seller"
           element={

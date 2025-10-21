@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import com.sga.project.dto.AlquilerDto;
 import com.sga.project.mapper.AlquilerMapper;
 import com.sga.project.models.Alquiler;
+import com.sga.project.models.AlquilerArticulos;
+import com.sga.project.repositoryes.AlquilerArticuloRepository;
 import com.sga.project.repositoryes.AlquilerRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -14,18 +16,31 @@ public class AlquilerServiceImplement implements AlquilerService{
 
     private final AlquilerMapper alquiMap;
     private final AlquilerRepositoryes alquiRepo;
+    private final AlquilerArticuloRepository alquiArtiRepo;
 
-    public AlquilerServiceImplement (AlquilerMapper alquiMap, AlquilerRepositoryes alquiRepo) {
+    public AlquilerServiceImplement (AlquilerMapper alquiMap, AlquilerRepositoryes alquiRepo, AlquilerArticuloRepository alquiArtiRepo) {
         this.alquiMap = alquiMap;
         this.alquiRepo = alquiRepo;
+        this.alquiArtiRepo = alquiArtiRepo;
     }
     
     @Override
     @Transactional
+
     public AlquilerDto saveAlquiler(AlquilerDto alquilerDto) {
+
     Alquiler alquiler = alquiMap.toAlquiler(alquilerDto);
     Alquiler alquiGuardado = alquiRepo.save(alquiler);
+
+    List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(alquiGuardado.getId());
+
+    Integer total = articulos.stream().mapToInt(a -> a.getArticulo().getPrecio()).sum();
+    alquiGuardado.setTotalAlq(total);
+    alquiRepo.save(alquiGuardado);
     return alquiMap.toAlquilerDto(alquiGuardado);
+    
+
+    
     }
     
     @Override

@@ -1,14 +1,14 @@
 .inventory-wrapper {
   display: flex;
   min-height: 100vh;
-  background-color: rgba(238, 229, 209, 0.616);
+  background-color: #fdf6f3;
   font-family: 'Arial', sans-serif;
   margin-top: 70px;
 }
 
 .sidebar {
   width: 220px;
-  background-color: #fff;
+  background-color: #ffffff83;
   padding: 30px 20px;
   box-shadow: 3px 0 15px rgba(0,0,0,0.08);
 }
