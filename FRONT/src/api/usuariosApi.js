@@ -1,9 +1,18 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/usu";
 
-const jsonHeaders = { "Content-Type": "application/json" };
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("sga_token");
+    return {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+    };
+};
 
 export const obtenerUsuario = async () => {
-    const res = await fetch(`${BASE_URL}/ConsultarUsuarios`, { method: "GET" });
+    const res = await fetch(`${BASE_URL}/ConsultarUsuarios`, { 
+        method: "GET",
+        headers: getAuthHeaders(),
+    });
     if (!res.ok) throw new Error("Error al consultar usuarios");
     return await res.json();
 };
@@ -11,7 +20,7 @@ export const obtenerUsuario = async () => {
 export const crearUsuario = async (data) => {
     const res = await fetch(`${BASE_URL}/crear`, {
         method: "POST",
-        headers: jsonHeaders,
+        headers: getAuthHeaders(),
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error("No se pudo crear el usuario");
@@ -21,7 +30,7 @@ export const crearUsuario = async (data) => {
 export const editarUsuario = async (id, data) => {
     const res = await fetch(`${BASE_URL}/actualizar/${id}`, {
         method: "PUT",
-        headers: jsonHeaders,
+        headers: getAuthHeaders(),
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error("No se pudo editar el usuario");

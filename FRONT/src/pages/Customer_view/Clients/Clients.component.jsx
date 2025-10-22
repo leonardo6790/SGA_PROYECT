@@ -17,7 +17,21 @@ const Clients = () => {
   });
 
   useEffect(() => {
-    obtenerUsuario().then((data) => setClients(data));
+    const cargarUsuarios = async () => {
+      try {
+        const token = localStorage.getItem("sga_token");
+        if (!token) {
+          console.log("No hay token, no se cargarán los usuarios");
+          return;
+        }
+        const data = await obtenerUsuario();
+        setClients(data);
+      } catch (error) {
+        console.error("Error al cargar usuarios:", error);
+      }
+    };
+    
+    cargarUsuarios();
   }, []);
 
   const handleEditClick = (client) => {
@@ -36,7 +50,7 @@ const Clients = () => {
     e.preventDefault();
     try {
       const dataToSend = {
-        numDocumento: cli.numDocumento,
+        numDocumento: editingId,
         nombre1: editedData.nombre1,
         nombre2: editedData.nombre2,
         apellido1: editedData.apellido1,

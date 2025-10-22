@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import { FaUser } from "react-icons/fa";
 import "./Navbar_Seller.styles.css";
 import { Link } from "react-router-dom";
-import AuthContext from "../../../context/AuthContext";
+import { AuthContext } from "../../../context/AuthContextDefinition";
 import { useNavigate } from "react-router-dom";
 
 const NavbarSeller = () => {

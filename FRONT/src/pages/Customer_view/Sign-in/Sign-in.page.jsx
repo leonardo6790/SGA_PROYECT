@@ -3,25 +3,39 @@ import "./Sign-in.styles.css";
 import { FaUser, FaLock } from "react-icons/fa";
 import BackgroundSignIn from "../../../assets/BackgroundSignIn.png";
 import { Link } from "react-router-dom";
-import AuthContext from "../../../context/AuthContext";
+import { AuthContext } from "../../../context/AuthContextDefinition";
 import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    const res = login({ email, password });
-    if (res.ok) {
-      // redirect to seller home on successful login
-      navigate("/home-seller");
-    } else {
-      setError(res.error || "Credenciales inválidas");
+    setLoading(true);
+    
+    try {
+      const res = await login(email, password);
+      
+      if (res.ok) {
+        // Redirigir según el rol del usuario
+        if (res.user.rol === "ADMIN" || res.user.rol === "VENDEDOR") {
+          navigate("/home-seller");
+        } else {
+          navigate("/home");
+        }
+      } else {
+        setError(res.error || "Credenciales inválidas");
+      }
+    } catch {
+      setError("Error al conectar con el servidor");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,7 +74,9 @@ const SignIn = () => {
             />
             <FaLock className="input-icon" />
           </div>
-          <button className="signin-btn" type="submit">Ingresar</button>
+          <button className="signin-btn" type="submit" disabled={loading}>
+            {loading ? "Iniciando sesión..." : "Ingresar"}
+          </button>
         </form>
         {error && <p className="signin-error">{error}</p>}
         <p className="signin-footer">

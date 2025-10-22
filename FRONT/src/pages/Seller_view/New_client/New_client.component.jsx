@@ -3,7 +3,6 @@ import "./New_client.styles.css";
 import HomeSellerImage from "../../../assets/HomeSellerImage.png";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { useNavigate } from "react-router-dom";
-import { crearUsuario } from "../../../api/usuariosApi";
 
 export default function NewClient() {
   const navigate = useNavigate();
@@ -21,16 +20,12 @@ export default function NewClient() {
     idTipoDoc: "",
     idRol: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Temporarily redirect to New Order page when saving — actual create logic will be added later
   const handleCrearUsuario = (e) => {
     e?.preventDefault();
     navigate('/home-seller/new-order');
@@ -121,9 +116,6 @@ export default function NewClient() {
               Cancelar
             </button>
           </div>
-
-          {success && <div className="nc-success">{success}</div>}
-          {error && <div className="nc-error">{error}</div>}
         </form>
       </div>
     </div>

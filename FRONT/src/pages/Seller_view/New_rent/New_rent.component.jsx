@@ -5,7 +5,6 @@ import ImagenAlquiler from "../../../assets/NewRent.png";
 import ImagenDefault from "../../../assets/ImagenQuieto.png";    
 import ImagenUsuario from "../../../assets/ImagenUsuarioEncontrado.png";     
 import ImagenError from "../../../assets/imagenConfundido.png";         
-import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { Link } from "react-router-dom";
 import { obtenerUsuario } from "../../../api/usuariosApi";
 
@@ -40,7 +39,6 @@ useEffect(() => {
       className="new-rent-container"
       style={{ backgroundImage: `url(${HomeSellerImage})` }}
     >
-      <NavbarSeller />
       <div className="overlay"></div>
       <div className="form-section">
         <h1 className="form-title">Bienvenido</h1>

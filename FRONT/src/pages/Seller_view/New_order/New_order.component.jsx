@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import emailjs from '@emailjs/browser';
 
 export default function NewOrder() {
-  // Simulated customer data
   const customers = [
     {
       id: 1,
@@ -18,7 +17,6 @@ export default function NewOrder() {
     },
   ];
 
-  // Simulated catalog of 10 elegant dresses
   const catalog = [
     { id: 1, name: "Vestido Gala Negro", price: 120000, desc: "Seda, corte sirena" },
     { id: 2, name: "Vestido Encaje Champagne", price: 140000, desc: "Encaje fino, corte A" },

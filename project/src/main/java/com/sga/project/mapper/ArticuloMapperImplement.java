@@ -44,17 +44,17 @@ if (articuloDto == null){
     if (articulo == null){
         return null;
     }
-    return new ArticuloDto(
-        articulo.getId(),
-        articulo.getGenero(),
-        articulo.getTalla(),
-        articulo.getColor(),
-        articulo.getNomArt(),
-        articulo.getPrecio(),
-        articulo.getFoto(),
-        articulo.getCategoria() != null ? articulo.getCategoria().getId_categoria() :null,
-        articulo.getCategoria() != null ? articulo.getCategoria().getNomCate() : null
-    );
+    ArticuloDto dto = new ArticuloDto();
+    dto.setIdArt(articulo.getId());
+    dto.setGeneroArt(articulo.getGenero());
+    dto.setTallaArt(articulo.getTalla());
+    dto.setColorArt(articulo.getColor());
+    dto.setNombre(articulo.getNomArt());
+    dto.setPrecioArt(articulo.getPrecio());
+    dto.setFotoArt(articulo.getFoto());
+    dto.setIdCategoria(articulo.getCategoria() != null ? articulo.getCategoria().getId_categoria() : null);
+    dto.setNomCate(articulo.getCategoria() != null ? articulo.getCategoria().getNomCate() : null);
+    return dto;
     }
 
 

@@ -4,13 +4,27 @@ import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Na
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquiler } from "../../../api/alquilerArticulosApi";
-import { data } from "react-router-dom";
 
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  
   useEffect(() => {
-    obtenerAlquiler().then((data) => setOrders(data))
+    const cargarAlquileres = async () => {
+      try {
+        const token = localStorage.getItem("sga_token");
+        if (!token) {
+          console.log("No hay token, no se cargarán los alquileres");
+          return;
+        }
+        const data = await obtenerAlquiler();
+        setOrders(data);
+      } catch (error) {
+        console.error("Error al cargar alquileres:", error);
+      }
+    };
+    
+    cargarAlquileres();
   }, [])
 
   const [startDate, setStartDate] = useState(new Date());

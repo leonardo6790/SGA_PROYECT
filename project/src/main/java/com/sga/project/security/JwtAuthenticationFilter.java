@@ -1,9 +1,11 @@
 package com.sga.project.security;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -40,20 +42,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
+        try {
+            String token = authHeader.substring(7);
+            String email = jwtUtil.extractEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            if (jwtUtil.validateToken(token)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                
+                if (jwtUtil.validateToken(token)) {
+                    // Extraer el rol del token y agregar el prefijo ROLE_
+                    String rol = jwtUtil.extractRol(token);
+                    String rolConPrefijo = "ROLE_" + rol;
+                    
+                    // Cargar el usuario
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                    
+                    // Crear la autenticación con las autoridades del token
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            Collections.singletonList(new SimpleGrantedAuthority(rolConPrefijo)));
+                    
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    
+                    System.out.println("✅ Usuario autenticado: " + email + " con rol: " + rolConPrefijo);
+                }
             }
+        } catch (Exception e) {
+            System.err.println("❌ Error en autenticación JWT: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
