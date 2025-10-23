@@ -47,6 +47,7 @@ private String color;
 @Column (nullable = false)
 private Integer precio;
 
+@Column (length = 500)
 private String foto;
 
 @ManyToOne (fetch = FetchType.LAZY)

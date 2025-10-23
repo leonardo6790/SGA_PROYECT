@@ -44,9 +44,13 @@ public class CategoriaServiceImplement implements CategoriaService {
     @Transactional
     public List<CategoriaDto> getCategoria() {
         return cr.findAll().stream().map(cm::toCategoriaDto).toList();
-        
-            
-        }
+    }
+
+    @Override
+    @Transactional
+    public List<CategoriaDto> getListCategorias() {
+        return cr.findAll().stream().map(cm::toCategoriaDto).toList();
+    }
     
 
     @Override

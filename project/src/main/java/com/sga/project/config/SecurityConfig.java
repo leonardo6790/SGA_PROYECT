@@ -31,9 +31,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configure(http))
+                .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos
                         .requestMatchers("/api/auth/**").permitAll()
                         
                         // Endpoints solo para ADMIN
@@ -47,6 +46,8 @@ public class SecurityConfig {
                         
                         .requestMatchers("/api/AlquilerArticulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/alquiler/**").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers("/api/cat/**").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers("/api/cli/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/categoria/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/pago/**").hasAnyRole("ADMIN", "VENDEDOR")
                         

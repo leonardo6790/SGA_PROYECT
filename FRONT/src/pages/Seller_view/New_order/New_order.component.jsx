@@ -2,20 +2,30 @@ import React, { useState } from "react";
 import "./New_order.styles.css";
 import HomeSellerImage from "../../../assets/HomeSellerImage.png";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import emailjs from '@emailjs/browser';
 
 export default function NewOrder() {
-  const customers = [
-    {
-      id: 1,
-      name: "Miguel Paludo",
-      email: "miguel@paludo.co",
-      phone: "+57 300 123 4567",
-      address: "Calle Falsa 123, Barrio Centro",
-      document: "CC 12345678",
-    },
-  ];
+  const location = useLocation();
+  const clienteRecibido = location.state?.cliente;
+
+  const defaultCustomer = clienteRecibido ? {
+    id: clienteRecibido.doc,
+    name: `${clienteRecibido.nomcli1} ${clienteRecibido.nomcli2 || ''} ${clienteRecibido.apecli1} ${clienteRecibido.apecli2 || ''}`.trim(),
+    email: clienteRecibido.correoElectronico || '',
+    phone: clienteRecibido.numeroCli ? `+57 ${clienteRecibido.numeroCli}` : '',
+    address: clienteRecibido.direCli || 'No especificada',
+    document: `CC ${clienteRecibido.doc}`,
+  } : {
+    id: 1,
+    name: "Miguel Paludo",
+    email: "miguel@paludo.co",
+    phone: "+57 300 123 4567",
+    address: "Calle Falsa 123, Barrio Centro",
+    document: "CC 12345678",
+  };
+
+  const customers = [defaultCustomer];
 
   const catalog = [
     { id: 1, name: "Vestido Gala Negro", price: 120000, desc: "Seda, corte sirena" },

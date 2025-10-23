@@ -15,6 +15,7 @@ public class ClientesDto {
     private String apecli2;
     private String direCli;
     private Long numeroCli;
+    private String correoElectronico;
     private Integer barrioId;
     private Integer tipoDocId;
 }

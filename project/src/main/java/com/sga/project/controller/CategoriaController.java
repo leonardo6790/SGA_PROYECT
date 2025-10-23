@@ -11,9 +11,11 @@ import com.sga.project.service.CategoriaService;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
 
 
 @RestController
@@ -27,6 +29,12 @@ public class CategoriaController {
     public ResponseEntity <CategoriaDto> saveCategoria (@Valid @RequestBody CategoriaDto categoriaDto) {
         CategoriaDto guardar = cs.saveCategoria(categoriaDto);
         return ResponseEntity.ok(guardar);
+    }
+
+    @GetMapping("/listar")
+    public ResponseEntity<List<CategoriaDto>> listarCategorias() {
+        List<CategoriaDto> categorias = cs.getListCategorias();
+        return ResponseEntity.ok(categorias);
     }
     
     @DeleteMapping("/borrar/{id_categoria}")

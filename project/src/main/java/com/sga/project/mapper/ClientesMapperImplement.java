@@ -26,6 +26,7 @@ public class ClientesMapperImplement implements ClientesMapper {
         clientes.setApellido2(clientesDto.getApecli2());
         clientes.setDireccion(clientesDto.getDireCli());
         clientes.setNumTel(clientesDto.getNumeroCli());
+        clientes.setCorreoElectronico(clientesDto.getCorreoElectronico());
 
         // Solo crear referencias lazy sin hacer consultas aquí
         if (clientesDto.getBarrioId() != null) {
@@ -56,6 +57,7 @@ public class ClientesMapperImplement implements ClientesMapper {
             clientes.getApellido2(),
             clientes.getDireccion(),
             clientes.getNumTel(),
+            clientes.getCorreoElectronico(),
             clientes.getBarrio() != null ? clientes.getBarrio().getId_barrio() : null,
             clientes.getTipoDoc() != null ? clientes.getTipoDoc().getId_tipoDoc() : null
         );

@@ -72,16 +72,24 @@ public class ClienteServiceImplement implements ClienteService {
         cli.setNombre2(clientesDto.getNomcli2());
         cli.setApellido(clientesDto.getApecli1());
         cli.setApellido2(clientesDto.getApecli2());
-        cli.setDireccion(clientesDto.getDireCli());
         cli.setNumTel(clientesDto.getNumeroCli());
+        cli.setCorreoElectronico(clientesDto.getCorreoElectronico());
         
-        Barrio bar = br.findById(clientesDto.getBarrioId())
-        .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
-        cli.setBarrio(bar);
+        if (clientesDto.getDireCli() != null) {
+            cli.setDireccion(clientesDto.getDireCli());
+        }
+        
+        if (clientesDto.getBarrioId() != null) {
+            Barrio bar = br.findById(clientesDto.getBarrioId())
+            .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
+            cli.setBarrio(bar);
+        }
 
-        TipoDoc tipoDoc = tp.findById(clientesDto.getTipoDocId())
-        .orElseThrow(() -> new EntityNotFoundException("tipo de documento no encontrado"));
-        cli.setTipoDoc(tipoDoc);
+        if (clientesDto.getTipoDocId() != null) {
+            TipoDoc tipoDoc = tp.findById(clientesDto.getTipoDocId())
+            .orElseThrow(() -> new EntityNotFoundException("tipo de documento no encontrado"));
+            cli.setTipoDoc(tipoDoc);
+        }
         
         Clientes clienteActualizado = cr.save(cli);
         return cm.toClientesDto(clienteActualizado);

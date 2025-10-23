@@ -115,6 +115,28 @@
   color: #333;
   border-bottom: 1px solid #333;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-text:hover {
+  color: #9b59b6;
+  border-bottom-color: #9b59b6;
+  transform: scale(1.1);
+}
+
+.delete-icon {
+  position: absolute;
+  bottom: 15px;
+  left: 20px;
+  font-size: 14px;
+  color: #e74c3c;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.delete-icon:hover {
+  color: #c0392b;
+  transform: scale(1.2);
 }
 
 .modal-overlay {
@@ -176,4 +198,60 @@
 .cancel-button:hover {
   background-color: #999;
   color: #fff;
+}
+
+.floating-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: #fff;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.floating-button:hover {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 6px 20px rgba(155, 89, 182, 0.6);
+}
+
+.floating-button:active {
+  transform: scale(0.95) rotate(90deg);
+}
+
+.modal-create {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-create h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 24px;
+}
+
+.modal-create select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.modal-create select:focus,
+.modal-create input:focus {
+  outline: none;
+  border-color: #9b59b6;
+  box-shadow: 0 0 5px rgba(155, 89, 182, 0.3);
 }

@@ -36,13 +36,27 @@ export const obtenerArticulo = async () => {
 };
 
 export const crearArticulo = async (data) => {
-    const res = await fetch(`${BASE_URL}/Crear`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error("No se pudo crear el articulo");
-    return await res.json();
+    try {
+        console.log("Creando artículo con datos:", data);
+        const res = await fetch(`${BASE_URL}/Crear`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+        
+        console.log("Respuesta del servidor:", res.status, res.statusText);
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Error response:', res.status, errorText);
+            throw new Error(`Error al crear el articulo: ${res.status} - ${errorText}`);
+        }
+        
+        return await res.json();
+    } catch (error) {
+        console.error('Error completo en crearArticulo:', error);
+        throw error;
+    }
 };
 
 export const actualizarArticulo = async (id, data) => {
@@ -62,4 +76,24 @@ export const obtenerArticuloporId = async (id) => {
     });
     if (!res.ok) throw new Error("Articulo no encontrado");
     return await res.json();
+};
+
+export const eliminarArticulo = async (id) => {
+    try {
+        const res = await fetch(`${BASE_URL}/Eliminar/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Error al eliminar artículo:', res.status, errorText);
+            throw new Error(`Error al eliminar el artículo: ${res.status}`);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error completo en eliminarArticulo:', error);
+        throw error;
+    }
 };

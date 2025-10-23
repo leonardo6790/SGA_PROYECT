@@ -1,21 +1,31 @@
 import React, { useEffect, useState, useContext } from "react";
 import "./Inventory.styles.css";
-import { FaPencilAlt } from "react-icons/fa";
-import { actualizarArticulo, obtenerArticulo } from "../../../api/articulosApi";
+import { FaPencilAlt, FaPlus, FaTrash } from "react-icons/fa";
+import { actualizarArticulo, obtenerArticulo, crearArticulo, eliminarArticulo } from "../../../api/articulosApi";
+import { obtenerCategorias } from "../../../api/categoriasApi";
 import { AuthContext } from "../../../context/AuthContextDefinition";
 import { useNavigate } from "react-router-dom";
 
-const categories = ["Para dama", "Para caballero", "Para niño"];
-
 const Inventory = () => {
   const [articulos, setArticulos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedData, setEditedData] = useState({ precioArt: "", fotoArt: "" });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newArticle, setNewArticle] = useState({
+    nomArt: "",
+    genero: "",
+    talla: "",
+    color: "",
+    precio: "",
+    foto: "",
+    idCategoria: ""
+  });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const cargarArticulos = async () => {
+    const cargarDatos = async () => {
       try {
         const token = localStorage.getItem("sga_token");
         if (!token) {
@@ -26,11 +36,18 @@ const Inventory = () => {
         }
 
         console.log("Cargando artículos con token:", token.substring(0, 20) + "...");
-        const data = await obtenerArticulo();
-        console.log("Artículos recibidos del backend:", data);
-        setArticulos(data);
+        const [articulosData, categoriasData] = await Promise.all([
+          obtenerArticulo(),
+          obtenerCategorias()
+        ]);
+        
+        console.log("Artículos recibidos del backend:", articulosData);
+        console.log("Categorías recibidas del backend:", categoriasData);
+        
+        setArticulos(articulosData);
+        setCategorias(categoriasData);
       } catch (error) {
-        console.error("Error completo al cargar artículos:", error);
+        console.error("Error completo al cargar datos:", error);
         if (error.message.includes("401") || error.message.includes("403")) {
           alert("Sesión expirada. Por favor inicia sesión nuevamente.");
           localStorage.removeItem("sga_token");
@@ -40,7 +57,7 @@ const Inventory = () => {
       }
     };
     
-    cargarArticulos();
+    cargarDatos();
   }, [navigate]);
 
   const handleEditClick = (art) => {
@@ -76,13 +93,85 @@ const Inventory = () => {
 
   const handleCancel = () => setEditingId(null);
 
+  const handleCreateArticle = async (e) => {
+    e.preventDefault();
+    try {
+      console.log("Estado actual newArticle:", newArticle);
+      
+      const dataToSend = {
+        nombre: newArticle.nomArt,
+        generoArt: newArticle.genero,
+        tallaArt: newArticle.talla,
+        colorArt: newArticle.color,
+        precioArt: parseInt(newArticle.precio),
+        fotoArt: newArticle.foto,
+        idCategoria: parseInt(newArticle.idCategoria)
+      };
+      
+      console.log("Datos a enviar al backend:", dataToSend);
+      console.log("ID Categoría seleccionada:", newArticle.idCategoria, "tipo:", typeof newArticle.idCategoria);
+      
+      await crearArticulo(dataToSend);
+      
+      const data = await obtenerArticulo();
+      setArticulos(data);
+      
+      setShowCreateModal(false);
+      setNewArticle({
+        nomArt: "",
+        genero: "",
+        talla: "",
+        color: "",
+        precio: "",
+        foto: "",
+        idCategoria: ""
+      });
+      
+      alert("Artículo creado exitosamente");
+    } catch (error) {
+      console.error("Error al crear el artículo:", error);
+      alert(`Error al crear el artículo: ${error.message}`);
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setShowCreateModal(false);
+    setNewArticle({
+      nomArt: "",
+      genero: "",
+      talla: "",
+      color: "",
+      precio: "",
+      foto: "",
+      idCategoria: ""
+    });
+  };
+
+  const handleDeleteArticle = async (idArt, nombreArt) => {
+    const confirmar = window.confirm(`¿Estás seguro de que deseas eliminar el artículo "${nombreArt}"?`);
+    
+    if (confirmar) {
+      try {
+        await eliminarArticulo(idArt);
+        
+        const data = await obtenerArticulo();
+        setArticulos(data);
+        
+        alert("Artículo eliminado exitosamente");
+      } catch (error) {
+        console.error("Error al eliminar el artículo:", error);
+        alert(`Error al eliminar el artículo: ${error.message}`);
+      }
+    }
+  };
+
   return (
     <div className="inventory-wrapper">
       <aside className="sidebar">
         <h2>Categorías</h2>
         <ul>
-          {categories.map((cat, index) => (
-            <li key={index}>{cat}</li>
+          {categorias.map((cat) => (
+            <li key={cat.idCate}>{cat.nomCate}</li>
           ))}
         </ul>
       </aside>
@@ -107,6 +196,13 @@ const Inventory = () => {
               <p className="player-subtitle">Género: {art.generoArt}</p>
               <p className="player-price">Color: {art.colorArt}</p>
               <p className="player-category">Categoría: {art.nomCate}</p>
+              <span
+                className="delete-icon"
+                onClick={() => handleDeleteArticle(art.idArt, art.nombre)}
+                title="Eliminar artículo"
+              >
+                <FaTrash />
+              </span>
               <span
                 className="edit-text"
                 onClick={() => handleEditClick(art)}
@@ -150,6 +246,89 @@ const Inventory = () => {
             </form>
           </div>
         )}
+
+        {showCreateModal && (
+          <div className="modal-overlay">
+            <form onSubmit={handleCreateArticle} className="modal modal-create">
+              <h2>Crear Nuevo Artículo</h2>
+              <input
+                type="text"
+                value={newArticle.nomArt}
+                onChange={(e) => setNewArticle({ ...newArticle, nomArt: e.target.value })}
+                placeholder="Nombre del artículo"
+                required
+              />
+              <select
+                value={newArticle.genero}
+                onChange={(e) => setNewArticle({ ...newArticle, genero: e.target.value })}
+                required
+              >
+                <option value="">Seleccionar género</option>
+                <option value="Dama">Dama</option>
+                <option value="Caballero">Caballero</option>
+                <option value="Niño">Niño</option>
+              </select>
+              <input
+                type="text"
+                value={newArticle.talla}
+                onChange={(e) => setNewArticle({ ...newArticle, talla: e.target.value })}
+                placeholder="Talla"
+                required
+              />
+              <input
+                type="text"
+                value={newArticle.color}
+                onChange={(e) => setNewArticle({ ...newArticle, color: e.target.value })}
+                placeholder="Color"
+                required
+              />
+              <input
+                type="number"
+                value={newArticle.precio}
+                onChange={(e) => setNewArticle({ ...newArticle, precio: e.target.value })}
+                placeholder="Precio"
+                required
+              />
+              <input
+                type="text"
+                value={newArticle.foto}
+                onChange={(e) => setNewArticle({ ...newArticle, foto: e.target.value })}
+                placeholder="URL de la foto"
+                required
+              />
+              <select
+                value={newArticle.idCategoria}
+                onChange={(e) => setNewArticle({ ...newArticle, idCategoria: e.target.value })}
+                required
+              >
+                <option value="">Seleccionar categoría</option>
+                {categorias.map((cat) => (
+                  <option key={cat.idCate} value={cat.idCate}>
+                    {cat.nomCate}
+                  </option>
+                ))}
+              </select>
+              <div className="modal-buttons">
+                <button type="submit">Crear Artículo</button>
+                <button
+                  type="button"
+                  onClick={handleCancelCreate}
+                  className="cancel-button"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <button 
+          className="floating-button"
+          onClick={() => setShowCreateModal(true)}
+          title="Agregar nuevo artículo"
+        >
+          <FaPlus />
+        </button>
       </div>
     </div>
   );

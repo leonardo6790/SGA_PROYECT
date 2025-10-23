@@ -1,0 +1,11 @@
+SUMA = 0
+while True:
+    numero = int(input("Ingresa un número del 1 al 20 (0 para salir): "))
+    if numero == 0:
+        print(f"La sumatoria es: {suma}")
+        break
+    elif numero < 1 or numero > 20: 
+        print("Número inválido, debe ser entre 1 y 20. Intenta de nuevo.")
+        continue
+    else:
+        suma += numero

@@ -5,34 +5,47 @@ import ImagenAlquiler from "../../../assets/NewRent.png";
 import ImagenDefault from "../../../assets/ImagenQuieto.png";    
 import ImagenUsuario from "../../../assets/ImagenUsuarioEncontrado.png";     
 import ImagenError from "../../../assets/imagenConfundido.png";         
-import { Link } from "react-router-dom";
-import { obtenerUsuario } from "../../../api/usuariosApi";
+import { Link, useNavigate } from "react-router-dom";
+import { obtenerClientes } from "../../../api/clientesApi";
 
 export default function NewRent() {
   const [documento, setDocumento] = useState("");
   const [clients, setClients] = useState([]);
+  const [clienteEncontrado, setClienteEncontrado] = useState(null);
   const [imagen, setImagen] = useState(ImagenDefault);
   const [mensaje, setMensaje] = useState("Por favor escribe el documento");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    obtenerUsuario().then((data) => setClients(data));
+    obtenerClientes().then((data) => setClients(data));
   }, []);
 useEffect(() => {
-  if (documento.length === 10) {
-    const user = clients.find((e) => String(e.numDocumento).trim() === documento.trim());
-    console.log("in", user);
+  if (documento.length >= 7) {
+    const user = clients.find((e) => String(e.doc) === documento.trim());
+    console.log("Cliente buscado:", user);
     if (user) {
+      setClienteEncontrado(user);
       setImagen(ImagenUsuario);
-      setMensaje("El usuario ha sido encontrado en la base de datos");
+      setMensaje("El cliente ha sido encontrado en la base de datos");
     } else {
+      setClienteEncontrado(null);
       setImagen(ImagenError);
-      setMensaje("Usuario no encontrado :(");
+      setMensaje("Cliente no encontrado :(");
     }
   } else {
+    setClienteEncontrado(null);
     setImagen(ImagenDefault);
     setMensaje("Por favor escribe el documento");
   }
 }, [documento, clients]);
+
+  const handleContinuar = () => {
+    if (clienteEncontrado) {
+      navigate('/home-seller/new-order', { state: { cliente: clienteEncontrado } });
+    } else {
+      navigate('/home-seller/new-client');
+    }
+  };
 
   return (
     <div
@@ -54,9 +67,9 @@ useEffect(() => {
           className="form-input"
         />
 
-        <Link to="/home-seller/new-client" className="form-button">
+        <button onClick={handleContinuar} className="form-button">
           Continuar
-        </Link>
+        </button>
 
         <div className="status-section">
           <img src={imagen} alt="estado usuario" className="status-image" />

@@ -1,48 +1,49 @@
 import React, { useEffect, useState } from "react";
 import "./Clients.styles.css";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
-import { obtenerUsuario, editarUsuario } from "../../../api/usuariosApi";
+import { obtenerClientes, actualizarCliente } from "../../../api/clientesApi";
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editedData, setEditedData] = useState({
-    numDocumento: 0,
-    nombre1: "",
-    nombre2: "",
-    apellido1: "",
-    apellido2: "",
+    nomcli1: "",
+    nomcli2: "",
+    apecli1: "",
+    apecli2: "",
     correoElectronico: "",
-    tele: "",
+    numeroCli: "",
   });
 
   useEffect(() => {
-    const cargarUsuarios = async () => {
+    const cargarClientes = async () => {
       try {
         const token = localStorage.getItem("sga_token");
         if (!token) {
-          console.log("No hay token, no se cargarán los usuarios");
+          console.log("No hay token, no se cargarán los clientes");
           return;
         }
-        const data = await obtenerUsuario();
+        const data = await obtenerClientes();
+        console.log("Clientes recibidos:", data);
         setClients(data);
       } catch (error) {
-        console.error("Error al cargar usuarios:", error);
+        console.error("Error al cargar clientes:", error);
       }
     };
     
-    cargarUsuarios();
+    cargarClientes();
   }, []);
 
   const handleEditClick = (client) => {
-    setEditingId(client.numDocumento);
+    console.log("Cliente seleccionado para editar:", client);
+    setEditingId(client.doc);
     setEditedData({
-      nombre1: client.nombre1,
-      nombre2: client.nombre2,
-      apellido1: client.apellido1,
-      apellido2: client.apellido2,
-      correoElectronico: client.correoElectronico,
-      tele: client.tele,
+      nomcli1: client.nomcli1 || "",
+      nomcli2: client.nomcli2 || "",
+      apecli1: client.apecli1 || "",
+      apecli2: client.apecli2 || "",
+      correoElectronico: client.correoElectronico || "",
+      numeroCli: client.numeroCli || "",
     });
   };
 
@@ -50,47 +51,50 @@ const Clients = () => {
     e.preventDefault();
     try {
       const dataToSend = {
-        numDocumento: editingId,
-        nombre1: editedData.nombre1,
-        nombre2: editedData.nombre2,
-        apellido1: editedData.apellido1,
-        apellido2: editedData.apellido2,
+        doc: editingId,
+        nomcli1: editedData.nomcli1,
+        nomcli2: editedData.nomcli2,
+        apecli1: editedData.apecli1,
+        apecli2: editedData.apecli2,
         correoElectronico: editedData.correoElectronico,
-        tele: editedData.tele,
+        numeroCli: parseInt(editedData.numeroCli),
       };
 
-      console.log("in2",editingId)
-      console.log("data",dataToSend )
-      await editarUsuario(editingId, dataToSend);
+      console.log("Actualizando cliente:", editingId);
+      console.log("Datos a enviar:", dataToSend);
+      
+      const resultado = await actualizarCliente(editingId, dataToSend);
+      console.log("Resultado de actualización:", resultado);
 
-      setClients((prev) =>
-        prev.map((c) =>
-          c.numeroDoc === editingId ? { ...c, ...editedData } : c
-        )
-      );
+      const data = await obtenerClientes();
+      setClients(data);
+      
       setEditingId(null);
       setEditedData({
-        nombre1: "",
-        nombre2: "",
-        apellido1: "",
-        apellido2: "",
+        nomcli1: "",
+        nomcli2: "",
+        apecli1: "",
+        apecli2: "",
         correoElectronico: "",
-        tele: "",
+        numeroCli: "",
       });
+      
+      alert("Cliente actualizado exitosamente");
     } catch (error) {
-      console.log("Error al editar el usuario:", error);
+      console.error("Error completo al editar el cliente:", error);
+      alert(`Error al editar el cliente: ${error.message}`);
     }
   };
 
   const handleCancel = () => {
     setEditingId(null);
     setEditedData({
-      nombre1: "",
-      nombre2: "",
-      apellido1: "",
-      apellido2: "",
+      nomcli1: "",
+      nomcli2: "",
+      apecli1: "",
+      apecli2: "",
       correoElectronico: "",
-      tele: "",
+      numeroCli: "",
     });
   };
 
@@ -117,15 +121,15 @@ const Clients = () => {
           </div>
 
           {clients.map((cli) => (
-            <div key={cli.numeroDoc} className="client-card">
+            <div key={cli.doc} className="client-card">
               <div className="client-body">
-                <div className="client-field">{cli.numeroDoc}</div>
-                <div className="client-field">{cli.nombre1}</div>
-                <div className="client-field">{cli.nombre2}</div>
-                <div className="client-field">{cli.apellido1}</div>
-                <div className="client-field">{cli.apellido2}</div>
+                <div className="client-field">{cli.doc}</div>
+                <div className="client-field">{cli.nomcli1}</div>
+                <div className="client-field">{cli.nomcli2}</div>
+                <div className="client-field">{cli.apecli1}</div>
+                <div className="client-field">{cli.apecli2}</div>
                 <div className="client-field">{cli.correoElectronico}</div>
-                <div className="client-field">{cli.tele}</div>
+                <div className="client-field">{cli.numeroCli}</div>
                 <button onClick={() => handleEditClick(cli)}>Editar</button>
               </div>
             </div>
@@ -139,38 +143,38 @@ const Clients = () => {
             <h2>Editar Cliente</h2>
             <input
               type="text"
-              value={editedData.nombre1}
+              value={editedData.nomcli1}
               onChange={(e) =>
-                setEditedData({ ...editedData, nombre1: e.target.value })
+                setEditedData({ ...editedData, nomcli1: e.target.value })
               }
               placeholder="Nombre 1"
             />
             <input
               type="text"
-              value={editedData.nombre2}
+              value={editedData.nomcli2}
               onChange={(e) =>
-                setEditedData({ ...editedData, nombre2: e.target.value })
+                setEditedData({ ...editedData, nomcli2: e.target.value })
               }
               placeholder="Nombre 2"
             />
             <input
               type="text"
-              value={editedData.apellido1}
+              value={editedData.apecli1}
               onChange={(e) =>
-                setEditedData({ ...editedData, apellido1: e.target.value })
+                setEditedData({ ...editedData, apecli1: e.target.value })
               }
               placeholder="Apellido 1"
             />
             <input
               type="text"
-              value={editedData.apellido2}
+              value={editedData.apecli2}
               onChange={(e) =>
-                setEditedData({ ...editedData, apellido2: e.target.value })
+                setEditedData({ ...editedData, apecli2: e.target.value })
               }
               placeholder="Apellido 2"
             />
             <input
-              type="text"
+              type="email"
               value={editedData.correoElectronico}
               onChange={(e) =>
                 setEditedData({ ...editedData, correoElectronico: e.target.value })
@@ -179,9 +183,9 @@ const Clients = () => {
             />
             <input
               type="text"
-              value={editedData.tele}
+              value={editedData.numeroCli}
               onChange={(e) =>
-                setEditedData({ ...editedData, tele: e.target.value })
+                setEditedData({ ...editedData, numeroCli: e.target.value })
               }
               placeholder="Teléfono"
             />

@@ -42,6 +42,9 @@ public class Clientes {
     @NotNull
     private Long numTel;
 
+    @Column(length = 100)
+    private String correoElectronico;
+
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn(name = "id_barrio", nullable = false, foreignKey = @ForeignKey(name = "FK_clientes_barrio"))
     private Barrio barrio;
