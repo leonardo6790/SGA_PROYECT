@@ -18,10 +18,12 @@ public class AlquilerArticuloServiceImplement implements AlquilerArticuloService
 
     private final AlquilerArticuloRepository alquiArtiRepo;
     private final AlquilerArticuloMapper alquiArtiMap;
+    private final AlquilerService alquiServi;
 
-    public AlquilerArticuloServiceImplement(AlquilerArticuloRepository alquiArtiRepo, AlquilerArticuloMapper alquiArtiMap) {
+    public AlquilerArticuloServiceImplement(AlquilerArticuloRepository alquiArtiRepo, AlquilerArticuloMapper alquiArtiMap, AlquilerService alquiServi) {
         this.alquiArtiMap = alquiArtiMap;
         this.alquiArtiRepo = alquiArtiRepo;
+        this.alquiServi = alquiServi;
     }
 
     @Override
@@ -34,6 +36,8 @@ public class AlquilerArticuloServiceImplement implements AlquilerArticuloService
         }
 
         AlquilerArticulos guardado = alquiArtiRepo.save(alqArt);
+        alquiServi.calcularTotalAlquiler(alquiArtiDto.getAlquilerId());
+
 
         return alquiArtiMap.toAlquilerArticulosDto(guardado);
     }
@@ -65,5 +69,30 @@ public void eliminarAsignacion (Integer articuloId, Integer alquilerId){
 @Override
 public List<AlquilerArticulosDto> listarAlquileres() {
     return alquiArtiRepo.findAll().stream().map(alquiArtiMap::toAlquilerArticulosDto).toList();
+}
+
+@Override
+public String debugAlquiler(Integer alquilerId) {
+    List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(alquilerId);
+    StringBuilder debug = new StringBuilder();
+    debug.append("=== DEBUG ALQUILER ID: ").append(alquilerId).append(" ===\n\n");
+    debug.append("Total de artículos asignados: ").append(articulos.size()).append("\n\n");
+    
+    int sumaTotal = 0;
+    for (AlquilerArticulos aa : articulos) {
+        debug.append("Artículo ID: ").append(aa.getArticulo().getId()).append("\n");
+        debug.append("  - Nombre: ").append(aa.getArticulo().getNomArt()).append("\n");
+        debug.append("  - Precio del artículo (tabla articulos): ").append(aa.getArticulo().getPrecio()).append("\n");
+        debug.append("  - Precio en asignación (tabla alquiler_articulos): ").append(aa.getPrecio()).append("\n");
+        debug.append("  - Estado: ").append(aa.getEstado()).append("\n");
+        debug.append("  - Observaciones: ").append(aa.getObservaciones()).append("\n\n");
+        
+        Integer precioAsignacion = aa.getPrecio() != null ? aa.getPrecio() : 0;
+        sumaTotal += precioAsignacion;
+    }
+    
+    debug.append("SUMA TOTAL CALCULADA: ").append(sumaTotal).append("\n");
+    
+    return debug.toString();
 }
 }
