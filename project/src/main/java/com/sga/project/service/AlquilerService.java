@@ -10,4 +10,5 @@ public AlquilerDto saveAlquiler (AlquilerDto alquilerDto);
 public List <AlquilerDto> getAlquilerList ();
 public void deleteAlquiler (Integer idAlquiler);
 public AlquilerDto updateAlquiler (AlquilerDto alquilerDto);
+public void calcularTotalAlquiler (Integer idAlquiler);
 }

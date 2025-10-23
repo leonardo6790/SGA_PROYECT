@@ -40,9 +40,8 @@ public class Alquiler {
     @NotNull
     private Date fechaAlq;
 
-    @NotNull
+    // El total se calcula automáticamente al asignar artículos
     private Integer totalAlq;
-
 
     @ManyToOne (fetch = FetchType.LAZY)
 

@@ -29,6 +29,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // ⚠️ SEGURIDAD TEMPORALMENTE DESACTIVADA PARA PRUEBAS ⚠️
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configure(http))
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()); // Todos los endpoints son públicos
+        
+        /* CONFIGURACIÓN ORIGINAL (REACTIVAR DESPUÉS):
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configure(http))
@@ -55,6 +63,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        */
 
         return http.build();
     }

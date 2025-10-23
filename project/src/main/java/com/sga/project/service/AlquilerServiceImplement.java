@@ -26,26 +26,44 @@ public class AlquilerServiceImplement implements AlquilerService{
     
     @Override
     @Transactional
-
     public AlquilerDto saveAlquiler(AlquilerDto alquilerDto) {
 
     Alquiler alquiler = alquiMap.toAlquiler(alquilerDto);
+    
+    // Inicializar el total en 0 si no viene en el DTO
+    if (alquiler.getTotalAlq() == null) {
+        alquiler.setTotalAlq(0);
+    }
+    
     Alquiler alquiGuardado = alquiRepo.save(alquiler);
 
+    // Calcular el total basado en los artículos asignados (si los hay)
     List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(alquiGuardado.getId());
-
-    Integer total = articulos.stream().mapToInt(a -> a.getArticulo().getPrecio()).sum();
-    alquiGuardado.setTotalAlq(total);
-    alquiRepo.save(alquiGuardado);
+    
+    if (!articulos.isEmpty()) {
+        Integer total = articulos.stream()
+            .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
+            .sum();
+        alquiGuardado.setTotalAlq(total);
+        alquiGuardado = alquiRepo.save(alquiGuardado);
+    }
+    
     return alquiMap.toAlquilerDto(alquiGuardado);
-    
-
-    
     }
     
     @Override
+    @Transactional
     public AlquilerDto getAlquilerById (Integer idAlquiler) {
-        return alquiRepo.findById(idAlquiler).map(alquiMap::toAlquilerDto).orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+        Alquiler alquiler = alquiRepo.findById(idAlquiler)
+            .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+        
+        // Recalcular el total antes de devolver
+        calcularTotalAlquiler(idAlquiler);
+        
+        // Refrescar la entidad para obtener el total actualizado
+        alquiler = alquiRepo.findById(idAlquiler).get();
+        
+        return alquiMap.toAlquilerDto(alquiler);
     }
     
     @Override
@@ -73,6 +91,21 @@ public class AlquilerServiceImplement implements AlquilerService{
         return alquiRepo.findAll().stream().map(alquiMap::toAlquilerDto).toList();
     }
 
-    
+    @Override
+    @Transactional
+    public void calcularTotalAlquiler(Integer idAlquiler) {
+        List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(idAlquiler);
+        // Usar el precio de la asignación (AlquilerArticulos.precio) en lugar del precio del artículo
+        Integer total = articulos.stream()
+            .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
+            .sum();
+
+        Alquiler alquiler = alquiRepo.findById(idAlquiler)
+        .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+
+        alquiler.setTotalAlq(total);
+        alquiRepo.save(alquiler);
+
+    }
 
 }
