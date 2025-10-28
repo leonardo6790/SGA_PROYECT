@@ -28,7 +28,7 @@
 }
 
 .clients-subtitle {
-  font-size: 16px;
+  font-size: 17px;
   color: #666;
   margin: 10px 0 20px 0;
 }
@@ -36,7 +36,7 @@
 .clients-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .client-header {
@@ -53,7 +53,7 @@
 
 .client-card {
   background-color: #fff;
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;
@@ -61,7 +61,7 @@
 
 .client-body {
   display: flex;
-  align-items: center;
+  align-items: center;      
   padding: 10px 20px;
   border-bottom: 1px solid #eee;
 }
@@ -135,4 +135,17 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.editbutton {
+  background-color: #f5e0e0fd;
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+}
+.editbutton svg{
+width: 20px;
+height: 20px;
+
 }

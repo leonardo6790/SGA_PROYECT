@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./Clients.styles.css";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { obtenerClientes, actualizarCliente } from "../../../api/clientesApi";
+import { HiPencilSquare } from "react-icons/hi2";
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
@@ -130,7 +131,7 @@ const Clients = () => {
                 <div className="client-field">{cli.apecli2}</div>
                 <div className="client-field">{cli.correoElectronico}</div>
                 <div className="client-field">{cli.numeroCli}</div>
-                <button onClick={() => handleEditClick(cli)}>Editar</button>
+                <div className="client-field"><button className="editbutton" onClick={() => handleEditClick(cli)}><HiPencilSquare /></button></div>
               </div>
             </div>
           ))}

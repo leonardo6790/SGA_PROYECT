@@ -12,28 +12,28 @@ const products = [
   {
     id: 1,
     name: "Vestimenta para caballero",
-    description: "Para todo tipo de hombre macho pecho peludo",
+    description: "Alquila, deslumbra y repite",
     price: "$120",
     image: VestidosHombre
   },
   {
     id: 2,
     name: "Vestimenta para Dama",
-    description: "Para todo tipo de cocinas, es broma para todo tipo de cielo por que cada una de ustedes es una estrella",
+    description: "Tu evento, tu estilo, nuestro vestido",
     price: "$150",
     image: VestidosMujer
   },
   {
     id: 3,
     name: "Vestimenta para todas las edades",
-    description: "Para todas las edades, desde niños hasta gente mayor",
+    description: "Vestidos y trajes que hacen de cada ocasion un cuento",
     price: "$180",
     image: VestidosParaNiños
   },
   {
     id: 4,
     name: "Accesorios para todo tipo de vestimenta",
-    description: "Desde la cubana mas bandida hasta la mas barata",
+    description: "Detalles que hacen la diferencia",
     price: "$200",
     image: Accesorios
   },
