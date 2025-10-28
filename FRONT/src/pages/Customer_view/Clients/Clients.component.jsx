@@ -5,6 +5,8 @@ import { obtenerClientes, actualizarCliente } from "../../../api/clientesApi";
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editedData, setEditedData] = useState({
     nomcli1: "",
@@ -26,6 +28,7 @@ const Clients = () => {
         const data = await obtenerClientes();
         console.log("Clientes recibidos:", data);
         setClients(data);
+        setFilteredClients(data); // Inicialmente mostrar todos los clientes
       } catch (error) {
         console.error("Error al cargar clientes:", error);
       }
@@ -33,6 +36,22 @@ const Clients = () => {
     
     cargarClientes();
   }, []);
+
+  // Filtrar clientes cuando cambia el término de búsqueda
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredClients(clients);
+    } else {
+      const filtered = clients.filter((client) => 
+        String(client.doc).includes(searchTerm.trim())
+      );
+      setFilteredClients(filtered);
+    }
+  }, [searchTerm, clients]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
   const handleEditClick = (client) => {
     console.log("Cliente seleccionado para editar:", client);
@@ -68,6 +87,7 @@ const Clients = () => {
 
       const data = await obtenerClientes();
       setClients(data);
+      setFilteredClients(data); // Actualizar también los filtrados
       
       setEditingId(null);
       setEditedData({
@@ -104,9 +124,17 @@ const Clients = () => {
       <div className="clients-wrapper">
         <div className="clients-header">
           <h1 className="clients-title">Lista de Clientes</h1>
-          <input className="search-input" placeholder="Buscar cliente" />
+          <input 
+            className="search-input" 
+            placeholder="Buscar por documento" 
+            value={searchTerm}
+            onChange={handleSearchChange}
+            type="text"
+          />
         </div>
-        <p className="clients-subtitle">Todos los clientes registrados</p>
+        <p className="clients-subtitle">
+          {searchTerm ? `Mostrando ${filteredClients.length} resultado(s)` : `Todos los clientes registrados (${clients.length})`}
+        </p>
 
         <div className="clients-list">
           <div className="client-header">
@@ -120,20 +148,26 @@ const Clients = () => {
             <span>Acciones</span>
           </div>
 
-          {clients.map((cli) => (
-            <div key={cli.doc} className="client-card">
-              <div className="client-body">
-                <div className="client-field">{cli.doc}</div>
-                <div className="client-field">{cli.nomcli1}</div>
-                <div className="client-field">{cli.nomcli2}</div>
-                <div className="client-field">{cli.apecli1}</div>
-                <div className="client-field">{cli.apecli2}</div>
-                <div className="client-field">{cli.correoElectronico}</div>
-                <div className="client-field">{cli.numeroCli}</div>
-                <button onClick={() => handleEditClick(cli)}>Editar</button>
+          {filteredClients.length > 0 ? (
+            filteredClients.map((cli) => (
+              <div key={cli.doc} className="client-card">
+                <div className="client-body">
+                  <div className="client-field">{cli.doc}</div>
+                  <div className="client-field">{cli.nomcli1}</div>
+                  <div className="client-field">{cli.nomcli2}</div>
+                  <div className="client-field">{cli.apecli1}</div>
+                  <div className="client-field">{cli.apecli2}</div>
+                  <div className="client-field">{cli.correoElectronico}</div>
+                  <div className="client-field">{cli.numeroCli}</div>
+                  <button onClick={() => handleEditClick(cli)}>Editar</button>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="no-results">
+              <p>No se encontraron clientes con el documento "{searchTerm}"</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

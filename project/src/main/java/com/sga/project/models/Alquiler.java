@@ -4,6 +4,8 @@ package com.sga.project.models;
 import java.sql.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,6 +27,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @Table (name = "alquiler")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Alquiler {
     @Id
     @Column (name = "id_alquiler")
@@ -45,9 +48,8 @@ public class Alquiler {
 
 
     @ManyToOne (fetch = FetchType.LAZY)
-
-    @JoinColumn (name = "usuarioDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_alquiler_usuario"))
-    private Usuario usuario;
+    @JoinColumn (name = "clienteDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_alquiler_cliente"))
+    private Clientes cliente;
 
     @OneToMany (mappedBy = "alquiler")
     private List<AlquilerArticulos> asignacionAlq;

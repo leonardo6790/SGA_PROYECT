@@ -27,13 +27,11 @@ public class Clientes {
     @NotNull
     private String nombre1;
 
-    @NotNull
     private String nombre2;
 
     @NotNull
     private String apellido;
 
-    @NotNull
     private String apellido2;
 
     @NotNull
@@ -42,14 +40,15 @@ public class Clientes {
     @NotNull
     private Long numTel;
 
+    @NotNull
     @Column(length = 100)
     private String correoElectronico;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_barrio", nullable = false, foreignKey = @ForeignKey(name = "FK_clientes_barrio"))
+    @JoinColumn(name = "id_barrio", nullable = true, foreignKey = @ForeignKey(name = "FK_clientes_barrio"))
     private Barrio barrio;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_tipoDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_clientes_tipoDoc"))
+    @JoinColumn(name = "id_tipoDoc", nullable = true, foreignKey = @ForeignKey(name = "FK_clientes_tipoDoc"))
     private TipoDoc tipoDoc;
 }

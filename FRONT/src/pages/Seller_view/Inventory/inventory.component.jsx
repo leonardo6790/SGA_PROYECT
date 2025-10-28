@@ -8,7 +8,9 @@ import { useNavigate } from "react-router-dom";
 
 const Inventory = () => {
   const [articulos, setArticulos] = useState([]);
+  const [filteredArticulos, setFilteredArticulos] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editedData, setEditedData] = useState({ precioArt: "", fotoArt: "" });
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -45,6 +47,7 @@ const Inventory = () => {
         console.log("Categorías recibidas del backend:", categoriasData);
         
         setArticulos(articulosData);
+        setFilteredArticulos(articulosData); // Inicialmente mostrar todos
         setCategorias(categoriasData);
       } catch (error) {
         console.error("Error completo al cargar datos:", error);
@@ -59,6 +62,24 @@ const Inventory = () => {
     
     cargarDatos();
   }, [navigate]);
+
+  // Filtrar artículos cuando cambia la categoría seleccionada
+  useEffect(() => {
+    if (selectedCategory === null) {
+      setFilteredArticulos(articulos); // Mostrar todos
+    } else {
+      const filtered = articulos.filter((art) => art.idCategoria === selectedCategory);
+      setFilteredArticulos(filtered);
+    }
+  }, [selectedCategory, articulos]);
+
+  const handleCategoryClick = (categoryId) => {
+    if (selectedCategory === categoryId) {
+      setSelectedCategory(null); // Deseleccionar si ya está seleccionada
+    } else {
+      setSelectedCategory(categoryId); // Seleccionar nueva categoría
+    }
+  };
 
   const handleEditClick = (art) => {
     setEditingId(art.idArt);
@@ -115,6 +136,7 @@ const Inventory = () => {
       
       const data = await obtenerArticulo();
       setArticulos(data);
+      setFilteredArticulos(data); // Actualizar también los filtrados
       
       setShowCreateModal(false);
       setNewArticle({
@@ -156,6 +178,7 @@ const Inventory = () => {
         
         const data = await obtenerArticulo();
         setArticulos(data);
+        setFilteredArticulos(data); // Actualizar también los filtrados
         
         alert("Artículo eliminado exitosamente");
       } catch (error) {
@@ -169,48 +192,76 @@ const Inventory = () => {
     <div className="inventory-wrapper">
       <aside className="sidebar">
         <h2>Categorías</h2>
+        <button 
+          className={`category-item ${selectedCategory === null ? 'active' : ''}`}
+          onClick={() => setSelectedCategory(null)}
+        >
+          Todas las categorías
+        </button>
         <ul>
           {categorias.map((cat) => (
-            <li key={cat.idCate}>{cat.nomCate}</li>
+            <li 
+              key={cat.idCate}
+              className={selectedCategory === cat.idCate ? 'active' : ''}
+              onClick={() => handleCategoryClick(cat.idCate)}
+            >
+              {cat.nomCate}
+            </li>
           ))}
         </ul>
       </aside>
 
       <div className="inventory-container">
-        <h1 className="inventory-title">Inventario de vestidos</h1>
+        <h1 className="inventory-title">
+          Inventario de vestidos 
+          {selectedCategory !== null && (
+            <span className="filter-badge">
+              {` - ${categorias.find(cat => cat.idCate === selectedCategory)?.nomCate || ''} (${filteredArticulos.length})`}
+            </span>
+          )}
+        </h1>
         <p className="inventory-subtitle">
-          A continuación se mostraran todos los vestidos correspondiente en los cuales podras cambiar su precio o su foto.
+          {selectedCategory === null 
+            ? `Mostrando todos los vestidos (${articulos.length} artículos)` 
+            : `Mostrando ${filteredArticulos.length} artículo(s) de la categoría seleccionada`
+          }
         </p>
 
         <div className="cards-container">
-          {articulos.map((art) => (
-            <div key={art.idArt} className="player-card">
-              <img
-                src={art.fotoArt}
-                alt={art.nombre}
-                className="player-image"
-              />
-              <h2 className="player-name">{art.nombre}</h2>
-              <p className="player-subtitle">Talla: {art.tallaArt}</p>
-              <p className="player-subtitle">Precio: ${art.precioArt?.toLocaleString()}</p>
-              <p className="player-subtitle">Género: {art.generoArt}</p>
-              <p className="player-price">Color: {art.colorArt}</p>
-              <p className="player-category">Categoría: {art.nomCate}</p>
-              <span
-                className="delete-icon"
-                onClick={() => handleDeleteArticle(art.idArt, art.nombre)}
-                title="Eliminar artículo"
-              >
-                <FaTrash />
-              </span>
-              <span
-                className="edit-text"
-                onClick={() => handleEditClick(art)}
-              >
-                <FaPencilAlt />
-              </span>
+          {filteredArticulos.length > 0 ? (
+            filteredArticulos.map((art) => (
+              <div key={art.idArt} className="player-card">
+                <img
+                  src={art.fotoArt}
+                  alt={art.nombre}
+                  className="player-image"
+                />
+                <h2 className="player-name">{art.nombre}</h2>
+                <p className="player-subtitle">Talla: {art.tallaArt}</p>
+                <p className="player-subtitle">Precio: ${art.precioArt?.toLocaleString()}</p>
+                <p className="player-subtitle">Género: {art.generoArt}</p>
+                <p className="player-price">Color: {art.colorArt}</p>
+                <p className="player-category">Categoría: {art.nomCate}</p>
+                <span
+                  className="delete-icon"
+                  onClick={() => handleDeleteArticle(art.idArt, art.nombre)}
+                  title="Eliminar artículo"
+                >
+                  <FaTrash />
+                </span>
+                <span
+                  className="edit-text"
+                  onClick={() => handleEditClick(art)}
+                >
+                  <FaPencilAlt />
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="no-articles">
+              <p>No hay artículos en esta categoría</p>
             </div>
-          ))}
+          )}
         </div>
 
         {editingId !== null && (

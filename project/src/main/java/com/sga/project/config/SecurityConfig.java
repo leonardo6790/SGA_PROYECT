@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/cli/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/categoria/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/pago/**").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers("/api/barrio/**").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers("/api/tipodoc/**").hasAnyRole("ADMIN", "VENDEDOR")
                         
                         // Todos los demás endpoints requieren autenticación
                         .anyRequest().authenticated())
