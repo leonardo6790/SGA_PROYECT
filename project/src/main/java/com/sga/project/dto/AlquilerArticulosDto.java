@@ -33,4 +33,5 @@ private Boolean estado;
 private Integer precio;
 
 private String observaciones;
+
 }

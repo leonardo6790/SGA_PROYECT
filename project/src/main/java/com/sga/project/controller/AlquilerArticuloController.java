@@ -41,6 +41,13 @@ public class AlquilerArticuloController {
 
         return ResponseEntity.ok(asignaciones);
     }
+    
+    // Endpoint temporal para depurar
+    @GetMapping("/debug/Alquiler/{id}")
+    public ResponseEntity<String> debugAlquiler(@PathVariable Integer id) {
+        String debug = alquiArtiServi.debugAlquiler(id);
+        return ResponseEntity.ok(debug);
+    }
 
     @GetMapping("/Articulo/{id}")
     public ResponseEntity<List<AlquilerArticulosDto>> listarPorArticulos (@PathVariable Integer id) {

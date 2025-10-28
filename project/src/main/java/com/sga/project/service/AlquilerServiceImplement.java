@@ -110,6 +110,21 @@ public class AlquilerServiceImplement implements AlquilerService{
         return alquileres.stream().map(alquiMap::toAlquilerDto).toList();
     }
 
-    
+    @Override
+    @Transactional
+    public void calcularTotalAlquiler(Integer idAlquiler) {
+        List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(idAlquiler);
+        // Usar el precio de la asignación (AlquilerArticulos.precio) en lugar del precio del artículo
+        Integer total = articulos.stream()
+            .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
+            .sum();
+
+        Alquiler alquiler = alquiRepo.findById(idAlquiler)
+        .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+
+        alquiler.setTotalAlq(total);
+        alquiRepo.save(alquiler);
+
+    }
 
 }
