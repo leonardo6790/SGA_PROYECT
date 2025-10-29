@@ -13,7 +13,7 @@ const HomeSeller = () => {
       <div className="overlay"></div>
       <main className="seller-main">
         <div className="seller-header">
-          <h1 className="seller-title">Bienvenido, Que vamos a hacer hoy?</h1>
+          <h1 className="seller-title">Bienvenido, ¿Que vamos a hacer hoy?</h1>
           <p className="seller-subtitle">Administra tus alquileres, inventario y clientes fácilmente</p>
         </div>
         <div className="button-grid">

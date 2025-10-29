@@ -3,6 +3,7 @@ import "./Clients.styles.css";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { obtenerClientes, actualizarCliente } from "../../../api/clientesApi";
 import { HiPencilSquare } from "react-icons/hi2";
+import { SlArrowDown } from "react-icons/sl";
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
@@ -107,8 +108,9 @@ const Clients = () => {
           <h1 className="clients-title">Lista de Clientes</h1>
           <input className="search-input" placeholder="Buscar cliente" />
         </div>
-        <p className="clients-subtitle">Todos los clientes registrados</p>
-
+        <div className="container-clients-subtitle">
+        <p className="clients-subtitle">Todos los clientes registrados <button className="arrowbutton" onClick={() => handleEditClick (cli)}><SlArrowDown /></button></p>
+        </div>
         <div className="clients-list">
           <div className="client-header">
             <span>Documento</span>

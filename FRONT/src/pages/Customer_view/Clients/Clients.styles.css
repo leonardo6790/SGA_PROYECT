@@ -28,7 +28,7 @@
 }
 
 .clients-subtitle {
-  font-size: 17px;
+  font-size: 18px;
   color: #666;
   margin: 10px 0 20px 0;
 }
@@ -138,14 +138,26 @@
 }
 
 .editbutton {
-  background-color: #f5e0e0fd;
+  background-color: #f4e4dd;
   border: none;
   border-radius: 5px;
   padding: 5px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 .editbutton svg{
 width: 20px;
 height: 20px;
 
+}
+
+.arrowbutton {
+background-color: #fdf6f3;
+border: none;
+padding: 5px;
+cursor: pointer
+;
+}
+.container-clients-subtitle{
+  display: flex;
 }
