@@ -57,7 +57,7 @@ public class AlquilerArticuloController {
     }
 
     @DeleteMapping("/Eliminar/{idArt}/{idAlq}")
-    public ResponseEntity<Void> eliminarAsig (@PathVariable Integer idArt, Integer idAlq) {
+    public ResponseEntity<Void> eliminarAsig (@PathVariable Integer idArt, @PathVariable Integer idAlq) {
         alquiArtiServi.eliminarAsignacion(idArt, idAlq);
         return ResponseEntity.noContent().build();
         

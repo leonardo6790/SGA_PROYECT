@@ -13,9 +13,9 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override 
             public void addCorsMappings(@NonNull CorsRegistry registry){
-                registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5174")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                registry.addMapping("/**") // Permitir todos los endpoints
+                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000") // Múltiples puertos
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
