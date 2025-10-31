@@ -18,4 +18,7 @@ public class AlquilerDto {
     private Integer totalAlquiler;
     private Integer clienteDoc;
     private List<AlquilerArticulosDto> articulos;
+    private List<PagoDto> pagos;
+    private Integer totalPagado;  // Calculado por el backend
+    private Integer saldoPendiente;  // Calculado por el backend
 }

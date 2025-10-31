@@ -2,18 +2,20 @@ package com.sga.project.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
 import com.sga.project.dto.AlquilerArticulosDto;
 import com.sga.project.dto.AlquilerDto;
+import com.sga.project.dto.PagoDto;
 import com.sga.project.models.Alquiler;
 import com.sga.project.models.AlquilerArticulos;
 import com.sga.project.models.Clientes;
+import com.sga.project.models.Pago;
 import com.sga.project.repositoryes.AlquilerArticuloRepository;
 import com.sga.project.repositoryes.ClientesRepository;
+import com.sga.project.repositoryes.PagoRepositoryes;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -22,10 +24,12 @@ class AlquilermapperImplement implements AlquilerMapper{
 
     private final ClientesRepository clienteRepo;
     private final AlquilerArticuloRepository alquilerArticuloRepo;
+    private final PagoRepositoryes pagoRepo;
 
-    public AlquilermapperImplement (ClientesRepository clienteRepo, AlquilerArticuloRepository alquilerArticuloRepo) {
+    public AlquilermapperImplement (ClientesRepository clienteRepo, AlquilerArticuloRepository alquilerArticuloRepo, PagoRepositoryes pagoRepo) {
         this.clienteRepo = clienteRepo;
         this.alquilerArticuloRepo = alquilerArticuloRepo;
+        this.pagoRepo = pagoRepo;
     }
 
     @Override
@@ -127,9 +131,33 @@ class AlquilermapperImplement implements AlquilerMapper{
             }
         }
         
+        // Cargar pagos del alquiler
+        List<PagoDto> pagosDto = new ArrayList<>();
+        try {
+            List<Pago> pagos = pagoRepo.findByAlquilerId(alquiler.getId());
+            for (Pago pago : pagos) {
+                PagoDto dto = new PagoDto();
+                dto.setIdPago(pago.getId_pago());
+                dto.setValAbo(pago.getValorAbono());
+                dto.setFechaUltimoAbono(pago.getFechaUltimoAbono());
+                dto.setIdAlquiler(alquiler.getId());
+                pagosDto.add(dto);
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando pagos para alquiler " + alquiler.getId() + ": " + e.getMessage());
+            pagosDto = new ArrayList<>();
+        }
+
+        // BACKEND: Calcular total pagado y saldo pendiente
+        Integer totalPagado = pagosDto.stream()
+            .mapToInt(p -> p.getValAbo() != null ? p.getValAbo() : 0)
+            .sum();
+        Integer saldoPendiente = (alquiler.getTotalAlq() != null ? alquiler.getTotalAlq() : 0) - totalPagado;
+        
         // Crear el DTO con el orden correcto según la clase AlquilerDto:
         // Integer id_alquiler, Date fechaRetiro, Date fechaEntrega, Date fechaAlquiler, 
-        // Integer totalAlquiler, Integer clienteDoc, List<AlquilerArticulosDto> articulos
+        // Integer totalAlquiler, Integer clienteDoc, List<AlquilerArticulosDto> articulos, 
+        // List<PagoDto> pagos, Integer totalPagado, Integer saldoPendiente
         return new AlquilerDto(
             alquiler.getId(),           // id_alquiler
             alquiler.getFechaRet(),     // fechaRetiro
@@ -137,7 +165,10 @@ class AlquilermapperImplement implements AlquilerMapper{
             alquiler.getFechaAlq(),     // fechaAlquiler
             alquiler.getTotalAlq(),     // totalAlquiler
             clienteDoc,                 // clienteDoc
-            articulosDto                // articulos
+            articulosDto,               // articulos
+            pagosDto,                   // pagos
+            totalPagado,                // totalPagado (calculado)
+            saldoPendiente              // saldoPendiente (calculado)
         );
     }
 }
