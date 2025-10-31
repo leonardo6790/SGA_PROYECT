@@ -57,13 +57,22 @@ public class AlquilerArticulosMapperImplement implements AlquilerArticuloMapper{
 
     @Override
     public AlquilerArticulosDto toAlquilerArticulosDto (AlquilerArticulos entity) {
+        String nombreCliente = "";
+        Long telefonoCliente = null;
+        
+        if (entity.getAlquiler().getCliente() != null) {
+            nombreCliente = entity.getAlquiler().getCliente().getNombre1() + " " + 
+                          (entity.getAlquiler().getCliente().getApellido() != null ? entity.getAlquiler().getCliente().getApellido() : "");
+            telefonoCliente = entity.getAlquiler().getCliente().getNumTel();
+        }
+        
         return new AlquilerArticulosDto(
             entity.getAlquiler().getId(),
             entity.getArticulo().getId(),
             entity.getArticulo().getNomArt(),
             entity.getArticulo().getTalla(),
-            entity.getAlquiler().getUsuario().getNom1() + " " + entity.getAlquiler().getUsuario().getApe1() + " " + entity.getAlquiler().getUsuario().getApe2(),
-            entity.getAlquiler().getUsuario().getNumTel(),
+            nombreCliente.trim(),
+            telefonoCliente,
             entity.getAlquiler().getFechaEnt(),
             entity.getEstado(),
             entity.getPrecio(), // Usar el precio de la asignación, no del artículo

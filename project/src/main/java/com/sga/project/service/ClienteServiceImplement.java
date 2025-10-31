@@ -46,6 +46,24 @@ public class ClienteServiceImplement implements ClienteService {
     @Transactional
     public ClientesDto saveCliente(ClientesDto clientesDto) {
         Clientes clientes = cm.toClientes(clientesDto);
+        
+        // Cargar las entidades relacionadas desde la base de datos
+        if (clientesDto.getBarrioId() != null && clientesDto.getBarrioId() > 0) {
+            Barrio barrio = br.findById(clientesDto.getBarrioId())
+                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado: " + clientesDto.getBarrioId()));
+            clientes.setBarrio(barrio);
+        } else {
+            clientes.setBarrio(null);
+        }
+        
+        if (clientesDto.getTipoDocId() != null && clientesDto.getTipoDocId() > 0) {
+            TipoDoc tipoDoc = tp.findById(clientesDto.getTipoDocId())
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de documento no encontrado: " + clientesDto.getTipoDocId()));
+            clientes.setTipoDoc(tipoDoc);
+        } else {
+            clientes.setTipoDoc(null);
+        }
+        
         Clientes clienteGuardado = cr.save(clientes);
         return cm.toClientesDto(clienteGuardado);
     }

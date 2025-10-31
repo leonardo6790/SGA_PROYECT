@@ -136,7 +136,6 @@
   justify-content: flex-end;
   gap: 10px;
 }
-
 .editbutton {
   background-color: #f4e4dd;
   border: none;
@@ -161,3 +160,4 @@ cursor: pointer
 .container-clients-subtitle{
   display: flex;
 }
+

@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sga.project.dto.AlquilerDto;
-import com.sga.project.models.Alquiler;
-import com.sga.project.repositoryes.AlquilerRepositoryes;
 import com.sga.project.service.AlquilerService;
 
 import jakarta.validation.Valid;
@@ -28,16 +26,14 @@ import jakarta.validation.Valid;
     public class AlquilerController {
 
     private final AlquilerService alquiServi;
-    private final AlquilerRepositoryes alquiRep;
 
-    public AlquilerController (AlquilerService alquiServi, AlquilerRepositoryes alquiRep) {
+    public AlquilerController (AlquilerService alquiServi) {
         this.alquiServi = alquiServi;
-        this.alquiRep = alquiRep;
     }
 
     @GetMapping
-    public List<Alquiler> alquilando() {
-        return alquiRep.findAll();
+    public List<AlquilerDto> alquilando() {
+        return alquiServi.getAlquilerList();
     }
     
     //Crear

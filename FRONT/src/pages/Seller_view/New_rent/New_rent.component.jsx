@@ -43,7 +43,13 @@ useEffect(() => {
     if (clienteEncontrado) {
       navigate('/home-seller/new-order', { state: { cliente: clienteEncontrado } });
     } else {
-      navigate('/home-seller/new-client');
+      navigate('/home-seller/new-client', { state: { documento: documento } });
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleContinuar();
     }
   };
 
@@ -63,6 +69,7 @@ useEffect(() => {
           maxLength={10}
           value={documento}
           onChange={(e) => setDocumento(e.target.value)}
+          onKeyPress={handleKeyPress}
           placeholder="Escribe aquí..."
           className="form-input"
         />

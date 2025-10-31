@@ -28,18 +28,8 @@ public class ClientesMapperImplement implements ClientesMapper {
         clientes.setNumTel(clientesDto.getNumeroCli());
         clientes.setCorreoElectronico(clientesDto.getCorreoElectronico());
 
-        // Solo crear referencias lazy sin hacer consultas aquí
-        if (clientesDto.getBarrioId() != null) {
-            Barrio barrio = new Barrio();
-            barrio.setId_barrio(clientesDto.getBarrioId());
-            clientes.setBarrio(barrio);
-        }
-
-        if (clientesDto.getTipoDocId() != null) {
-            TipoDoc tipoDoc = new TipoDoc();
-            tipoDoc.setId_tipoDoc(clientesDto.getTipoDocId());
-            clientes.setTipoDoc(tipoDoc);
-        }
+        // NO crear objetos Barrio y TipoDoc aquí
+        // El servicio se encargará de cargarlos desde la base de datos
         
         return clientes;
     }

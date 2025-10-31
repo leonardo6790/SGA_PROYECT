@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./New_order.styles.css";
 import HomeSellerImage from "../../../assets/HomeSellerImage.png";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { useNavigate, useLocation } from "react-router-dom";
 import emailjs from '@emailjs/browser';
+import { obtenerArticulo } from "../../../api/articulosApi";
+import { crearAlquiler } from "../../../api/alquilerApi";
 
 export default function NewOrder() {
   const location = useLocation();
@@ -27,26 +29,46 @@ export default function NewOrder() {
 
   const customers = [defaultCustomer];
 
-  const catalog = [
-    { id: 1, name: "Vestido Gala Negro", price: 120000, desc: "Seda, corte sirena" },
-    { id: 2, name: "Vestido Encaje Champagne", price: 140000, desc: "Encaje fino, corte A" },
-    { id: 3, name: "Vestido Largo Burdeos", price: 130000, desc: "Terciopelo elegante" },
-    { id: 4, name: "Vestido Halter Plateado", price: 150000, desc: "Brillo sutil" },
-    { id: 5, name: "Vestido Corte Imperio Azul", price: 110000, desc: "Gasa ligera" },
-    { id: 6, name: "Vestido Asimétrico Verde", price: 125000, desc: "Detalle drapeado" },
-    { id: 7, name: "Vestido Satin Rosa", price: 115000, desc: "Satin clásico" },
-    { id: 8, name: "Vestido Vintage Marfil", price: 135000, desc: "Bordado artesanal" },
-    { id: 9, name: "Vestido Column Negro", price: 145000, desc: "Corte recto elegante" },
-    { id: 10, name: "Vestido Tul Noche", price: 155000, desc: "Tul con pedrería" },
-  ];
-
+  const [catalog, setCatalog] = useState([]);
   const [selectedCustomer] = useState(customers[0]);
-  const [selectedProductId, setSelectedProductId] = useState(catalog[0].id);
+  const [selectedProductId, setSelectedProductId] = useState("");
   const [orderItems, setOrderItems] = useState([]);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+
+  // Cargar artículos desde la base de datos
+  useEffect(() => {
+    const cargarArticulos = async () => {
+      try {
+        const articulosData = await obtenerArticulo();
+        // Mapear los artículos de la BD al formato del catálogo
+        const articulosMapeados = articulosData.map(art => ({
+          id: art.idArt,
+          name: art.nombre,
+          price: art.precioArt,
+          desc: `${art.generoArt} - Talla: ${art.tallaArt} - Color: ${art.colorArt}`,
+          categoria: art.nomCate
+        }));
+        setCatalog(articulosMapeados);
+        // Establecer el primer artículo como seleccionado por defecto
+        if (articulosMapeados.length > 0) {
+          setSelectedProductId(articulosMapeados[0].id);
+        }
+      } catch (error) {
+        console.error("Error al cargar artículos:", error);
+        alert("No se pudieron cargar los artículos");
+      }
+    };
+
+    cargarArticulos();
+  }, []);
 
   const addProductToOrder = () => {
+    if (!selectedProductId) {
+      alert("Por favor seleccione un artículo");
+      return;
+    }
     const prod = catalog.find((p) => p.id === Number(selectedProductId));
     if (!prod) return;
     setOrderItems((prev) => {
@@ -95,7 +117,9 @@ export default function NewOrder() {
       <p>Email: ${selectedCustomer.email} - Tel: ${selectedCustomer.phone}</p>
       <p>Dirección: ${selectedCustomer.address}</p>
       <p>Documento: ${selectedCustomer.document}</p>
-      <p>Fechas: ${startDate} → ${endDate}</p>
+      <p><strong>Fecha de inicio:</strong> ${startDate}</p>
+      <p><strong>Fecha de entrega:</strong> ${endDate}</p>
+      <p><strong>Fecha de devolución:</strong> ${returnDate}</p>
       <h4>Items:</h4>
       <ul>${itemsHtml}</ul>
       <p><strong>Total: $${total.toLocaleString()}</strong></p>
@@ -103,75 +127,91 @@ export default function NewOrder() {
   };
 
   const handleSendOrder = async () => {
-    // Recipient from env (set in project .env) with hard fallback
-    const toEmail = import.meta.env.VITE_EMAILJS_TO_EMAIL || 'miguelitomendez454@gmail.com';
-    const html = buildOrderHtml();
-
-    // Prefer EmailJS if configured
-    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-    setLoading(true);
-    console.log('handleSendOrder start', { serviceId, templateId, publicKey, toEmail });
-
-    if (serviceId && templateId && publicKey) {
-      try {
-        const itemsHtml = buildItemsHtml();
-        const itemsText = orderItems.map(it => `${it.name} x${it.cantidad} - $${(it.cantidad * it.price).toLocaleString()}`).join('\n');
-        const templateParams = {
-          // EmailJS template expects {{email}} as recipient variable according to your template settings
-          email: toEmail,
-          to_email: toEmail,
-          reply_to: selectedCustomer.email,
-          subject: `Nueva orden - ${selectedCustomer.name}`,
-          message_html: html,
-          items_html: itemsHtml,
-          items_text: itemsText,
-          customer_name: selectedCustomer.name,
-          total: total,
-        };
-        console.log('Sending via EmailJS with params:', templateParams);
-        const result = await emailjs.send(serviceId, templateId, templateParams, publicKey);
-        console.log('EmailJS send success', result);
-        setPopupMessage('Correo enviado exitosamente');
-        setShowPopup(true);
-        setTimeout(() => {
-          setLoading(false);
-          setShowPopup(false);
-          navigate('/home-seller/orders');
-        }, 900);
-        return;
-      } catch (err) {
-        // EmailJS returns a Response-like error for HTTP failures; log everything we can
-        console.error('EmailJS send failed (raw):', err);
-        try {
-          // some errors come with status and text
-          console.error('EmailJS error status:', err?.status);
-          console.error('EmailJS error text:', err?.text || err?.message || JSON.stringify(err));
-          setPopupMessage(`Error al enviar (EmailJS): ${err?.status || ''} ${err?.text || err?.message || ''}`);
-        } catch (logErr) {
-          console.error('Error logging EmailJS failure:', logErr);
-          setPopupMessage('Error al enviar (detalles en consola)');
-        }
-        setShowPopup(true);
-        // fall through to mailto fallback after logging so user can still send the mail manually
-      }
+    // Validar que haya productos
+    if (orderItems.length === 0) {
+      alert("Debe agregar al menos un producto al pedido");
+      return;
     }
 
-    // mailto fallback: open mail client with prefilled content and navigate after short delay
-  const itemsTextForMail = orderItems.map(it => `${it.name} x${it.cantidad} - $${(it.cantidad * it.price).toLocaleString()}`).join('\n');
-  const mailBody = `Orden para ${selectedCustomer.name}\nEmail: ${selectedCustomer.email}\nTel: ${selectedCustomer.phone}\nDirección: ${selectedCustomer.address}\nDocumento: ${selectedCustomer.document}\nFechas: ${startDate} -> ${endDate}\n\nItems:\n${itemsTextForMail}\n\nTotal: $${total.toLocaleString()}`;
-  const mailto = `mailto:${toEmail}?subject=${encodeURIComponent('Nueva orden - '+selectedCustomer.name)}&body=${encodeURIComponent(mailBody)}`;
-    console.log('Using mailto fallback:', mailto);
-    window.location.href = mailto;
-    setPopupMessage('Se abrió el cliente de correo. Complete y envíe el mensaje para que llegue al correo.');
-    setShowPopup(true);
-    setTimeout(() => {
+    // Validar que haya fechas
+    if (!startDate || !endDate || !returnDate) {
+      alert("Debe completar todas las fechas");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Crear el objeto de alquiler para enviar al backend
+      const alquilerData = {
+        clienteDoc: selectedCustomer.id,
+        fechaAlquiler: startDate,
+        fechaEntrega: endDate,
+        fechaRetiro: returnDate,
+        totalAlquiler: total,
+        articulos: orderItems.map(item => ({
+          articuloId: item.id,
+          precio: item.price,
+          estado: false, // false = no devuelto
+          observaciones: null
+        }))
+      };
+
+      console.log("Guardando alquiler:", alquilerData);
+
+      // Guardar en la base de datos
+      const response = await crearAlquiler(alquilerData);
+      console.log("Alquiler guardado:", response);
+
+      // Mostrar mensaje de éxito
+      setPopupMessage('Alquiler creado exitosamente');
+      setShowPopup(true);
+
+      // Ahora enviar el correo
+      const toEmail = import.meta.env.VITE_EMAILJS_TO_EMAIL || 'miguelitomendez454@gmail.com';
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (serviceId && templateId && publicKey) {
+        try {
+          const html = buildOrderHtml();
+          const itemsHtml = buildItemsHtml();
+          const itemsText = orderItems.map(it => `${it.name} x${it.cantidad} - $${(it.cantidad * it.price).toLocaleString()}`).join('\n');
+          const templateParams = {
+            email: toEmail,
+            to_email: toEmail,
+            reply_to: selectedCustomer.email,
+            subject: `Nueva orden - ${selectedCustomer.name}`,
+            message_html: html,
+            items_html: itemsHtml,
+            items_text: itemsText,
+            customer_name: selectedCustomer.name,
+            total: total,
+          };
+          console.log('Sending via EmailJS with params:', templateParams);
+          await emailjs.send(serviceId, templateId, templateParams, publicKey);
+          console.log('EmailJS send success');
+        } catch (err) {
+          console.error('EmailJS send failed:', err);
+          // No bloqueamos si falla el correo, ya se guardó el alquiler
+        }
+      }
+
+      // Navegar a órdenes después de un pequeño delay
+      setTimeout(() => {
+        setLoading(false);
+        setShowPopup(false);
+        navigate('/home-seller/orders');
+      }, 1500);
+
+    } catch (error) {
+      console.error("Error al crear alquiler:", error);
       setLoading(false);
-      setShowPopup(false);
-      navigate('/home-seller/orders');
-    }, 900);
+      setPopupMessage(`Error al crear alquiler: ${error.message}`);
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000);
+    }
   };
 
   return (
@@ -201,6 +241,8 @@ export default function NewOrder() {
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-field" />
             <label className="small-label">Fecha de entrega</label>
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field" />
+            <label className="small-label">Fecha de devolución</label>
+            <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="input-field" />
           </div>
         </div>
 
@@ -208,12 +250,29 @@ export default function NewOrder() {
           <h2>Productos a Alquilar</h2>
 
           <div className="product-select-row">
-            <select className="product-select" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)}>
-              {catalog.map((p) => (
-                <option key={p.id} value={p.id}>{p.name} — ${p.price.toLocaleString()}</option>
-              ))}
+            <select 
+              className="product-select" 
+              value={selectedProductId} 
+              onChange={(e) => setSelectedProductId(e.target.value)}
+              disabled={catalog.length === 0}
+            >
+              {catalog.length === 0 ? (
+                <option value="">Cargando artículos...</option>
+              ) : (
+                catalog.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — ${p.price.toLocaleString()} — {p.desc}
+                  </option>
+                ))
+              )}
             </select>
-            <button className="nc-button add-btn" onClick={addProductToOrder}>Añadir al pedido</button>
+            <button 
+              className="nc-button add-btn" 
+              onClick={addProductToOrder}
+              disabled={catalog.length === 0}
+            >
+              Añadir al pedido
+            </button>
           </div>
 
           <div className="order-items-table">

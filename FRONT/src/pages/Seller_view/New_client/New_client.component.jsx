@@ -1,14 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./New_client.styles.css";
 import HomeSellerImage from "../../../assets/HomeSellerImage.png";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { crearCliente } from "../../../api/clientesApi";
+import { obtenerBarrios } from "../../../api/barriosApi";
+import { obtenerTiposDoc } from "../../../api/tipoDocApi";
 
 export default function NewClient() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const documentoRecibido = location.state?.documento || "";
+  
+  const [barrios, setBarrios] = useState([]);
+  const [tiposDoc, setTiposDoc] = useState([]);
+  
   const [formData, setFormData] = useState({
-    doc: "",
+    doc: documentoRecibido,
     nomcli1: "",
     nomcli2: "",
     apecli1: "",
@@ -16,9 +24,41 @@ export default function NewClient() {
     direCli: "",
     numeroCli: "",
     correoElectronico: "",
-    idBarrio: 1,
-    idTipoDoc: 1,
+    idBarrio: null,
+    idTipoDoc: null,
   });
+
+  // Cargar barrios y tipos de documento al montar el componente
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const [barriosData, tiposDocData] = await Promise.all([
+          obtenerBarrios(),
+          obtenerTiposDoc()
+        ]);
+        setBarrios(barriosData);
+        setTiposDoc(tiposDocData);
+        
+        // Establecer valores por defecto cuando se cargan los datos
+        if (barriosData.length > 0 && !formData.idBarrio) {
+          setFormData(prev => ({ ...prev, idBarrio: barriosData[0].id_barrio }));
+        }
+        if (tiposDocData.length > 0 && !formData.idTipoDoc) {
+          setFormData(prev => ({ ...prev, idTipoDoc: tiposDocData[0].id_tipoDoc }));
+        }
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+      }
+    };
+    cargarDatos();
+  }, []);
+
+  // Actualizar el documento si llega desde New_rent
+  useEffect(() => {
+    if (documentoRecibido) {
+      setFormData(prev => ({ ...prev, doc: documentoRecibido }));
+    }
+  }, [documentoRecibido]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,23 +70,29 @@ export default function NewClient() {
     
     try {
       // Validar campos requeridos
-      if (!formData.doc || !formData.nomcli1 || !formData.apecli1 || !formData.numeroCli) {
-        alert("Por favor complete los campos obligatorios: Documento, Primer Nombre, Primer Apellido y Teléfono");
+      if (!formData.doc || !formData.nomcli1 || !formData.apecli1 || !formData.numeroCli || !formData.correoElectronico || !formData.direCli) {
+        alert("Por favor complete los campos obligatorios: Documento, Primer Nombre, Primer Apellido, Teléfono, Correo Electrónico y Dirección");
+        return;
+      }
+
+      // Validar que barrio y tipo de documento estén seleccionados
+      if (!formData.idBarrio || !formData.idTipoDoc) {
+        alert("Por favor seleccione el barrio y el tipo de documento");
         return;
       }
 
       // Crear el cliente
       const clienteData = {
-        doc: formData.doc,
+        doc: parseInt(formData.doc),
         nomcli1: formData.nomcli1,
         nomcli2: formData.nomcli2 || null,
         apecli1: formData.apecli1,
         apecli2: formData.apecli2 || null,
-        direCli: formData.direCli || null,
+        direCli: formData.direCli,
         numeroCli: parseInt(formData.numeroCli),
-        correoElectronico: formData.correoElectronico || null,
-        idBarrio: parseInt(formData.idBarrio),
-        idTipoDoc: parseInt(formData.idTipoDoc),
+        correoElectronico: formData.correoElectronico,
+        barrioId: parseInt(formData.idBarrio),
+        tipoDocId: parseInt(formData.idTipoDoc),
       };
 
       console.log("Creando cliente:", clienteData);
@@ -54,10 +100,12 @@ export default function NewClient() {
       console.log("Cliente creado:", response);
       
       alert("Cliente registrado exitosamente");
-      navigate('/home-seller/new-rent');
+      
+      // Redirigir a new-order con los datos del cliente creado
+      navigate('/home-seller/new-order', { state: { cliente: response } });
     } catch (error) {
       console.error("Error al crear cliente:", error);
-      alert(`Error al registrar el cliente: ${error.response?.data?.mensaje || error.message}`);
+      alert(`Error al registrar el cliente: ${error.message || error}`);
     }
   };
 
@@ -99,15 +147,31 @@ export default function NewClient() {
 
             <label className="nc-field">
               <span className="nc-label">Documento *</span>
-              <input type="text" name="doc" value={formData.doc} onChange={handleChange} className="nc-input" required />
+              <input 
+                type="text" 
+                name="doc" 
+                value={formData.doc} 
+                onChange={handleChange} 
+                className="nc-input" 
+                required 
+                readOnly={!!documentoRecibido}
+                style={documentoRecibido ? { backgroundColor: '#f0f0f0', cursor: 'not-allowed' } : {}}
+              />
             </label>
 
             <label className="nc-field">
-              <span className="nc-label">Tipo Documento</span>
-              <select name="idTipoDoc" value={formData.idTipoDoc} onChange={handleChange} className="nc-input">
-                <option value="1">Cédula de Ciudadanía</option>
-                <option value="2">Tarjeta de Identidad</option>
-                <option value="3">Cédula de Extranjería</option>
+              <span className="nc-label">Tipo Documento *</span>
+              <select name="idTipoDoc" value={formData.idTipoDoc || ""} onChange={handleChange} className="nc-input" required>
+                <option value="" disabled>Seleccione un tipo</option>
+                {tiposDoc.length > 0 ? (
+                  tiposDoc.map((tipo) => (
+                    <option key={tipo.id_tipoDoc} value={tipo.id_tipoDoc}>
+                      {tipo.nomDoc}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>Cargando...</option>
+                )}
               </select>
             </label>
 
@@ -117,21 +181,28 @@ export default function NewClient() {
             </label>
 
             <label className="nc-field">
-              <span className="nc-label">Correo Electrónico</span>
-              <input type="email" name="correoElectronico" value={formData.correoElectronico} onChange={handleChange} className="nc-input" />
+              <span className="nc-label">Correo Electrónico *</span>
+              <input type="email" name="correoElectronico" value={formData.correoElectronico} onChange={handleChange} className="nc-input" required />
             </label>
 
             <label className="nc-field">
-              <span className="nc-label">Dirección</span>
-              <input type="text" name="direCli" value={formData.direCli} onChange={handleChange} className="nc-input" />
+              <span className="nc-label">Dirección *</span>
+              <input type="text" name="direCli" value={formData.direCli} onChange={handleChange} className="nc-input" required />
             </label>
 
             <label className="nc-field">
-              <span className="nc-label">Barrio</span>
-              <select name="idBarrio" value={formData.idBarrio} onChange={handleChange} className="nc-input">
-                <option value="1">Centro</option>
-                <option value="2">Norte</option>
-                <option value="3">Sur</option>
+              <span className="nc-label">Barrio *</span>
+              <select name="idBarrio" value={formData.idBarrio || ""} onChange={handleChange} className="nc-input" required>
+                <option value="" disabled>Seleccione un barrio</option>
+                {barrios.length > 0 ? (
+                  barrios.map((barrio) => (
+                    <option key={barrio.id_barrio} value={barrio.id_barrio}>
+                      {barrio.nomBar}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>Cargando...</option>
+                )}
               </select>
             </label>
           </div>
