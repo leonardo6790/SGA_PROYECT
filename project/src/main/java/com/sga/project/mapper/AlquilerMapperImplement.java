@@ -8,11 +8,14 @@ import org.springframework.stereotype.Component;
 
 import com.sga.project.dto.AlquilerArticulosDto;
 import com.sga.project.dto.AlquilerDto;
+import com.sga.project.dto.PagoDto;
 import com.sga.project.models.Alquiler;
 import com.sga.project.models.AlquilerArticulos;
 import com.sga.project.models.Clientes;
+import com.sga.project.models.Pago;
 import com.sga.project.repositoryes.AlquilerArticuloRepository;
 import com.sga.project.repositoryes.ClientesRepository;
+import com.sga.project.repositoryes.PagoRepositoryes;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -21,10 +24,12 @@ class AlquilermapperImplement implements AlquilerMapper {
 
     private final ClientesRepository clienteRepo;
     private final AlquilerArticuloRepository alquilerArticuloRepo;
+    private final PagoRepositoryes pagoRepo;
 
     public AlquilermapperImplement(ClientesRepository clienteRepo, AlquilerArticuloRepository alquilerArticuloRepo) {
         this.clienteRepo = clienteRepo;
         this.alquilerArticuloRepo = alquilerArticuloRepo;
+        this.pagoRepo = pagoRepo;
     }
 
     @Override
@@ -126,6 +131,7 @@ class AlquilermapperImplement implements AlquilerMapper {
             }
         }
 
+
         // Calcular el total sumando los precios de los artículos cargados
         Integer totalCalculado = articulosDto.stream()
                 .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
@@ -143,6 +149,7 @@ class AlquilermapperImplement implements AlquilerMapper {
                 totalCalculado, // totalAlquiler - calculado desde los artículos
                 clienteDoc, // clienteDoc
                 articulosDto // articulos
+
         );
     }
 }

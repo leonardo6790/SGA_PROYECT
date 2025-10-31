@@ -4,14 +4,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import com.sga.project.dto.AlquilerArticulosDto;
 import com.sga.project.dto.AlquilerDto;
+import com.sga.project.dto.PagoDto;
 import com.sga.project.mapper.AlquilerMapper;
 import com.sga.project.models.Alquiler;
 import com.sga.project.models.AlquilerArticulos;
 import com.sga.project.models.AlquilerArticulosId;
 import com.sga.project.models.Articulo;
+import com.sga.project.models.Pago;
 import com.sga.project.repositoryes.AlquilerArticuloRepository;
 import com.sga.project.repositoryes.AlquilerRepositoryes;
 import com.sga.project.repositoryes.ArticuloRepositoryes;
+import com.sga.project.repositoryes.PagoRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
@@ -22,13 +25,17 @@ public class AlquilerServiceImplement implements AlquilerService {
     private final AlquilerRepositoryes alquiRepo;
     private final AlquilerArticuloRepository alquiArtiRepo;
     private final ArticuloRepositoryes articuloRepo;
+    private final PagoRepositoryes pagoRepo;
+
 
     public AlquilerServiceImplement(AlquilerMapper alquiMap, AlquilerRepositoryes alquiRepo,
             AlquilerArticuloRepository alquiArtiRepo, ArticuloRepositoryes articuloRepo) {
+
         this.alquiMap = alquiMap;
         this.alquiRepo = alquiRepo;
         this.alquiArtiRepo = alquiArtiRepo;
         this.articuloRepo = articuloRepo;
+        this.pagoRepo = pagoRepo;
     }
 
     @Override
@@ -36,6 +43,7 @@ public class AlquilerServiceImplement implements AlquilerService {
     public AlquilerDto saveAlquiler(AlquilerDto alquilerDto) {
         // Convertir DTO a entidad
         Alquiler alquiler = alquiMap.toAlquiler(alquilerDto);
+
 
         // Calcular total antes de guardar (siempre inicializar en 0 si no hay
         // artículos)
@@ -71,6 +79,19 @@ public class AlquilerServiceImplement implements AlquilerService {
             }
         }
 
+        
+        // Guardar los pagos del alquiler si existen
+        if (alquilerDto.getPagos() != null && !alquilerDto.getPagos().isEmpty()) {
+            for (PagoDto pagoDto : alquilerDto.getPagos()) {
+                Pago pago = new Pago();
+                pago.setValorAbono(pagoDto.getValAbo());
+                pago.setFechaUltimoAbono(pagoDto.getFechaUltimoAbono());
+                pago.setAlquiler(alquiGuardado);
+                
+                pagoRepo.save(pago);
+            }
+        }
+        
         // Recargar el alquiler para retornarlo
         Alquiler alquilerCompleto = alquiRepo.findById(alquiGuardado.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
