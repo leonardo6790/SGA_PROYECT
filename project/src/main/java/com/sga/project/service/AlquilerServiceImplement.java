@@ -29,7 +29,8 @@ public class AlquilerServiceImplement implements AlquilerService {
 
 
     public AlquilerServiceImplement(AlquilerMapper alquiMap, AlquilerRepositoryes alquiRepo,
-            AlquilerArticuloRepository alquiArtiRepo, ArticuloRepositoryes articuloRepo) {
+            AlquilerArticuloRepository alquiArtiRepo, ArticuloRepositoryes articuloRepo, 
+            PagoRepositoryes pagoRepo) {
 
         this.alquiMap = alquiMap;
         this.alquiRepo = alquiRepo;

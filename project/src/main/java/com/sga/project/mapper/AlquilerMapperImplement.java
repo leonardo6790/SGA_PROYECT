@@ -26,7 +26,9 @@ class AlquilermapperImplement implements AlquilerMapper {
     private final AlquilerArticuloRepository alquilerArticuloRepo;
     private final PagoRepositoryes pagoRepo;
 
-    public AlquilermapperImplement(ClientesRepository clienteRepo, AlquilerArticuloRepository alquilerArticuloRepo) {
+    public AlquilermapperImplement(ClientesRepository clienteRepo, 
+            AlquilerArticuloRepository alquilerArticuloRepo, 
+            PagoRepositoryes pagoRepo) {
         this.clienteRepo = clienteRepo;
         this.alquilerArticuloRepo = alquilerArticuloRepo;
         this.pagoRepo = pagoRepo;
@@ -137,19 +139,30 @@ class AlquilermapperImplement implements AlquilerMapper {
                 .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
                 .sum();
 
-        // Crear el DTO con el orden correcto según la clase AlquilerDto:
-        // Integer id_alquiler, Date fechaRetiro, Date fechaEntrega, Date fechaAlquiler,
-        // Integer totalAlquiler, Integer clienteDoc, List<AlquilerArticulosDto>
-        // articulos
+        // Cargar los pagos del alquiler
+        List<Pago> pagos = pagoRepo.findByAlquilerId(alquiler.getId());
+        List<PagoDto> pagosDto = pagos.stream()
+                .map(p -> new PagoDto(p.getId_pago(), p.getFechaUltimoAbono(), p.getValorAbono(), p.getAlquiler().getId()))
+                .toList();
+
+        // Calcular total pagado y saldo pendiente
+        Integer totalPagado = pagosDto.stream()
+                .mapToInt(p -> p.getValAbo() != null ? p.getValAbo() : 0)
+                .sum();
+        Integer saldoPendiente = totalCalculado - totalPagado;
+
+        // Crear el DTO con todos los campos requeridos
         return new AlquilerDto(
                 alquiler.getId(), // id_alquiler
                 alquiler.getFechaRet(), // fechaRetiro
                 alquiler.getFechaEnt(), // fechaEntrega
                 alquiler.getFechaAlq(), // fechaAlquiler
-                totalCalculado, // totalAlquiler - calculado desde los artículos
+                totalCalculado, // totalAlquiler
                 clienteDoc, // clienteDoc
-                articulosDto // articulos
-
+                articulosDto, // articulos
+                pagosDto, // pagos
+                totalPagado, // totalPagado
+                saldoPendiente // saldoPendiente
         );
     }
 }
