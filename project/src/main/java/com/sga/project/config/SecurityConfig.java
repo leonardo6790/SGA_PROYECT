@@ -29,44 +29,52 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // ⚠️ SEGURIDAD TEMPORALMENTE DESACTIVADA PARA PRUEBAS ⚠️
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configure(http))
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()); // Todos los endpoints son públicos
-        
-        /* CONFIGURACIÓN ORIGINAL (REACTIVAR DESPUÉS):
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos
                         .requestMatchers("/api/auth/**").permitAll()
                         
                         // Endpoints solo para ADMIN
                         .requestMatchers("/api/usu/**").hasRole("ADMIN")
                         
-                        // Endpoints para ADMIN y VENDEDOR
+                        // ARTÍCULOS: Vendedor puede ver, crear y editar, pero NO eliminar
                         .requestMatchers(HttpMethod.GET, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.POST, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.PUT, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/articulos/**").hasRole("ADMIN")
                         
+                        // PAGOS: Solo ADMIN puede acceder (vendedor NO puede ver, editar ni eliminar)
+                        .requestMatchers("/api/pagos/**").hasRole("ADMIN")
+                        
+                        // Endpoints para ADMIN y VENDEDOR
                         .requestMatchers("/api/AlquilerArticulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/alquiler/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/cat/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/cli/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/categoria/**").hasAnyRole("ADMIN", "VENDEDOR")
-                        .requestMatchers("/api/pago/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/barrio/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/tipodoc/**").hasAnyRole("ADMIN", "VENDEDOR")
                         
                         // Todos los demás endpoints requieren autenticación
                         .anyRequest().authenticated())
+                .exceptionHandling(exceptions -> exceptions
+                        // Acceso denegado (sin permisos) -> 401
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"No autorizado\",\"message\":\"No tienes permisos suficientes para realizar esta acción\",\"status\":401}");
+                        })
+                        // No autenticado (sin token o token inválido) -> 401
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"No autenticado\",\"message\":\"Debes iniciar sesión para acceder a este recurso\",\"status\":401}");
+                        }))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        */
 
         return http.build();
     }
