@@ -2,7 +2,6 @@ package com.sga.project.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
@@ -17,20 +16,20 @@ import com.sga.project.repositoryes.ClientesRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
-@Component 
-class AlquilermapperImplement implements AlquilerMapper{
+@Component
+class AlquilermapperImplement implements AlquilerMapper {
 
     private final ClientesRepository clienteRepo;
     private final AlquilerArticuloRepository alquilerArticuloRepo;
 
-    public AlquilermapperImplement (ClientesRepository clienteRepo, AlquilerArticuloRepository alquilerArticuloRepo) {
+    public AlquilermapperImplement(ClientesRepository clienteRepo, AlquilerArticuloRepository alquilerArticuloRepo) {
         this.clienteRepo = clienteRepo;
         this.alquilerArticuloRepo = alquilerArticuloRepo;
     }
 
     @Override
     public Alquiler toAlquiler(AlquilerDto alquilerDto) {
-        if (alquilerDto == null){
+        if (alquilerDto == null) {
             return null;
         }
         Alquiler alquiler = new Alquiler();
@@ -41,14 +40,14 @@ class AlquilermapperImplement implements AlquilerMapper{
         alquiler.setTotalAlq(alquilerDto.getTotalAlquiler());
 
         Clientes cliente = clienteRepo.findById(alquilerDto.getClienteDoc())
-            .orElseThrow(()-> new EntityNotFoundException("Cliente no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado"));
         alquiler.setCliente(cliente);
         return alquiler;
     }
 
     @Override
     public AlquilerDto toAlquilerDto(Alquiler alquiler) {
-        if (alquiler == null){
+        if (alquiler == null) {
             return null;
         }
 
@@ -72,32 +71,32 @@ class AlquilermapperImplement implements AlquilerMapper{
                 AlquilerArticulosDto dto = new AlquilerArticulosDto();
                 dto.setAlquilerId(alquiler.getId());
                 dto.setArticuloId(aa.getId().getArticuloId());
-                
+
                 // Información del artículo
                 try {
                     if (aa.getArticulo() != null) {
                         dto.setNomArticulo(aa.getArticulo().getNomArt());
                         dto.setTallaArticulo(aa.getArticulo().getTalla());
-                        dto.setPrecio(aa.getArticulo().getPrecio());
                     } else {
                         dto.setNomArticulo("Artículo " + aa.getId().getArticuloId());
-                        dto.setPrecio(aa.getPrecio() != null ? aa.getPrecio() : 0);
                     }
                 } catch (Exception e) {
                     // Si no se puede acceder al artículo, usar valores por defecto
                     dto.setNomArticulo("Artículo " + aa.getId().getArticuloId());
-                    dto.setPrecio(aa.getPrecio() != null ? aa.getPrecio() : 0);
                 }
-                
+
+                // El precio SIEMPRE debe venir de la tabla alquiler_articulos, no del artículo
+                dto.setPrecio(aa.getPrecio() != null ? aa.getPrecio() : 0);
+
                 // Información del cliente (usando los valores que ya obtuvimos)
                 dto.setNomCliente(nombreCliente);
                 dto.setTelCliente(telCliente);
-                
+
                 // Información adicional del alquiler
                 dto.setEstado(aa.getEstado());
                 dto.setObservaciones(aa.getObservaciones());
                 dto.setFechaEntrega(alquiler.getFechaEnt());
-                
+
                 articulosDto.add(dto);
             }
         } catch (Exception e) {
@@ -105,7 +104,7 @@ class AlquilermapperImplement implements AlquilerMapper{
             System.err.println("Error cargando artículos para alquiler " + alquiler.getId() + ": " + e.getMessage());
             articulosDto = new ArrayList<>();
         }
-        
+
         // Cargar información del cliente de forma segura
         Integer clienteDoc = null;
         try {
@@ -126,20 +125,24 @@ class AlquilermapperImplement implements AlquilerMapper{
                 clienteDoc = null; // Se mostrará el nombre del cliente desde los artículos
             }
         }
-        
+
+        // Calcular el total sumando los precios de los artículos cargados
+        Integer totalCalculado = articulosDto.stream()
+                .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
+                .sum();
+
         // Crear el DTO con el orden correcto según la clase AlquilerDto:
-        // Integer id_alquiler, Date fechaRetiro, Date fechaEntrega, Date fechaAlquiler, 
-        // Integer totalAlquiler, Integer clienteDoc, List<AlquilerArticulosDto> articulos
+        // Integer id_alquiler, Date fechaRetiro, Date fechaEntrega, Date fechaAlquiler,
+        // Integer totalAlquiler, Integer clienteDoc, List<AlquilerArticulosDto>
+        // articulos
         return new AlquilerDto(
-            alquiler.getId(),           // id_alquiler
-            alquiler.getFechaRet(),     // fechaRetiro
-            alquiler.getFechaEnt(),     // fechaEntrega
-            alquiler.getFechaAlq(),     // fechaAlquiler
-            alquiler.getTotalAlq(),     // totalAlquiler
-            clienteDoc,                 // clienteDoc
-            articulosDto                // articulos
+                alquiler.getId(), // id_alquiler
+                alquiler.getFechaRet(), // fechaRetiro
+                alquiler.getFechaEnt(), // fechaEntrega
+                alquiler.getFechaAlq(), // fechaAlquiler
+                totalCalculado, // totalAlquiler - calculado desde los artículos
+                clienteDoc, // clienteDoc
+                articulosDto // articulos
         );
     }
 }
-
-

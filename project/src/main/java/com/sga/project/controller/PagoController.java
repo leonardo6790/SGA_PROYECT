@@ -1,7 +1,5 @@
 package com.sga.project.controller;
 
-
-
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,50 +24,49 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping ("/api/pagos")
+@RequestMapping("/api/pagos")
 public class PagoController {
-        private final PagoRepositoryes pagoRepo;
+    private final PagoRepositoryes pagoRepo;
     private final PagoMapper pagoMap;
     private final PagoService pagoServi;
 
-    public PagoController (PagoRepositoryes pagoRepo, PagoMapper pagoMap, PagoService pagoServi) {
+    public PagoController(PagoRepositoryes pagoRepo, PagoMapper pagoMap, PagoService pagoServi) {
         this.pagoRepo = pagoRepo;
         this.pagoMap = pagoMap;
         this.pagoServi = pagoServi;
 
     }
 
-
-@PostMapping("/AñadirPago")
-    public ResponseEntity <?> crear (@Valid @RequestBody PagoDto pagoDto) {
+    @PostMapping("/AñadirPago")
+    public ResponseEntity<?> crear(@Valid @RequestBody PagoDto pagoDto) {
         try {
             PagoDto añadir = pagoServi.savePago(pagoDto);
             return ResponseEntity.status(HttpStatus.CREATED)
-            .body(Map.of("mensaje", "Pago añadido", "data", añadir));
+                    .body(Map.of("mensaje", "Pago añadido", "data", añadir));
         } catch (IllegalStateException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(Map.of("error", exception.getMessage()));
-        }catch (Exception ex) {
+                    .body(Map.of("error", exception.getMessage()));
+        } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(Map.of("error", "Error al añadir un pago","detalle", ex.getMessage()));
+                    .body(Map.of("error", "Error al añadir un pago", "detalle", ex.getMessage()));
         }
 
     }
 
-@GetMapping("/ConsultarById")
-    public PagoDto getPagoById (Integer idPago) {
-        return pagoRepo.findById(idPago).map(pagoMap::toPagoDto).orElseThrow(() -> new EntityNotFoundException("Pago no encontrado por el ID: " + idPago));
+    @GetMapping("/ConsultarById/{idPago}")
+    public PagoDto getPagoById(@PathVariable Integer idPago) {
+        return pagoRepo.findById(idPago).map(pagoMap::toPagoDto)
+                .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado por el ID: " + idPago));
     }
 
-@GetMapping ("ConsultarPagos")
-public List<PagoDto> getListPagos () {
-    return pagoRepo.findAll().stream().map(pagoMap::toPagoDto).toList();
-}
+    @GetMapping("ConsultarPagos")
+    public List<PagoDto> getListPagos() {
+        return pagoRepo.findAll().stream().map(pagoMap::toPagoDto).toList();
+    }
 
-@DeleteMapping("/Eliminar/{idPago}")
-    public void deletePago(Integer idPago) {
+    @DeleteMapping("/Eliminar/{idPago}")
+    public void deletePago(@PathVariable Integer idPago) {
         Pago pago = pagoRepo.findById(idPago).orElseThrow(() -> new EntityNotFoundException("Pago no encontrado"));
         pagoRepo.delete(pago);
     }
 }
-
