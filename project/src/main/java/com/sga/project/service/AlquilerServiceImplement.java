@@ -54,6 +54,26 @@ public class AlquilerServiceImplement implements AlquilerService{
         // BACKEND: Validar y calcular total de pagos
         Integer totalPagos = 0;
         if (alquilerDto.getPagos() != null && !alquilerDto.getPagos().isEmpty()) {
+            // Log para debug
+            System.out.println("=== VALIDANDO PAGOS ===");
+            System.out.println("Cantidad de pagos recibidos: " + alquilerDto.getPagos().size());
+            for (int i = 0; i < alquilerDto.getPagos().size(); i++) {
+                PagoDto p = alquilerDto.getPagos().get(i);
+                System.out.println("Pago " + (i+1) + ": ValAbo=" + p.getValAbo() + ", Fecha=" + p.getFechaUltimoAbono());
+            }
+            
+            // VALIDACIÓN: Los pagos deben ser positivos ANTES de sumar
+            for (int i = 0; i < alquilerDto.getPagos().size(); i++) {
+                PagoDto p = alquilerDto.getPagos().get(i);
+                if (p.getValAbo() == null || p.getValAbo() <= 0) {
+                    throw new IllegalStateException(
+                        String.format("El pago #%d tiene un valor inválido: %s. Todos los pagos deben ser mayores a 0", 
+                        (i+1), p.getValAbo())
+                    );
+                }
+            }
+            
+            // Calcular total de pagos
             totalPagos = alquilerDto.getPagos().stream()
                 .mapToInt(p -> p.getValAbo() != null ? p.getValAbo() : 0)
                 .sum();
@@ -64,13 +84,6 @@ public class AlquilerServiceImplement implements AlquilerService{
                     String.format("El total de pagos ($%,d) excede el total del alquiler ($%,d)", 
                     totalPagos, totalAlquiler)
                 );
-            }
-            
-            // VALIDACIÓN: Los pagos deben ser positivos
-            boolean hayPagoInvalido = alquilerDto.getPagos().stream()
-                .anyMatch(p -> p.getValAbo() == null || p.getValAbo() <= 0);
-            if (hayPagoInvalido) {
-                throw new IllegalStateException("Todos los pagos deben tener un valor mayor a 0");
             }
         }
         
