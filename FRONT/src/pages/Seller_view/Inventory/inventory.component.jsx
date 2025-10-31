@@ -228,7 +228,7 @@ const Inventory = () => {
         </p>
 
         <div className="cards-container">
-          {articulos.map((art) => (
+          {filteredArticulos.map((art) => (
             <div key={art.idArt} className="player-card">
               <img
                 src={art.fotoArt}
@@ -254,7 +254,7 @@ const Inventory = () => {
                 <FaPencilAlt />
               </span>
             </div>
-          )}
+          ))}
         </div>
 
         {editingId !== null && (

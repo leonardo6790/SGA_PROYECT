@@ -135,7 +135,7 @@ const Clients = () => {
           />
         </div>
         <div className="container-clients-subtitle">
-        <p className="clients-subtitle">Todos los clientes registrados <button className="arrowbutton" onClick={() => handleEditClick (cli)}><SlArrowDown /></button></p>
+        <p className="clients-subtitle">Todos los clientes registrados</p>
         </div>
 
         <div className="clients-list">
@@ -150,22 +150,28 @@ const Clients = () => {
             <span>Acciones</span>
           </div>
 
-          {clients.map((cli) => (
-            <div key={cli.doc} className="client-card">
-              <div className="client-body">
-                <div className="client-field">{cli.doc}</div>
-                <div className="client-field">{cli.nomcli1}</div>
-                <div className="client-field">{cli.nomcli2}</div>
-                <div className="client-field">{cli.apecli1}</div>
-                <div className="client-field">{cli.apecli2}</div>
-                <div className="client-field">{cli.correoElectronico}</div>
-                <div className="client-field">{cli.numeroCli}</div>
-                <div className="client-field"><button className="editbutton" onClick={() => handleEditClick(cli)}><HiPencilSquare /></button></div>
+          {filteredClients.length > 0 ? (
+            filteredClients.map((cli) => (
+              <div key={cli.doc} className="client-card">
+                <div className="client-body">
+                  <div className="client-field">{cli.doc}</div>
+                  <div className="client-field">{cli.nomcli1}</div>
+                  <div className="client-field">{cli.nomcli2}</div>
+                  <div className="client-field">{cli.apecli1}</div>
+                  <div className="client-field">{cli.apecli2}</div>
+                  <div className="client-field">{cli.correoElectronico}</div>
+                  <div className="client-field">{cli.numeroCli}</div>
+                  <div className="client-field">
+                    <button className="editbutton" onClick={() => handleEditClick(cli)}>
+                      <HiPencilSquare />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))
           ) : (
             <div className="no-results">
-              <p>No se encontraron clientes con el documento "{searchTerm}"</p>
+              <p>No se encontraron clientes con el documento &quot;{searchTerm}&quot;</p>
             </div>
           )}
         </div>
