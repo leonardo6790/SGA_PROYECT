@@ -28,7 +28,7 @@
 }
 
 .clients-subtitle {
-  font-size: 16px;
+  font-size: 18px;
   color: #666;
   margin: 10px 0 20px 0;
 }
@@ -36,7 +36,7 @@
 .clients-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .client-header {
@@ -53,7 +53,7 @@
 
 .client-card {
   background-color: #fff;
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;
@@ -61,7 +61,7 @@
 
 .client-body {
   display: flex;
-  align-items: center;
+  align-items: center;      
   padding: 10px 20px;
   border-bottom: 1px solid #eee;
 }
@@ -136,19 +136,28 @@
   justify-content: flex-end;
   gap: 10px;
 }
+.editbutton {
+  background-color: #f4e4dd;
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.editbutton svg{
+width: 20px;
+height: 20px;
 
-.no-results {
+}
+
+.arrowbutton {
+background-color: #fdf6f3;
+border: none;
+padding: 5px;
+cursor: pointer
+;
+}
+.container-clients-subtitle{
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px;
-  background-color: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.no-results p {
-  color: #666;
-  font-size: 16px;
-  text-align: center;
-}

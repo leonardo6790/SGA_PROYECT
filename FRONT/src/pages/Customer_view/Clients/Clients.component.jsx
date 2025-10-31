@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import "./Clients.styles.css";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { obtenerClientes, actualizarCliente } from "../../../api/clientesApi";
+import { HiPencilSquare } from "react-icons/hi2";
+import { SlArrowDown } from "react-icons/sl";
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
@@ -132,9 +134,9 @@ const Clients = () => {
             type="text"
           />
         </div>
-        <p className="clients-subtitle">
-          {searchTerm ? `Mostrando ${filteredClients.length} resultado(s)` : `Todos los clientes registrados (${clients.length})`}
-        </p>
+        <div className="container-clients-subtitle">
+        <p className="clients-subtitle">Todos los clientes registrados <button className="arrowbutton" onClick={() => handleEditClick (cli)}><SlArrowDown /></button></p>
+        </div>
 
         <div className="clients-list">
           <div className="client-header">
@@ -148,19 +150,17 @@ const Clients = () => {
             <span>Acciones</span>
           </div>
 
-          {filteredClients.length > 0 ? (
-            filteredClients.map((cli) => (
-              <div key={cli.doc} className="client-card">
-                <div className="client-body">
-                  <div className="client-field">{cli.doc}</div>
-                  <div className="client-field">{cli.nomcli1}</div>
-                  <div className="client-field">{cli.nomcli2}</div>
-                  <div className="client-field">{cli.apecli1}</div>
-                  <div className="client-field">{cli.apecli2}</div>
-                  <div className="client-field">{cli.correoElectronico}</div>
-                  <div className="client-field">{cli.numeroCli}</div>
-                  <button onClick={() => handleEditClick(cli)}>Editar</button>
-                </div>
+          {clients.map((cli) => (
+            <div key={cli.doc} className="client-card">
+              <div className="client-body">
+                <div className="client-field">{cli.doc}</div>
+                <div className="client-field">{cli.nomcli1}</div>
+                <div className="client-field">{cli.nomcli2}</div>
+                <div className="client-field">{cli.apecli1}</div>
+                <div className="client-field">{cli.apecli2}</div>
+                <div className="client-field">{cli.correoElectronico}</div>
+                <div className="client-field">{cli.numeroCli}</div>
+                <div className="client-field"><button className="editbutton" onClick={() => handleEditClick(cli)}><HiPencilSquare /></button></div>
               </div>
             ))
           ) : (

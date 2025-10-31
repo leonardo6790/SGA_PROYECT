@@ -37,7 +37,7 @@
 }
 
 .seller-title {
-  font-size: 4rem;
+  font-size: 3.5rem;
   color: #4b0082;
   animation: fadeInDown 1s ease forwards;
   padding: 0px;
@@ -45,7 +45,7 @@
 
 .seller-subtitle {
   font-size: 1.4rem;
-  color: #9b59b6;
+  color: #9a49ba;
   animation: fadeInDown 1.2s ease forwards;
   margin-top: -30px;
 }

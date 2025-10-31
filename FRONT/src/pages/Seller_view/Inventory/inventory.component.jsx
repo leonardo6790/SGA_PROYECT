@@ -228,38 +228,31 @@ const Inventory = () => {
         </p>
 
         <div className="cards-container">
-          {filteredArticulos.length > 0 ? (
-            filteredArticulos.map((art) => (
-              <div key={art.idArt} className="player-card">
-                <img
-                  src={art.fotoArt}
-                  alt={art.nombre}
-                  className="player-image"
-                />
-                <h2 className="player-name">{art.nombre}</h2>
-                <p className="player-subtitle">Talla: {art.tallaArt}</p>
-                <p className="player-subtitle">Precio: ${art.precioArt?.toLocaleString()}</p>
-                <p className="player-subtitle">Género: {art.generoArt}</p>
-                <p className="player-price">Color: {art.colorArt}</p>
-                <p className="player-category">Categoría: {art.nomCate}</p>
-                <span
-                  className="delete-icon"
-                  onClick={() => handleDeleteArticle(art.idArt, art.nombre)}
-                  title="Eliminar artículo"
-                >
-                  <FaTrash />
-                </span>
-                <span
-                  className="edit-text"
-                  onClick={() => handleEditClick(art)}
-                >
-                  <FaPencilAlt />
-                </span>
-              </div>
-            ))
-          ) : (
-            <div className="no-articles">
-              <p>No hay artículos en esta categoría</p>
+          {articulos.map((art) => (
+            <div key={art.idArt} className="player-card">
+              <img
+                src={art.fotoArt}
+                alt={art.nombre}
+                className="player-image"
+              />
+              <h2 className="player-name">{art.nombre}</h2>
+              <p className="player-subtitle">Talla: {art.tallaArt}</p>
+              <p className="player-subtitle">Género: {art.generoArt}</p>
+              <p className="player-subtitle">Color: {art.colorArt}</p>
+              <p className="player-price">Precio: ${art.precioArt?.toLocaleString()}</p>
+              <span
+                className="delete-icon"
+                onClick={() => handleDeleteArticle(art.idArt, art.nombre)}
+                title="Eliminar artículo"
+              >
+                <FaTrash />
+              </span>
+              <span
+                className="edit-text"
+                onClick={() => handleEditClick(art)}
+              >
+                <FaPencilAlt />
+              </span>
             </div>
           )}
         </div>
