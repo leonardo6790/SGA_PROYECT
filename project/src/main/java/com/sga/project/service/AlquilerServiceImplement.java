@@ -19,7 +19,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
-public class AlquilerServiceImplement implements AlquilerService{
+public class AlquilerServiceImplement implements AlquilerService {
 
     private final AlquilerMapper alquiMap;
     private final AlquilerRepositoryes alquiRepo;
@@ -27,85 +27,45 @@ public class AlquilerServiceImplement implements AlquilerService{
     private final ArticuloRepositoryes articuloRepo;
     private final PagoRepositoryes pagoRepo;
 
-    public AlquilerServiceImplement (AlquilerMapper alquiMap, AlquilerRepositoryes alquiRepo, AlquilerArticuloRepository alquiArtiRepo, ArticuloRepositoryes articuloRepo, PagoRepositoryes pagoRepo) 
-        {
+
+    public AlquilerServiceImplement(AlquilerMapper alquiMap, AlquilerRepositoryes alquiRepo,
+            AlquilerArticuloRepository alquiArtiRepo, ArticuloRepositoryes articuloRepo) {
+
         this.alquiMap = alquiMap;
         this.alquiRepo = alquiRepo;
         this.alquiArtiRepo = alquiArtiRepo;
         this.articuloRepo = articuloRepo;
         this.pagoRepo = pagoRepo;
     }
-    
+
     @Override
     @Transactional
     public AlquilerDto saveAlquiler(AlquilerDto alquilerDto) {
         // Convertir DTO a entidad
         Alquiler alquiler = alquiMap.toAlquiler(alquilerDto);
-        
-        // BACKEND: Calcular total del alquiler basado en los artículos
-        Integer totalAlquiler = 0;
+
+
+        // Calcular total antes de guardar (siempre inicializar en 0 si no hay
+        // artículos)
+        Integer total = 0;
         if (alquilerDto.getArticulos() != null && !alquilerDto.getArticulos().isEmpty()) {
-            totalAlquiler = alquilerDto.getArticulos().stream()
-                .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
-                .sum();
+            total = alquilerDto.getArticulos().stream()
+                    .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
+                    .sum();
         }
-        alquiler.setTotalAlq(totalAlquiler);
-        
-        // BACKEND: Validar y calcular total de pagos
-        Integer totalPagos = 0;
-        if (alquilerDto.getPagos() != null && !alquilerDto.getPagos().isEmpty()) {
-            // Log para debug
-            System.out.println("=== VALIDANDO PAGOS ===");
-            System.out.println("Cantidad de pagos recibidos: " + alquilerDto.getPagos().size());
-            for (int i = 0; i < alquilerDto.getPagos().size(); i++) {
-                PagoDto p = alquilerDto.getPagos().get(i);
-                System.out.println("Pago " + (i+1) + ": ValAbo=" + p.getValAbo() + ", Fecha=" + p.getFechaUltimoAbono());
-            }
-            
-            // VALIDACIÓN: Los pagos deben ser positivos ANTES de sumar
-            for (int i = 0; i < alquilerDto.getPagos().size(); i++) {
-                PagoDto p = alquilerDto.getPagos().get(i);
-                if (p.getValAbo() == null || p.getValAbo() <= 0) {
-                    throw new IllegalStateException(
-                        String.format("El pago #%d tiene un valor inválido: %s. Todos los pagos deben ser mayores a 0", 
-                        (i+1), p.getValAbo())
-                    );
-                }
-            }
-            
-            // Calcular total de pagos
-            totalPagos = alquilerDto.getPagos().stream()
-                .mapToInt(p -> p.getValAbo() != null ? p.getValAbo() : 0)
-                .sum();
-            
-            // VALIDACIÓN: Los pagos no pueden exceder el total del alquiler
-            if (totalPagos > totalAlquiler) {
-                throw new IllegalStateException(
-                    String.format("El total de pagos ($%,d) excede el total del alquiler ($%,d)", 
-                    totalPagos, totalAlquiler)
-                );
-            }
-        }
-        
-        // Calcular saldo pendiente
-        Integer saldoPendiente = totalAlquiler - totalPagos;
-        
-        // Log para auditoría
-        System.out.println("=== CREANDO ALQUILER ===");
-        System.out.println("Total Alquiler: $" + String.format("%,d", totalAlquiler));
-        System.out.println("Total Pagos: $" + String.format("%,d", totalPagos));
-        System.out.println("Saldo Pendiente: $" + String.format("%,d", saldoPendiente));
-        System.out.println("========================");
-        
+        // Asegurar que el total nunca sea null
+        alquiler.setTotalAlq(total != null ? total : 0);
+
         // Guardar el alquiler
         Alquiler alquiGuardado = alquiRepo.save(alquiler);
-        
+
         // Guardar los artículos del alquiler si existen
         if (alquilerDto.getArticulos() != null && !alquilerDto.getArticulos().isEmpty()) {
             for (AlquilerArticulosDto artDto : alquilerDto.getArticulos()) {
                 Articulo articulo = articuloRepo.findById(artDto.getArticuloId())
-                    .orElseThrow(() -> new EntityNotFoundException("Artículo no encontrado: " + artDto.getArticuloId()));
-                
+                        .orElseThrow(
+                                () -> new EntityNotFoundException("Artículo no encontrado: " + artDto.getArticuloId()));
+
                 AlquilerArticulosId id = new AlquilerArticulosId(alquiGuardado.getId(), articulo.getId());
                 AlquilerArticulos aa = new AlquilerArticulos();
                 aa.setId(id);
@@ -114,10 +74,11 @@ public class AlquilerServiceImplement implements AlquilerService{
                 aa.setPrecio(artDto.getPrecio());
                 aa.setEstado(artDto.getEstado() != null ? artDto.getEstado() : false);
                 aa.setObservaciones(artDto.getObservaciones());
-                
+
                 alquiArtiRepo.save(aa);
             }
         }
+
         
         // Guardar los pagos del alquiler si existen
         if (alquilerDto.getPagos() != null && !alquilerDto.getPagos().isEmpty()) {
@@ -133,42 +94,43 @@ public class AlquilerServiceImplement implements AlquilerService{
         
         // Recargar el alquiler para retornarlo
         Alquiler alquilerCompleto = alquiRepo.findById(alquiGuardado.getId())
-            .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
-        
+                .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+
         return alquiMap.toAlquilerDto(alquilerCompleto);
     }
-    
+
     @Override
     @Transactional
-    public AlquilerDto getAlquilerById (Integer idAlquiler) {
+    public AlquilerDto getAlquilerById(Integer idAlquiler) {
         Alquiler alquiler = alquiRepo.findById(idAlquiler)
-            .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
-        
+                .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+
         return alquiMap.toAlquilerDto(alquiler);
     }
-    
+
     @Override
-    public void deleteAlquiler (Integer idAlquiler) {
-        Alquiler alqui = alquiRepo.findById(idAlquiler).orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado por el ID: " + idAlquiler));
+    public void deleteAlquiler(Integer idAlquiler) {
+        Alquiler alqui = alquiRepo.findById(idAlquiler)
+                .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado por el ID: " + idAlquiler));
         alquiRepo.delete(alqui);
     }
 
     @Override
     @Transactional
-    public AlquilerDto updateAlquiler (AlquilerDto alquiDto) {
+    public AlquilerDto updateAlquiler(AlquilerDto alquiDto) {
         Alquiler alqui = alquiRepo.findById(alquiDto.getId_alquiler())
-        .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
-        
+                .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+
         alqui.setFechaEnt(alquiDto.getFechaEntrega());
         alqui.setFechaRet(alquiDto.getFechaRetiro());
-        
+
         Alquiler actualizado = alquiRepo.save(alqui);
         return alquiMap.toAlquilerDto(actualizado);
     }
 
     @Override
     @Transactional
-    public List<AlquilerDto> getAlquilerList () {
+    public List<AlquilerDto> getAlquilerList() {
         List<Alquiler> alquileres = alquiRepo.findAll();
         return alquileres.stream().map(alquiMap::toAlquilerDto).toList();
     }
@@ -177,13 +139,14 @@ public class AlquilerServiceImplement implements AlquilerService{
     @Transactional
     public void calcularTotalAlquiler(Integer idAlquiler) {
         List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(idAlquiler);
-        // Usar el precio de la asignación (AlquilerArticulos.precio) en lugar del precio del artículo
+        // Usar el precio de la asignación (AlquilerArticulos.precio) en lugar del
+        // precio del artículo
         Integer total = articulos.stream()
-            .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
-            .sum();
+                .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
+                .sum();
 
         Alquiler alquiler = alquiRepo.findById(idAlquiler)
-        .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
 
         alquiler.setTotalAlq(total);
         alquiRepo.save(alquiler);

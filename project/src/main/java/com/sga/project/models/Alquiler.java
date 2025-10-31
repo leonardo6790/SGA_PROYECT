@@ -1,6 +1,5 @@
 package com.sga.project.models;
 
-
 import java.sql.Date;
 import java.util.List;
 
@@ -26,17 +25,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Entity
-@Table (name = "alquiler")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "alquiler")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Alquiler {
     @Id
-    @Column (name = "id_alquiler")
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @Column(name = "id_alquiler")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotNull
     private Date fechaRet;
-    
+
     @NotNull
     private Date fechaEnt;
 
@@ -44,12 +43,13 @@ public class Alquiler {
     private Date fechaAlq;
 
     // El total se calcula automáticamente al asignar artículos
-    private Integer totalAlq;
+    @Column(columnDefinition = "INTEGER DEFAULT 0")
+    private Integer totalAlq = 0;
 
-    @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn (name = "clienteDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_alquiler_cliente"))
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clienteDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_alquiler_cliente"))
     private Clientes cliente;
 
-    @OneToMany (mappedBy = "alquiler")
+    @OneToMany(mappedBy = "alquiler")
     private List<AlquilerArticulos> asignacionAlq;
 }
