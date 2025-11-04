@@ -50,6 +50,9 @@ private Integer precio;
 @Column (length = 500)
 private String foto;
 
+@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+private Boolean activo;
+
 @ManyToOne (fetch = FetchType.LAZY)
 @JoinColumn (name = "id_categoria", nullable = false, foreignKey = @ForeignKey (name = "FK_articulo_categoria"))
 private Categoria categoria;

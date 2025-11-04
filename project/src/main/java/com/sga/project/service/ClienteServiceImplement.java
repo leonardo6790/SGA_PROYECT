@@ -93,6 +93,10 @@ public class ClienteServiceImplement implements ClienteService {
         cli.setNumTel(clientesDto.getNumeroCli());
         cli.setCorreoElectronico(clientesDto.getCorreoElectronico());
         
+        if (clientesDto.getActivo() != null) {
+            cli.setActivo(clientesDto.getActivo());
+        }
+        
         if (clientesDto.getDireCli() != null) {
             cli.setDireccion(clientesDto.getDireCli());
         }
@@ -110,6 +114,17 @@ public class ClienteServiceImplement implements ClienteService {
         }
         
         Clientes clienteActualizado = cr.save(cli);
+        return cm.toClientesDto(clienteActualizado);
+    }
+
+    @Override
+    @Transactional
+    public ClientesDto toggleActivoCliente(Integer documCli, Boolean activo) {
+        Clientes cliente = cr.findById(documCli)
+            .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado: " + documCli));
+        
+        cliente.setActivo(activo);
+        Clientes clienteActualizado = cr.save(cliente);
         return cm.toClientesDto(clienteActualizado);
     }
 }

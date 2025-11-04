@@ -9,4 +9,5 @@ public PagoDto getPagoById (Integer idPago);
 public PagoDto savePago (PagoDto pagoDto);
 public List<PagoDto> getListPagos ();
 public void deletePago(Integer idPago);
+public PagoDto updatePago(PagoDto pagoDto);
 }

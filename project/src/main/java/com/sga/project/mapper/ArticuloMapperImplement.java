@@ -28,6 +28,7 @@ if (articuloDto == null){
     articulo.setNomArt(articuloDto.getNombre());
     articulo.setPrecio(articuloDto.getPrecioArt());
     articulo.setFoto(articuloDto.getFotoArt());
+    articulo.setActivo(articuloDto.getActivo() != null ? articuloDto.getActivo() : true);
 
     Categoria cate = cateRepo.findById(articuloDto.getIdCategoria())
         .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada"));
@@ -52,6 +53,7 @@ if (articuloDto == null){
     dto.setNombre(articulo.getNomArt());
     dto.setPrecioArt(articulo.getPrecio());
     dto.setFotoArt(articulo.getFoto());
+    dto.setActivo(articulo.getActivo());
     dto.setIdCategoria(articulo.getCategoria() != null ? articulo.getCategoria().getId_categoria() : null);
     dto.setNomCate(articulo.getCategoria() != null ? articulo.getCategoria().getNomCate() : null);
     return dto;

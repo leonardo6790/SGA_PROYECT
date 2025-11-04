@@ -50,4 +50,16 @@ public class UsuarioController {
         UsuarioDto actualizar = us.updateUsuario(usuarioDto);
         return ResponseEntity.ok(actualizar);
     }
+
+    @PutMapping("activar/{id}")
+    public ResponseEntity<UsuarioDto> activarUsuario(@PathVariable Integer id) {
+        UsuarioDto usuarioActualizado = us.toggleActivoUsuario(id, true);
+        return ResponseEntity.ok(usuarioActualizado);
+    }
+
+    @PutMapping("desactivar/{id}")
+    public ResponseEntity<UsuarioDto> desactivarUsuario(@PathVariable Integer id) {
+        UsuarioDto usuarioActualizado = us.toggleActivoUsuario(id, false);
+        return ResponseEntity.ok(usuarioActualizado);
+    }
 }

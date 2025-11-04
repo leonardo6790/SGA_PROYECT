@@ -7,20 +7,25 @@ import com.sga.project.dto.ArticuloDto;
 import com.sga.project.dto.ArticuloUpdateDto;
 import com.sga.project.mapper.ArticuloMapper;
 import com.sga.project.models.Articulo;
+import com.sga.project.models.Categoria;
 import com.sga.project.repositoryes.ArticuloRepositoryes;
+import com.sga.project.repositoryes.CategoriaRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
+@SuppressWarnings("null")
 public class ArticuloServiceImplement implements ArticuloService{
 
     private final ArticuloMapper artiMap;
     private final ArticuloRepositoryes artiRepo;
+    private final CategoriaRepositoryes cateRepo;
 
 
-    public ArticuloServiceImplement (ArticuloMapper artiMap, ArticuloRepositoryes artiRepo) {
+    public ArticuloServiceImplement (ArticuloMapper artiMap, ArticuloRepositoryes artiRepo, CategoriaRepositoryes cateRepo) {
     this.artiMap = artiMap;
     this.artiRepo = artiRepo;
+    this.cateRepo = cateRepo;
 
 }
 
@@ -56,8 +61,39 @@ public ArticuloDto updateArticulo (ArticuloUpdateDto artiUpdateDto) {
     Articulo art = artiRepo.findById(artiUpdateDto.getIdArt())
     .orElseThrow(() -> new EntityNotFoundException("Articulo no encontrado"));
 
+    // Actualizar campos si se proporcionan
+    if (artiUpdateDto.getNombre() != null && !artiUpdateDto.getNombre().isEmpty()) {
+        art.setNomArt(artiUpdateDto.getNombre());
+    }
+    
+    if (artiUpdateDto.getGeneroArt() != null) {
+        art.setGenero(artiUpdateDto.getGeneroArt());
+    }
+    
+    if (artiUpdateDto.getTallaArt() != null) {
+        art.setTalla(artiUpdateDto.getTallaArt());
+    }
+    
+    if (artiUpdateDto.getColorArt() != null) {
+        art.setColor(artiUpdateDto.getColorArt());
+    }
+
     art.setPrecio(artiUpdateDto.getPrecioArti());
-    art.setFoto(artiUpdateDto.getFotoArti());
+    
+    if (artiUpdateDto.getFotoArti() != null) {
+        art.setFoto(artiUpdateDto.getFotoArti());
+    }
+    
+    if (artiUpdateDto.getActivo() != null) {
+        art.setActivo(artiUpdateDto.getActivo());
+    }
+    
+    // Si se proporciona una nueva categoría, actualizarla
+    if (artiUpdateDto.getIdCategoria() != null) {
+        Categoria categoria = cateRepo.findById(artiUpdateDto.getIdCategoria())
+            .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada con ID: " + artiUpdateDto.getIdCategoria()));
+        art.setCategoria(categoria);
+    }
 
     Articulo artiActualizado = artiRepo.save(art);
     return artiMap.toArticuloDto(artiActualizado);
@@ -82,5 +118,16 @@ public List<ArticuloDto> getArticulosByCate (String nomCate) {
 
     return articulo.stream().map(artiMap:: toArticuloDto).collect(Collectors.toList());
 
+}
+
+@Override
+@Transactional
+public ArticuloDto toggleActivoArticulo(Integer idArt, Boolean activo) {
+    Articulo articulo = artiRepo.findById(idArt)
+        .orElseThrow(() -> new EntityNotFoundException("Artículo no encontrado por el ID: " + idArt));
+    
+    articulo.setActivo(activo);
+    Articulo articuloActualizado = artiRepo.save(articulo);
+    return artiMap.toArticuloDto(articuloActualizado);
 }
 }

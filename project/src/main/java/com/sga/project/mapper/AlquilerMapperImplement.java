@@ -45,6 +45,7 @@ class AlquilermapperImplement implements AlquilerMapper {
         alquiler.setFechaEnt(alquilerDto.getFechaEntrega());
         alquiler.setFechaAlq(alquilerDto.getFechaAlquiler());
         alquiler.setTotalAlq(alquilerDto.getTotalAlquiler());
+        alquiler.setActivo(alquilerDto.getActivo() != null ? alquilerDto.getActivo() : true);
 
         Clientes cliente = clienteRepo.findById(alquilerDto.getClienteDoc())
                 .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado"));
@@ -159,6 +160,7 @@ class AlquilermapperImplement implements AlquilerMapper {
                 alquiler.getFechaAlq(), // fechaAlquiler
                 totalCalculado, // totalAlquiler
                 clienteDoc, // clienteDoc
+                alquiler.getActivo(), // activo
                 articulosDto, // articulos
                 pagosDto, // pagos
                 totalPagado, // totalPagado

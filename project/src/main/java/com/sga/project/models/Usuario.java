@@ -48,6 +48,9 @@ public class Usuario {
     @Column(length = 200, nullable = false)
     private String contraseña;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+    private Boolean activo;
+
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn( name = "id_barrio", nullable = false, foreignKey =  @ForeignKey(name = "FK_usuario_barrio"))
     private Barrio barrio;

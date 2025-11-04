@@ -16,6 +16,7 @@ public class ArticuloDto {
     private String nombre;
     private Integer precioArt;
     private String fotoArt;
+    private Boolean activo;
     private Integer idCategoria;
     private String nomCate;
 }

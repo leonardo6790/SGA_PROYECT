@@ -11,4 +11,5 @@ public interface ClienteService {
     public List<ClientesDto> getListClientes();
     public void deleteCliente(Integer documCli);
     public ClientesDto updateCliente (ClientesDto clientesDto);
+    public ClientesDto toggleActivoCliente(Integer documCli, Boolean activo);
 }

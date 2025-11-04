@@ -11,5 +11,6 @@ public UsuarioDto saveUsuario (UsuarioDto usuarioDto);
 public List <UsuarioDto> getUsuarios ();
 public void deleteUsuario(Integer numDoc);
 public UsuarioDto updateUsuario (UsuarioDto usuarioDto);
+public UsuarioDto toggleActivoUsuario(Integer numDoc, Boolean activo);
 
 }

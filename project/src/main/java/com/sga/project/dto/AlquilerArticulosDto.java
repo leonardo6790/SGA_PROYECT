@@ -1,6 +1,8 @@
 package com.sga.project.dto;
 
-import java.sql.Date;
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,7 +28,8 @@ private String nomCliente;
 
 private Long telCliente;
 
-private Date fechaEntrega;
+@JsonFormat(pattern = "yyyy-MM-dd")
+private LocalDate fechaEntrega;
 
 private Boolean estado;
 

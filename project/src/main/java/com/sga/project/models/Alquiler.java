@@ -1,6 +1,6 @@
 package com.sga.project.models;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -34,17 +34,23 @@ public class Alquiler {
     private Integer id;
 
     @NotNull
-    private Date fechaRet;
+    @Column(columnDefinition = "DATE")
+    private LocalDate fechaRet;
 
     @NotNull
-    private Date fechaEnt;
+    @Column(columnDefinition = "DATE")
+    private LocalDate fechaEnt;
 
     @NotNull
-    private Date fechaAlq;
+    @Column(columnDefinition = "DATE")
+    private LocalDate fechaAlq;
 
     // El total se calcula automáticamente al asignar artículos
     @Column(columnDefinition = "INTEGER DEFAULT 0")
     private Integer totalAlq = 0;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+    private Boolean activo = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clienteDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_alquiler_cliente"))

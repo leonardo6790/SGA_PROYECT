@@ -57,4 +57,16 @@ public class ClientesController {
             ClientesDto update = cs.updateCliente(clientesDto);
             return ResponseEntity.ok(update);
         }
+
+    @PutMapping("activar/{id}")
+    public ResponseEntity<ClientesDto> activarCliente(@PathVariable Integer id) {
+        ClientesDto clienteActualizado = cs.toggleActivoCliente(id, true);
+        return ResponseEntity.ok(clienteActualizado);
+    }
+
+    @PutMapping("desactivar/{id}")
+    public ResponseEntity<ClientesDto> desactivarCliente(@PathVariable Integer id) {
+        ClientesDto clienteActualizado = cs.toggleActivoCliente(id, false);
+        return ResponseEntity.ok(clienteActualizado);
+    }
 }

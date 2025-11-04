@@ -18,4 +18,7 @@ public class Barrio {
 
     @Column (length = 20)
     private String nomBar;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+    private Boolean activo;
 }

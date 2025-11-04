@@ -36,6 +36,7 @@ import jakarta.persistence.EntityNotFoundException;
     usuario.setNumTel(usuarioDto.getTele());
     usuario.setCorreoElec(usuarioDto.getCorreoElectronico());
     usuario.setContraseña(usuarioDto.getContra());
+    usuario.setActivo(usuarioDto.getActivo() != null ? usuarioDto.getActivo() : true);
     
     Barrio barrio = barRep.findById(usuarioDto.getIdBarrio())
     .orElseThrow(() -> new EntityNotFoundException("barrio no encontrado"));
@@ -66,6 +67,7 @@ import jakarta.persistence.EntityNotFoundException;
         usuario.getNumTel(),
         usuario.getCorreoElec(),
         usuario.getContraseña(),
+        usuario.getActivo(),
         usuario.getBarrio() != null ? usuario.getBarrio().getId_barrio() : null,
         usuario.getBarrio() != null? usuario.getBarrio().getNomBar() : null,
         usuario.getRol() != null ? usuario.getRol().getId_rol() : null,

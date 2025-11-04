@@ -18,6 +18,7 @@ public class UsuarioDto {
     private Long tele;
     private String correoElectronico;
     private String contra;
+    private Boolean activo;
     private Integer idBarrio;
     private String nomBar;
     private Integer idTipoDoc;

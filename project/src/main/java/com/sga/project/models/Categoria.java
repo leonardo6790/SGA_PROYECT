@@ -21,4 +21,7 @@ private Integer id_categoria;
 @Column (nullable = false, length = 50)
 private String nomCate;
 
+@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+private Boolean activo;
+
 }

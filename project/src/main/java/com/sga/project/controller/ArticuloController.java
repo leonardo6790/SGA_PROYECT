@@ -83,4 +83,16 @@ public class ArticuloController {
         List<ArticuloDto> articulosCate = artiServi.getArticulosByCate(nomCate);
         return ResponseEntity.ok(articulosCate);
     }
+
+    @PutMapping("activar/{id}")
+    public ResponseEntity<ArticuloDto> activarArticulo(@PathVariable Integer id) {
+        ArticuloDto articuloActualizado = artiServi.toggleActivoArticulo(id, true);
+        return ResponseEntity.ok(articuloActualizado);
+    }
+
+    @PutMapping("desactivar/{id}")
+    public ResponseEntity<ArticuloDto> desactivarArticulo(@PathVariable Integer id) {
+        ArticuloDto articuloActualizado = artiServi.toggleActivoArticulo(id, false);
+        return ResponseEntity.ok(articuloActualizado);
+    }
 }

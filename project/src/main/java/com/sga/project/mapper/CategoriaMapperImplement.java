@@ -19,6 +19,7 @@ public Categoria toCategoria (CategoriaDto categoriaDto) {
     Categoria categoria = new Categoria();
     categoria.setId_categoria(categoriaDto.getIdCate());
     categoria.setNomCate(categoriaDto.getNomCate());
+    categoria.setActivo(categoriaDto.getActivo() != null ? categoriaDto.getActivo() : true);
     return categoria;
 }
 @Override
@@ -30,7 +31,8 @@ public CategoriaDto toCategoriaDto (Categoria categoria) {
 
     return new CategoriaDto(
         categoria.getId_categoria(),
-        categoria.getNomCate()
+        categoria.getNomCate(),
+        categoria.getActivo()
     );
 }
 

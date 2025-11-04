@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class BarrioDto {
-    private Integer idBarrio;
+public class TipoDocDto {
+    private Integer idTipoDoc;
     
-    @NotBlank(message = "El nombre del barrio es obligatorio")
-    @Size(max = 20, message = "El nombre del barrio no puede exceder 20 caracteres")
-    private String nombreBarrio;
+    @NotBlank(message = "El nombre del tipo de documento es obligatorio")
+    @Size(max = 40, message = "El nombre del tipo de documento no puede exceder 40 caracteres")
+    private String nomDoc;
     
     private Boolean activo;
 }

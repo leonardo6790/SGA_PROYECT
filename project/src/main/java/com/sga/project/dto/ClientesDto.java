@@ -16,6 +16,7 @@ public class ClientesDto {
     private String direCli;
     private Long numeroCli;
     private String correoElectronico;
+    private Boolean activo;
     private Integer barrioId;
     private Integer tipoDocId;
 }

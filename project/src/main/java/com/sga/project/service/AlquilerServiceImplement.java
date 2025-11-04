@@ -154,4 +154,15 @@ public class AlquilerServiceImplement implements AlquilerService {
 
     }
 
+    @Override
+    @Transactional
+    public AlquilerDto toggleActivoAlquiler(Integer idAlquiler, Boolean activo) {
+        Alquiler alquiler = alquiRepo.findById(idAlquiler)
+            .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado con ID: " + idAlquiler));
+        
+        alquiler.setActivo(activo);
+        Alquiler alquilerActualizado = alquiRepo.save(alquiler);
+        return alquiMap.toAlquilerDto(alquilerActualizado);
+    }
+
 }

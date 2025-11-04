@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -59,7 +60,7 @@ public class PagoController {
                 .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado por el ID: " + idPago));
     }
 
-    @GetMapping("ConsultarPagos")
+    @GetMapping("/ConsultarPagos")
     public List<PagoDto> getListPagos() {
         return pagoRepo.findAll().stream().map(pagoMap::toPagoDto).toList();
     }
@@ -68,5 +69,20 @@ public class PagoController {
     public void deletePago(@PathVariable Integer idPago) {
         Pago pago = pagoRepo.findById(idPago).orElseThrow(() -> new EntityNotFoundException("Pago no encontrado"));
         pagoRepo.delete(pago);
+    }
+
+    @PutMapping("/actualizar/{idPago}")
+    public ResponseEntity<?> actualizarPago(@PathVariable Integer idPago, @Valid @RequestBody PagoDto pagoDto) {
+        try {
+            pagoDto.setIdPago(idPago);
+            PagoDto pagoActualizado = pagoServi.updatePago(pagoDto);
+            return ResponseEntity.ok(Map.of("mensaje", "Pago actualizado correctamente", "data", pagoActualizado));
+        } catch (EntityNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al actualizar el pago", "detalle", ex.getMessage()));
+        }
     }
 }

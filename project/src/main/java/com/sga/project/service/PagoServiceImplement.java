@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@SuppressWarnings("null")
 public class PagoServiceImplement implements PagoService {
 
     private final PagoRepositoryes pr;
@@ -56,5 +57,33 @@ public class PagoServiceImplement implements PagoService {
         Pago pago = pr.findById(pagoid)
                 .orElseThrow(() -> new EntityNotFoundException("pago no encontrado por id: " + pagoid));
         pr.delete(pago);
+    }
+
+    @Override
+    @Transactional
+    public PagoDto updatePago(PagoDto pagoDto) {
+        // Verificar que el pago existe
+        Pago pagoExistente = pr.findById(pagoDto.getIdPago())
+                .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado por id: " + pagoDto.getIdPago()));
+
+        // Actualizar la fecha automáticamente
+        LocalDate fechaActual = LocalDate.now();
+        Integer fechaComoEntero = Integer.parseInt(fechaActual.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+
+        // Actualizar los campos
+        pagoExistente.setValorAbono(pagoDto.getValAbo());
+        pagoExistente.setFechaUltimoAbono(fechaComoEntero);
+        
+        // Si se proporciona un nuevo alquiler, actualizarlo
+        if (pagoDto.getIdAlquiler() != null && !pagoDto.getIdAlquiler().equals(pagoExistente.getAlquiler().getId())) {
+            Pago pagoConNuevoAlquiler = pm.toPago(pagoDto);
+            pagoConNuevoAlquiler.setId_pago(pagoExistente.getId_pago());
+            pagoConNuevoAlquiler.setFechaUltimoAbono(fechaComoEntero);
+            return pm.toPagoDto(pr.save(pagoConNuevoAlquiler));
+        }
+
+        // Guardar los cambios
+        Pago pagoActualizado = pr.save(pagoExistente);
+        return pm.toPagoDto(pagoActualizado);
     }
 }

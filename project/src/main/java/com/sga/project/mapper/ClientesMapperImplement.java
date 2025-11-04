@@ -27,6 +27,7 @@ public class ClientesMapperImplement implements ClientesMapper {
         clientes.setDireccion(clientesDto.getDireCli());
         clientes.setNumTel(clientesDto.getNumeroCli());
         clientes.setCorreoElectronico(clientesDto.getCorreoElectronico());
+        clientes.setActivo(clientesDto.getActivo() != null ? clientesDto.getActivo() : true);
 
         // NO crear objetos Barrio y TipoDoc aquí
         // El servicio se encargará de cargarlos desde la base de datos
@@ -48,6 +49,7 @@ public class ClientesMapperImplement implements ClientesMapper {
             clientes.getDireccion(),
             clientes.getNumTel(),
             clientes.getCorreoElectronico(),
+            clientes.getActivo(),
             clientes.getBarrio() != null ? clientes.getBarrio().getId_barrio() : null,
             clientes.getTipoDoc() != null ? clientes.getTipoDoc().getId_tipoDoc() : null
         );

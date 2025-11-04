@@ -76,6 +76,10 @@ public UsuarioDto updateUsuario (UsuarioDto usuarioDto) {
     usu.setNom1(usuarioDto.getNombre1());
     usu.setNom2(usuarioDto.getNombre2());
     usu.setNumTel(usuarioDto.getTele());
+    
+    if (usuarioDto.getActivo() != null) {
+        usu.setActivo(usuarioDto.getActivo());
+    }
 
     Rol rol = rolRepo.findById(usuarioDto.getIdRol())
         .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado"));
@@ -91,6 +95,17 @@ public UsuarioDto updateUsuario (UsuarioDto usuarioDto) {
 
     Usuario usuActualizado = usuRepo.save(usu);
     return usuMap.toUsuarioDto(usuActualizado);
+}
+
+@Override
+@Transactional
+public UsuarioDto toggleActivoUsuario(Integer numDoc, Boolean activo) {
+    Usuario usuario = usuRepo.findById(numDoc)
+        .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado por el Numero de Documento: " + numDoc));
+    
+    usuario.setActivo(activo);
+    Usuario usuarioActualizado = usuRepo.save(usuario);
+    return usuMap.toUsuarioDto(usuarioActualizado);
 }
 
 

@@ -72,5 +72,17 @@ import jakarta.validation.Valid;
         return ResponseEntity.ok(alquilerActualizado);
     }
 
+    @PutMapping("activar/{id}")
+    public ResponseEntity<AlquilerDto> activarAlquiler(@PathVariable Integer id) {
+        AlquilerDto alquilerActualizado = alquiServi.toggleActivoAlquiler(id, true);
+        return ResponseEntity.ok(alquilerActualizado);
+    }
+
+    @PutMapping("desactivar/{id}")
+    public ResponseEntity<AlquilerDto> desactivarAlquiler(@PathVariable Integer id) {
+        AlquilerDto alquilerActualizado = alquiServi.toggleActivoAlquiler(id, false);
+        return ResponseEntity.ok(alquilerActualizado);
+    }
+
 
 }

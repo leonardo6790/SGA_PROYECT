@@ -21,4 +21,7 @@ public class TipoDoc {
 
     @Column (length = 40)
     private String nomDoc;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
+    private Boolean activo;
 }
