@@ -41,7 +41,7 @@ export default function NewClient() {
         
         // Establecer valores por defecto cuando se cargan los datos
         if (barriosData.length > 0 && !formData.idBarrio) {
-          setFormData(prev => ({ ...prev, idBarrio: barriosData[0].id_barrio }));
+          setFormData(prev => ({ ...prev, idBarrio: barriosData[0].idBarrio }));
         }
         if (tiposDocData.length > 0 && !formData.idTipoDoc) {
           setFormData(prev => ({ ...prev, idTipoDoc: tiposDocData[0].id_tipoDoc }));
@@ -196,8 +196,8 @@ export default function NewClient() {
                 <option value="" disabled>Seleccione un barrio</option>
                 {barrios.length > 0 ? (
                   barrios.map((barrio) => (
-                    <option key={barrio.id_barrio} value={barrio.id_barrio}>
-                      {barrio.nomBar}
+                    <option key={barrio.idBarrio} value={barrio.idBarrio}>
+                      {barrio.nombreBarrio}
                     </option>
                   ))
                 ) : (

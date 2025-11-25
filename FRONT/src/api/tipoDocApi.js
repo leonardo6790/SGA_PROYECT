@@ -12,7 +12,7 @@ export const obtenerTiposDoc = async () => {
     try {
         const headers = getAuthHeaders();
         
-        const res = await fetch(`${BASE_URL}/listar`, { 
+        const res = await fetch(`${BASE_URL}`, { 
             method: "GET",
             headers: headers,
         });

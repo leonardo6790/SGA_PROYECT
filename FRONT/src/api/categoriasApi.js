@@ -10,7 +10,7 @@ const getAuthHeaders = () => {
 
 export const obtenerCategorias = async () => {
     try {
-        const res = await fetch(`${BASE_URL}/listar`, {
+        const res = await fetch(`${BASE_URL}`, {
             method: "GET",
             headers: getAuthHeaders(),
         });
