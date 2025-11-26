@@ -36,6 +36,9 @@ export default function NewOrder() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
+  const [showObsModal, setShowObsModal] = useState(false);
+  const [currentObsIndex, setCurrentObsIndex] = useState(null);
+  const [tempObservacion, setTempObservacion] = useState("");
 
   // Cargar artículos desde la base de datos
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function NewOrder() {
         items[existingIndex] = item;
         return items;
       }
-      return [...prev, { ...prod, cantidad: 1, subtotal: prod.price }];
+      return [...prev, { ...prod, cantidad: 1, subtotal: prod.price, observaciones: "" }];
     });
   };
 
@@ -104,6 +107,34 @@ export default function NewOrder() {
     setOrderItems(items);
   };
 
+  const openObsModal = (index) => {
+    setCurrentObsIndex(index);
+    setTempObservacion(orderItems[index].observaciones || "");
+    setShowObsModal(true);
+  };
+
+  const saveObservacion = () => {
+    if (currentObsIndex !== null) {
+      const items = [...orderItems];
+      items[currentObsIndex].observaciones = tempObservacion;
+      setOrderItems(items);
+    }
+    setShowObsModal(false);
+    setCurrentObsIndex(null);
+    setTempObservacion("");
+  };
+
+  const updateObservacionQuick = (index, value) => {
+    const items = [...orderItems];
+    items[index].observaciones = value;
+    setOrderItems(items);
+  };
+
+  const truncateText = (text, maxLength = 40) => {
+    if (!text) return "";
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
   const total = orderItems.reduce((s, it) => s + (it.subtotal || it.price * it.cantidad), 0);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -111,7 +142,7 @@ export default function NewOrder() {
   const [popupMessage, setPopupMessage] = useState('');
 
   const buildOrderHtml = () => {
-    const itemsHtml = orderItems.map(it => `<li>${it.name} x${it.cantidad} - $${(it.price*it.cantidad).toLocaleString()}</li>`).join('');
+    const itemsHtml = orderItems.map(it => `<li>${it.name} x${it.cantidad} - $${(it.price * it.cantidad).toLocaleString()}</li>`).join('');
     return `
       <h3>Orden para ${selectedCustomer.name}</h3>
       <p>Email: ${selectedCustomer.email} - Tel: ${selectedCustomer.phone}</p>
@@ -153,7 +184,7 @@ export default function NewOrder() {
           articuloId: item.id,
           precio: item.price,
           estado: false, // false = no devuelto
-          observaciones: null
+          observaciones: item.observaciones || null
         }))
       };
 
@@ -250,9 +281,9 @@ export default function NewOrder() {
           <h2>Productos a Alquilar</h2>
 
           <div className="product-select-row">
-            <select 
-              className="product-select" 
-              value={selectedProductId} 
+            <select
+              className="product-select"
+              value={selectedProductId}
               onChange={(e) => setSelectedProductId(e.target.value)}
               disabled={catalog.length === 0}
             >
@@ -266,8 +297,8 @@ export default function NewOrder() {
                 ))
               )}
             </select>
-            <button 
-              className="nc-button add-btn" 
+            <button
+              className="nc-button add-btn"
               onClick={addProductToOrder}
               disabled={catalog.length === 0}
             >
@@ -276,17 +307,55 @@ export default function NewOrder() {
           </div>
 
           <div className="order-items-table">
-            <div className="table-header"><span>Artículo</span><span>Cantidad</span><span>Precio</span><span>Subtotal</span></div>
+            <div className="table-header">
+              <span>Artículo</span>
+              <span>Cantidad</span>
+              <span>Precio</span>
+              <span>Observaciones</span>
+              <span>Subtotal</span>
+            </div>
             {orderItems.length === 0 && <div className="empty">No hay productos añadidos</div>}
             {orderItems.map((it, idx) => (
               <div className="table-row" key={idx}>
                 <span className="col-name">{it.name}</span>
-                <span className="col-qty"><input type="number" min={1} value={it.cantidad} onChange={(e) => updateQuantity(idx, e.target.value)} /></span>
+                <span className="col-qty">
+                  <input
+                    type="number"
+                    min={1}
+                    value={it.cantidad}
+                    onChange={(e) => updateQuantity(idx, e.target.value)}
+                  />
+                </span>
                 <span className="col-price">${it.price.toLocaleString()}</span>
+                <span className="col-obs">
+                  <div className="obs-container">
+                    <input
+                      type="text"
+                      className="obs-input"
+                      placeholder="Arreglos necesarios..."
+                      value={it.observaciones || ""}
+                      onChange={(e) => updateObservacionQuick(idx, e.target.value)}
+                      maxLength={50}
+                    />
+                    <button
+                      className="obs-expand-btn"
+                      onClick={() => openObsModal(idx)}
+                      title="Ampliar para escribir más"
+                    >
+                      🔍
+                    </button>
+                  </div>
+                </span>
                 <span className="col-sub">${(it.cantidad * it.price).toLocaleString()}</span>
               </div>
             ))}
-            <div className="table-footer"><span>Total</span><span></span><span></span><span className="total-amount">${total.toLocaleString()}</span></div>
+            <div className="table-footer">
+              <span>Total</span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span className="total-amount">${total.toLocaleString()}</span>
+            </div>
           </div>
         </div>
 
@@ -306,10 +375,40 @@ export default function NewOrder() {
 
         {showPopup && (
           <div className="nc-popup">
-              <div className="nc-popup-content">
-                <p>{popupMessage || 'Correo enviado exitosamente'}</p>
+            <div className="nc-popup-content">
+              <p>{popupMessage || 'Correo enviado exitosamente'}</p>
+            </div>
+          </div>
+        )}
+
+        {showObsModal && (
+          <div className="obs-modal-overlay" onClick={() => setShowObsModal(false)}>
+            <div className="obs-modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>📝 Observaciones y Arreglos</h3>
+              <p className="obs-modal-subtitle">
+                {orderItems[currentObsIndex]?.name}
+              </p>
+              <textarea
+                className="obs-modal-textarea"
+                placeholder="Ejemplo: Doblar 2cm la bota del pantalón, ajustar cintura 3cm, acortar mangas 5cm..."
+                value={tempObservacion}
+                onChange={(e) => setTempObservacion(e.target.value)}
+                maxLength={200}
+                rows={6}
+              />
+              <div className="obs-modal-footer">
+                <small>{tempObservacion.length}/200 caracteres</small>
+              </div>
+              <div className="obs-modal-actions">
+                <button className="obs-modal-btn save" onClick={saveObservacion}>
+                  Guardar
+                </button>
+                <button className="obs-modal-btn cancel" onClick={() => setShowObsModal(false)}>
+                  Cancelar
+                </button>
               </div>
             </div>
+          </div>
         )}
       </div>
     </div>

@@ -45,7 +45,7 @@ public class Clientes {
     private String correoElectronico;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
-    private Boolean activo;
+    private Boolean activo = true;
 
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn(name = "id_barrio", nullable = true, foreignKey = @ForeignKey(name = "FK_clientes_barrio"))

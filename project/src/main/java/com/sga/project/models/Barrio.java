@@ -20,5 +20,5 @@ public class Barrio {
     private String nomBar;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT true")
-    private Boolean activo;
+    private Boolean activo = true;
 }
