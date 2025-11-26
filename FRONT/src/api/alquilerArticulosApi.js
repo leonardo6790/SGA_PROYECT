@@ -38,3 +38,49 @@ export const eliminarArticuloDeAlquiler = async (idArticulo, idAlquiler) => {
         throw error;
     }
 };
+
+export const marcarArticuloComoEntregado = async (idArticulo, idAlquiler) => {
+    try {
+        console.log(`Marcando artículo ${idArticulo} del alquiler ${idAlquiler} como entregado`);
+        const response = await fetch(`${BASE_URL}/Actualizar/${idArticulo}/${idAlquiler}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ entregado: true }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error al marcar como entregado:", errorText);
+            throw new Error(`Error al marcar como entregado: ${response.statusText}`);
+        }
+
+        console.log("Artículo marcado como entregado exitosamente");
+        return await response.json();
+    } catch (error) {
+        console.error("Error en marcarArticuloComoEntregado:", error);
+        throw error;
+    }
+};
+
+export const marcarArticuloComoDevuelto = async (idArticulo, idAlquiler) => {
+    try {
+        console.log(`Marcando artículo ${idArticulo} del alquiler ${idAlquiler} como devuelto`);
+        const response = await fetch(`${BASE_URL}/Actualizar/${idArticulo}/${idAlquiler}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ estado: true }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error al marcar como devuelto:", errorText);
+            throw new Error(`Error al marcar como devuelto: ${response.statusText}`);
+        }
+
+        console.log("Artículo marcado como devuelto exitosamente");
+        return await response.json();
+    } catch (error) {
+        console.error("Error en marcarArticuloComoDevuelto:", error);
+        throw error;
+    }
+};

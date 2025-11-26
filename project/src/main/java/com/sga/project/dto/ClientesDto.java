@@ -17,6 +17,6 @@ public class ClientesDto {
     private Long numeroCli;
     private String correoElectronico;
     private Boolean activo;
-    private Integer barrioId;
-    private Integer tipoDocId;
+    private Integer idBarrio;
+    private Integer idTipoDoc;
 }

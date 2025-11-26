@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
 import "./Clients.styles.css";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
-import { obtenerClientes, actualizarCliente } from "../../../api/clientesApi";
-import { HiPencilSquare } from "react-icons/hi2";
-import { SlArrowDown } from "react-icons/sl";
+import { obtenerClientes, actualizarCliente, eliminarCliente } from "../../../api/clientesApi";
+import { obtenerBarrios } from "../../../api/barriosApi";
+import { obtenerTiposDoc } from "../../../api/tipoDocApi";
+import { HiPencilSquare, HiTrash, HiEye } from "react-icons/hi2";
 
 const Clients = () => {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [viewingClient, setViewingClient] = useState(null);
+  const [barrios, setBarrios] = useState([]);
+  const [tiposDoc, setTiposDoc] = useState([]);
   const [editedData, setEditedData] = useState({
     nomcli1: "",
     nomcli2: "",
@@ -17,26 +21,36 @@ const Clients = () => {
     apecli2: "",
     correoElectronico: "",
     numeroCli: "",
+    direCli: "",
+    idBarrio: null,
+    idTipoDoc: null,
+    activo: true,
   });
 
   useEffect(() => {
-    const cargarClientes = async () => {
+    const cargarDatos = async () => {
       try {
         const token = localStorage.getItem("sga_token");
         if (!token) {
           console.log("No hay token, no se cargarán los clientes");
           return;
         }
-        const data = await obtenerClientes();
-        console.log("Clientes recibidos:", data);
-        setClients(data);
-        setFilteredClients(data); // Inicialmente mostrar todos los clientes
+        const [clientesData, barriosData, tiposDocData] = await Promise.all([
+          obtenerClientes(),
+          obtenerBarrios(),
+          obtenerTiposDoc()
+        ]);
+        console.log("Clientes recibidos:", clientesData);
+        setClients(clientesData);
+        setFilteredClients(clientesData);
+        setBarrios(barriosData);
+        setTiposDoc(tiposDocData);
       } catch (error) {
-        console.error("Error al cargar clientes:", error);
+        console.error("Error al cargar datos:", error);
       }
     };
     
-    cargarClientes();
+    cargarDatos();
   }, []);
 
   // Filtrar clientes cuando cambia el término de búsqueda
@@ -45,7 +59,7 @@ const Clients = () => {
       setFilteredClients(clients);
     } else {
       const filtered = clients.filter((client) => 
-        String(client.doc).includes(searchTerm.trim())
+        String(client.doc).startsWith(searchTerm.trim())
       );
       setFilteredClients(filtered);
     }
@@ -65,6 +79,10 @@ const Clients = () => {
       apecli2: client.apecli2 || "",
       correoElectronico: client.correoElectronico || "",
       numeroCli: client.numeroCli || "",
+      direCli: client.direCli || "",
+      idBarrio: client.idBarrio || null,
+      idTipoDoc: client.idTipoDoc || null,
+      activo: client.activo !== undefined ? client.activo : true,
     });
   };
 
@@ -79,6 +97,10 @@ const Clients = () => {
         apecli2: editedData.apecli2,
         correoElectronico: editedData.correoElectronico,
         numeroCli: parseInt(editedData.numeroCli),
+        direCli: editedData.direCli,
+        idBarrio: editedData.idBarrio ? parseInt(editedData.idBarrio) : null,
+        idTipoDoc: editedData.idTipoDoc ? parseInt(editedData.idTipoDoc) : null,
+        activo: editedData.activo,
       };
 
       console.log("Actualizando cliente:", editingId);
@@ -99,6 +121,10 @@ const Clients = () => {
         apecli2: "",
         correoElectronico: "",
         numeroCli: "",
+        direCli: "",
+        idBarrio: null,
+        idTipoDoc: null,
+        activo: true,
       });
       
       alert("Cliente actualizado exitosamente");
@@ -117,7 +143,34 @@ const Clients = () => {
       apecli2: "",
       correoElectronico: "",
       numeroCli: "",
+      direCli: "",
+      idBarrio: null,
+      idTipoDoc: null,
+      activo: true,
     });
+  };
+
+  const handleViewClient = (client) => {
+    setViewingClient(client);
+  };
+
+  const handleCloseView = () => {
+    setViewingClient(null);
+  };
+
+  const handleDeleteClick = async (clientDoc) => {
+    if (window.confirm(`¿Está seguro de que desea eliminar al cliente con documento ${clientDoc}?`)) {
+      try {
+        await eliminarCliente(clientDoc);
+        const data = await obtenerClientes();
+        setClients(data);
+        setFilteredClients(data);
+        alert("Cliente eliminado exitosamente");
+      } catch (error) {
+        console.error("Error al eliminar cliente:", error);
+        alert(`Error al eliminar el cliente: ${error.message}`);
+      }
+    }
   };
 
   return (
@@ -161,9 +214,15 @@ const Clients = () => {
                   <div className="client-field">{cli.apecli2}</div>
                   <div className="client-field">{cli.correoElectronico}</div>
                   <div className="client-field">{cli.numeroCli}</div>
-                  <div className="client-field">
-                    <button className="editbutton" onClick={() => handleEditClick(cli)}>
+                  <div className="client-field client-actions">
+                    <button className="action-button view-button" onClick={() => handleViewClient(cli)} title="Ver más">
+                      <HiEye />
+                    </button>
+                    <button className="action-button edit-button" onClick={() => handleEditClick(cli)} title="Editar">
                       <HiPencilSquare />
+                    </button>
+                    <button className="action-button delete-button" onClick={() => handleDeleteClick(cli.doc)} title="Eliminar">
+                      <HiTrash />
                     </button>
                   </div>
                 </div>
@@ -229,6 +288,52 @@ const Clients = () => {
               }
               placeholder="Teléfono"
             />
+            <input
+              type="text"
+              value={editedData.direCli}
+              onChange={(e) =>
+                setEditedData({ ...editedData, direCli: e.target.value })
+              }
+              placeholder="Dirección"
+            />
+            <select
+              value={editedData.idBarrio || ""}
+              onChange={(e) =>
+                setEditedData({ ...editedData, idBarrio: e.target.value })
+              }
+            >
+              <option value="">Seleccione un barrio</option>
+              {barrios.map((barrio) => (
+                <option key={barrio.idBarrio} value={barrio.idBarrio}>
+                  {barrio.nombreBarrio}
+                </option>
+              ))}
+            </select>
+            <div className="activo-field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={editedData.activo}
+                  onChange={(e) =>
+                    setEditedData({ ...editedData, activo: e.target.checked })
+                  }
+                />
+                <span>Cliente Activo</span>
+              </label>
+            </div>
+            <select
+              value={editedData.idTipoDoc || ""}
+              onChange={(e) =>
+                setEditedData({ ...editedData, idTipoDoc: e.target.value })
+              }
+            >
+              <option value="">Seleccione tipo de documento</option>
+              {tiposDoc.map((tipo) => (
+                <option key={tipo.id_tipoDoc} value={tipo.id_tipoDoc}>
+                  {tipo.nomDoc}
+                </option>
+              ))}
+            </select>
             <div className="modal-buttons">
               <button type="submit">Actualizar</button>
               <button
@@ -240,6 +345,73 @@ const Clients = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {viewingClient && (
+        <div className="modal-overlay" onClick={handleCloseView}>
+          <div className="modal view-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Detalles del Cliente</h2>
+            <div className="client-details">
+              <div className="detail-row">
+                <span className="detail-label">Documento:</span>
+                <span className="detail-value">{viewingClient.doc}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Primer Nombre:</span>
+                <span className="detail-value">{viewingClient.nomcli1}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Segundo Nombre:</span>
+                <span className="detail-value">{viewingClient.nomcli2 || "N/A"}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Primer Apellido:</span>
+                <span className="detail-value">{viewingClient.apecli1}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Segundo Apellido:</span>
+                <span className="detail-value">{viewingClient.apecli2 || "N/A"}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Correo Electrónico:</span>
+                <span className="detail-value">{viewingClient.correoElectronico}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Teléfono:</span>
+                <span className="detail-value">{viewingClient.numeroCli}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Dirección:</span>
+                <span className="detail-value">{viewingClient.direCli || "N/A"}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Barrio:</span>
+                <span className="detail-value">
+                  {viewingClient.idBarrio 
+                    ? barrios.find(b => b.idBarrio === viewingClient.idBarrio)?.nombreBarrio || "N/A"
+                    : "N/A"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Tipo de Documento:</span>
+                <span className="detail-value">
+                  {viewingClient.idTipoDoc 
+                    ? tiposDoc.find(t => t.id_tipoDoc === viewingClient.idTipoDoc)?.nomDoc || "N/A"
+                    : "N/A"}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Estado:</span>
+                <span className="detail-value">{viewingClient.activo ? "Activo" : "Inactivo"}</span>
+              </div>
+            </div>
+            <div className="modal-buttons">
+              <button type="button" onClick={handleCloseView}>
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>

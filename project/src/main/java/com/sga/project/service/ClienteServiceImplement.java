@@ -48,17 +48,17 @@ public class ClienteServiceImplement implements ClienteService {
         Clientes clientes = cm.toClientes(clientesDto);
         
         // Cargar las entidades relacionadas desde la base de datos
-        if (clientesDto.getBarrioId() != null && clientesDto.getBarrioId() > 0) {
-            Barrio barrio = br.findById(clientesDto.getBarrioId())
-                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado: " + clientesDto.getBarrioId()));
+        if (clientesDto.getIdBarrio() != null && clientesDto.getIdBarrio() > 0) {
+            Barrio barrio = br.findById(clientesDto.getIdBarrio())
+                .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado: " + clientesDto.getIdBarrio()));
             clientes.setBarrio(barrio);
         } else {
             clientes.setBarrio(null);
         }
         
-        if (clientesDto.getTipoDocId() != null && clientesDto.getTipoDocId() > 0) {
-            TipoDoc tipoDoc = tp.findById(clientesDto.getTipoDocId())
-                .orElseThrow(() -> new EntityNotFoundException("Tipo de documento no encontrado: " + clientesDto.getTipoDocId()));
+        if (clientesDto.getIdTipoDoc() != null && clientesDto.getIdTipoDoc() > 0) {
+            TipoDoc tipoDoc = tp.findById(clientesDto.getIdTipoDoc())
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de documento no encontrado: " + clientesDto.getIdTipoDoc()));
             clientes.setTipoDoc(tipoDoc);
         } else {
             clientes.setTipoDoc(null);
@@ -101,14 +101,14 @@ public class ClienteServiceImplement implements ClienteService {
             cli.setDireccion(clientesDto.getDireCli());
         }
         
-        if (clientesDto.getBarrioId() != null) {
-            Barrio bar = br.findById(clientesDto.getBarrioId())
+        if (clientesDto.getIdBarrio() != null) {
+            Barrio bar = br.findById(clientesDto.getIdBarrio())
             .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
             cli.setBarrio(bar);
         }
 
-        if (clientesDto.getTipoDocId() != null) {
-            TipoDoc tipoDoc = tp.findById(clientesDto.getTipoDocId())
+        if (clientesDto.getIdTipoDoc() != null) {
+            TipoDoc tipoDoc = tp.findById(clientesDto.getIdTipoDoc())
             .orElseThrow(() -> new EntityNotFoundException("tipo de documento no encontrado"));
             cli.setTipoDoc(tipoDoc);
         }

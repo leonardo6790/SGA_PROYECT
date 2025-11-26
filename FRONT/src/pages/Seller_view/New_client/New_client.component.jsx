@@ -91,8 +91,8 @@ export default function NewClient() {
         direCli: formData.direCli,
         numeroCli: parseInt(formData.numeroCli),
         correoElectronico: formData.correoElectronico,
-        barrioId: parseInt(formData.idBarrio),
-        tipoDocId: parseInt(formData.idTipoDoc),
+        idBarrio: parseInt(formData.idBarrio),
+        idTipoDoc: parseInt(formData.idTipoDoc),
       };
 
       console.log("Creando cliente:", clienteData);

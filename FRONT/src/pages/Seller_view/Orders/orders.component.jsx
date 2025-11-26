@@ -4,7 +4,9 @@ import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Na
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
-import { eliminarArticuloDeAlquiler } from "../../../api/alquilerArticulosApi";
+import { eliminarArticuloDeAlquiler, marcarArticuloComoEntregado, marcarArticuloComoDevuelto } from "../../../api/alquilerArticulosApi";
+import { obtenerClientePorId } from "../../../api/clientesApi";
+import { HiEye } from "react-icons/hi2";
 
 
 const Orders = () => {
@@ -15,6 +17,9 @@ const Orders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [editData, setEditData] = useState({});
   const [filterByDate, setFilterByDate] = useState(false);
+  const [viewingOrder, setViewingOrder] = useState(null);
+  const [viewingClient, setViewingClient] = useState(null);
+  const [activeTab, setActiveTab] = useState('entregar'); // 'entregar' o 'recibir'
   
   // Convertir alquileres a lista de artículos (una tarjeta por artículo)
   const [articleCards, setArticleCards] = useState([]);
@@ -57,6 +62,7 @@ const Orders = () => {
                   talla: articulo.tallaArticulo,
                   precio: articulo.precio,
                   estado: articulo.estado,
+                  entregado: articulo.entregado || false, // Nuevo campo para controlar si fue entregado
                   observaciones: articulo.observaciones
                 });
               });
@@ -93,8 +99,22 @@ const Orders = () => {
     cargarAlquileres();
   }, []);
 
+  // Separar las órdenes en dos categorías
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Órdenes a entregar: no han sido entregados y no han sido devueltos
+  const ordersToDeliver = articleCards.filter(card => {
+    return !card.entregado && !card.estado;
+  });
+
+  // Órdenes a recibir: ya fueron entregados pero no han sido devueltos
+  const ordersToReceive = articleCards.filter(card => {
+    return card.entregado && !card.estado;
+  });
+
   // Filtrar tarjetas según búsqueda y fecha (solo si filterByDate está activo)
-  const filteredCards = articleCards.filter(card => {
+  const filteredCards = (activeTab === 'entregar' ? ordersToDeliver : ordersToReceive).filter(card => {
     // Si no hay búsqueda, solo aplicar filtro de fecha si está activo
     if (searchText === "") {
       if (filterByDate && startDate) {
@@ -185,6 +205,58 @@ const Orders = () => {
     console.log("Filtros limpiados");
   };
 
+  const handleViewMore = async (card) => {
+    try {
+      const clienteData = await obtenerClientePorId(card.clienteDoc);
+      setViewingClient(clienteData);
+      setViewingOrder(card);
+    } catch (error) {
+      console.error("Error al cargar datos del cliente:", error);
+      alert("Error al cargar los datos del cliente");
+    }
+  };
+
+  const handleCloseView = () => {
+    setViewingOrder(null);
+    setViewingClient(null);
+  };
+
+  const handleMarkAsDelivered = async (card) => {
+    if (window.confirm(`¿Confirmar que el artículo "${card.articulo}" ha sido entregado al cliente?`)) {
+      try {
+        await marcarArticuloComoEntregado(card.articuloId, card.idAlquiler);
+        
+        // Actualizar el estado local
+        setArticleCards(articleCards.map(c => 
+          c.id === card.id ? {...c, entregado: true} : c
+        ));
+        
+        alert("Artículo marcado como entregado. Ahora aparecerá en 'Órdenes a Recibir'");
+      } catch (error) {
+        console.error("Error al marcar como entregado:", error);
+        alert("Error al marcar como entregado. Por favor, intenta nuevamente.");
+      }
+    }
+  };
+
+  const handleMarkAsReceived = async (card) => {
+    if (window.confirm(`¿Confirmar que el artículo "${card.articulo}" ha sido devuelto? El artículo volverá a estar disponible para alquiler.`)) {
+      try {
+        await marcarArticuloComoDevuelto(card.articuloId, card.idAlquiler);
+        
+        // Actualizar el estado local - marcar como devuelto
+        setArticleCards(articleCards.map(c => 
+          c.id === card.id ? {...c, estado: true} : c
+        ));
+        
+        alert("Artículo marcado como devuelto. El artículo ya está disponible para alquiler nuevamente.");
+      } catch (error) {
+        console.error("Error al marcar como devuelto:", error);
+        alert("Error al marcar como devuelto. Por favor, intenta nuevamente.");
+      }
+    }
+  };
+
   return (
     <div className="orders-wrapper">
       <NavbarSeller />
@@ -224,11 +296,27 @@ const Orders = () => {
       </aside>
 
       <div className="orders-container">
-        <h1 className="orders-title">Órdenes recientes</h1>
+        <h1 className="orders-title">Gestión de Órdenes</h1>
+        
+        <div className="orders-tabs">
+          <button 
+            className={`tab-button ${activeTab === 'entregar' ? 'active' : ''}`}
+            onClick={() => setActiveTab('entregar')}
+          >
+            📦 Órdenes a Entregar ({ordersToDeliver.length})
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'recibir' ? 'active' : ''}`}
+            onClick={() => setActiveTab('recibir')}
+          >
+            📥 Órdenes a Recibir ({ordersToReceive.length})
+          </button>
+        </div>
+
         <p className="orders-subtitle">
           {searchText || filterByDate
             ? `Mostrando ${filteredCards.length} resultado(s)${searchText ? ` para "${searchText}"` : ''}${filterByDate ? ` (fecha: ${startDate.toLocaleDateString()})` : ''}`
-            : `Lista completa de artículos alquilados (${filteredCards.length} artículos)`
+            : `${activeTab === 'entregar' ? 'Órdenes pendientes de entrega' : 'Órdenes pendientes de devolución'} (${filteredCards.length} artículos)`
           }
         </p>
 
@@ -252,7 +340,7 @@ const Orders = () => {
                 <span>Artículo</span>
                 <span>Talla</span>
                 <span>Precio</span>
-                <span>Fecha Entrega</span>
+                <span>{activeTab === 'entregar' ? 'Fecha Entrega' : 'Fecha Devolución'}</span>
                 <span>Estado</span>
                 <span>Acciones</span>
               </div>
@@ -267,14 +355,28 @@ const Orders = () => {
                 <div className="order-field"><strong>{card.articulo}</strong></div>
                 <div className="order-field">{card.talla || 'N/A'}</div>
                 <div className="order-field">${card.precio?.toLocaleString()}</div>
-                <div className="order-field">{card.fechaEntrega}</div>
+                <div className="order-field">
+                  {activeTab === 'entregar' ? card.fechaEntrega : card.fechaRetiro}
+                </div>
                 <div className="order-field">
                   <span className={`status-badge ${card.estado ? 'devuelto' : 'pendiente'}`}>
                     {card.estado ? '✓ Devuelto' : '⏳ Pendiente'}
                   </span>
                 </div>
                 <div className="order-buttons">
-                  <button className="update-btn" onClick={() => handleEdit(card)}>Actualizar</button>
+                  <button className="view-btn" onClick={() => handleViewMore(card)} title="Ver más">
+                    <HiEye /> Ver más
+                  </button>
+                  {activeTab === 'entregar' && (
+                    <button className="deliver-btn" onClick={() => handleMarkAsDelivered(card)}>
+                      ✓ Entregado
+                    </button>
+                  )}
+                  {activeTab === 'recibir' && (
+                    <button className="receive-btn" onClick={() => handleMarkAsReceived(card)}>
+                      ✓ Recibido
+                    </button>
+                  )}
                   <button className="delete-btn" onClick={() => handleDelete(card)}>Eliminar</button>
                 </div>
               </div>
@@ -287,6 +389,92 @@ const Orders = () => {
           ))}
         </div>
       </div>
+
+      {viewingOrder && viewingClient && (
+        <div className="modal-overlay" onClick={handleCloseView}>
+          <div className="modal view-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Detalles de la Orden</h2>
+            
+            <div className="modal-section">
+              <h3>Información del Alquiler</h3>
+              <div className="detail-row">
+                <span className="detail-label">ID Alquiler:</span>
+                <span className="detail-value">#{viewingOrder.idAlquiler}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Artículo:</span>
+                <span className="detail-value">{viewingOrder.articulo}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Talla:</span>
+                <span className="detail-value">{viewingOrder.talla || 'N/A'}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Precio:</span>
+                <span className="detail-value">${viewingOrder.precio?.toLocaleString()}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Fecha Alquiler:</span>
+                <span className="detail-value">{viewingOrder.fechaAlquiler}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Fecha Entrega:</span>
+                <span className="detail-value">{viewingOrder.fechaEntrega}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Fecha Retiro:</span>
+                <span className="detail-value">{viewingOrder.fechaRetiro}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Estado:</span>
+                <span className="detail-value">
+                  <span className={`status-badge ${viewingOrder.estado ? 'devuelto' : 'pendiente'}`}>
+                    {viewingOrder.estado ? '✓ Devuelto' : '⏳ Pendiente'}
+                  </span>
+                </span>
+              </div>
+              {viewingOrder.observaciones && (
+                <div className="detail-row">
+                  <span className="detail-label">Observaciones:</span>
+                  <span className="detail-value">{viewingOrder.observaciones}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-section">
+              <h3>Información del Cliente</h3>
+              <div className="detail-row">
+                <span className="detail-label">Documento:</span>
+                <span className="detail-value">{viewingClient.doc}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Nombre Completo:</span>
+                <span className="detail-value">
+                  {viewingClient.nomcli1} {viewingClient.nomcli2 || ''} {viewingClient.apecli1} {viewingClient.apecli2 || ''}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Teléfono:</span>
+                <span className="detail-value">{viewingClient.numeroCli}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Correo:</span>
+                <span className="detail-value">{viewingClient.correoElectronico}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Dirección:</span>
+                <span className="detail-value">{viewingClient.direCli || 'N/A'}</span>
+              </div>
+            </div>
+
+            <div className="modal-buttons">
+              <button type="button" onClick={handleCloseView}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editingOrder && (
         <div className="edit-overlay">
