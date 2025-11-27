@@ -41,6 +41,7 @@ public class AlquilerArticulosMapperImplement implements AlquilerArticuloMapper{
         alquiArti.setAlquiler(alqui);
         alquiArti.setArticulo(arti);
         alquiArti.setEstado(alquiArtiDto.getEstado());
+        alquiArti.setEntregado(alquiArtiDto.getEntregado() != null ? alquiArtiDto.getEntregado() : false);
         alquiArti.setObservaciones(alquiArtiDto.getObservaciones());
         
         // Si el DTO trae un precio, usarlo; si no, usar el precio del artículo
@@ -75,6 +76,7 @@ public class AlquilerArticulosMapperImplement implements AlquilerArticuloMapper{
             telefonoCliente,
             entity.getAlquiler().getFechaEnt(),
             entity.getEstado(),
+            entity.getEntregado() != null ? entity.getEntregado() : false,
             entity.getPrecio(), // Usar el precio de la asignación, no del artículo
             entity.getObservaciones()
         );

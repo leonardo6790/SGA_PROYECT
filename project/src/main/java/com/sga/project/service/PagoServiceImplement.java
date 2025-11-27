@@ -53,6 +53,15 @@ public class PagoServiceImplement implements PagoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PagoDto> getPagosByAlquiler(Integer idAlquiler) {
+        return pr.findAll().stream()
+                .filter(pago -> pago.getAlquiler().getId().equals(idAlquiler))
+                .map(pm::toPagoDto)
+                .toList();
+    }
+
+    @Override
     public void deletePago(Integer pagoid) {
         Pago pago = pr.findById(pagoid)
                 .orElseThrow(() -> new EntityNotFoundException("pago no encontrado por id: " + pagoid));

@@ -41,13 +41,22 @@ public class PagoController {
     @PostMapping("/AñadirPago")
     public ResponseEntity<?> crear(@Valid @RequestBody PagoDto pagoDto) {
         try {
+            System.out.println("=== Recibiendo pago ===");
+            System.out.println("ID Alquiler: " + pagoDto.getIdAlquiler());
+            System.out.println("Valor Abono: " + pagoDto.getValAbo());
+            System.out.println("Fecha: " + pagoDto.getFechaUltimoAbono());
+            
             PagoDto añadir = pagoServi.savePago(pagoDto);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("mensaje", "Pago añadido", "data", añadir));
         } catch (IllegalStateException exception) {
+            System.err.println("Error IllegalStateException: " + exception.getMessage());
+            exception.printStackTrace();
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", exception.getMessage()));
         } catch (Exception ex) {
+            System.err.println("Error al añadir pago: " + ex.getMessage());
+            ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al añadir un pago", "detalle", ex.getMessage()));
         }
@@ -63,6 +72,16 @@ public class PagoController {
     @GetMapping("/ConsultarPagos")
     public List<PagoDto> getListPagos() {
         return pagoRepo.findAll().stream().map(pagoMap::toPagoDto).toList();
+    }
+
+    @GetMapping("/alquiler/{idAlquiler}")
+    public ResponseEntity<List<PagoDto>> getPagosByAlquiler(@PathVariable Integer idAlquiler) {
+        try {
+            List<PagoDto> pagos = pagoServi.getPagosByAlquiler(idAlquiler);
+            return ResponseEntity.ok(pagos);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @DeleteMapping("/Eliminar/{idPago}")

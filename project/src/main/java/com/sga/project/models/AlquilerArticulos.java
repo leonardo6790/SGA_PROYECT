@@ -35,6 +35,8 @@ public class AlquilerArticulos {
 
     private Boolean estado; //Indica el  esatado del alquiler, si fue devuelto o no.
 
+    private Boolean entregado = false; // Indica si el artículo fue entregado al cliente
+
     private Integer precio;
     
     @Size (max = 200)

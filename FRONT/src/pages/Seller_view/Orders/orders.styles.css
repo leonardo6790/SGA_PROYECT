@@ -10,7 +10,7 @@
   width: 16%;
   background-color: #fff;
   padding: 30px 20px;
-  box-shadow: 3px 0 15px rgba(0,0,0,0.08);
+  box-shadow: 3px 0 15px rgba(0, 0, 0, 0.08);
   position: fixed;
   height: 100vh;
 }
@@ -142,110 +142,178 @@
 
 .order-card {
   background-color: #fff;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .order-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 80px 180px 120px 200px 80px 100px 120px 200px;
+  gap: 10px;
   font-weight: bold;
-  padding: 10px 20px;
-  border-bottom: 1px solid #ccc;
+  padding: 12px 20px;
+  border-bottom: 2px solid #e0e0e0;
+  background-color: #f8f9fa;
+  align-items: center;
 }
 
 .order-header span {
-  flex: 1;
   text-align: center;
+  font-size: 13px;
+  color: #555;
 }
 
 .order-body {
-  display: flex;
+  display: grid;
+  grid-template-columns: 80px 180px 120px 200px 80px 100px 120px 200px;
+  gap: 10px;
   align-items: center;
-  padding: 10px 20px;
-  border-bottom: 1px solid #eee;
+  padding: 15px 20px;
 }
 
 .order-field {
-  flex: 1;
-  padding: 5px 10px;
+  padding: 5px;
   text-align: center;
-  border-right: 1px solid #ccc;
-}
-
-.order-field:last-child {
-  border-right: none;
+  font-size: 14px;
+  color: #333;
 }
 
 .order-buttons {
-  flex: 1;
   display: flex;
   justify-content: center;
-  gap: 10px;
-}
-
-.update-btn {
-  padding: 10px 12px;
-  border: none;
-  background-color: #3498db;
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.delete-btn {
-  padding: 6px 12px;
-  border: none;
-  background-color: #e74c3c;
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
+  gap: 8px;
+  align-items: center;
 }
 
 .view-btn {
-  padding: 6px 12px;
+  padding: 6px 8px;
   border: none;
-  background-color: #3498db;
+  background-color: #5dade2;
   color: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 14px;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
 }
 
 .view-btn:hover {
-  background-color: #2980b9;
+  background-color: #3498db;
+  transform: scale(1.05);
+}
+
+.delete-btn {
+  padding: 6px 8px;
+  border: none;
+  background-color: #e74c3c;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
 }
 
 .deliver-btn {
-  padding: 6px 12px;
+  padding: 6px 8px;
   border: none;
   background-color: #27ae60;
   color: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .deliver-btn:hover {
   background-color: #229954;
+  transform: scale(1.05);
 }
 
 .receive-btn {
-  padding: 6px 12px;
+  padding: 6px 8px;
   border: none;
   background-color: #f39c12;
   color: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .receive-btn:hover {
   background-color: #e67e22;
+  transform: scale(1.05);
+}
+
+.payment-btn {
+  padding: 6px 8px;
+  border: none;
+  background-color: #9b59b6;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-btn:hover {
+  background-color: #8e44ad;
+  transform: scale(1.05);
+}
+
+.view-payments-btn {
+  padding: 6px 8px;
+  border: none;
+  background-color: #16a085;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-payments-btn:hover {
+  background-color: #138d75;
+  transform: scale(1.05);
 }
 
 .edit-overlay {
@@ -254,7 +322,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -355,12 +423,11 @@
 
 /* Footer de la tarjeta para observaciones */
 .order-footer {
-  padding: 15px 20px;
+  padding: 12px 20px;
   background-color: #f8f9fa;
-  border-top: 1px solid #dee2e6;
-  font-size: 14px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 13px;
   color: #495057;
-  border-radius: 0 0 16px 16px;
 }
 
 .order-footer strong {
@@ -460,4 +527,176 @@
   background-color: #8e44ad;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(155, 89, 182, 0.3);
+}
+
+/* Estilos para modales de pago */
+.payment-modal {
+  max-width: 500px;
+}
+
+.payment-list-modal {
+  max-width: 700px;
+}
+
+.payment-info {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.payment-info p {
+  margin: 8px 0;
+  color: #333;
+}
+
+.payment-summary {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.payment-summary p {
+  margin: 8px 0;
+  color: #333;
+}
+
+.payment-totals {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid #ddd;
+}
+
+.payment-totals p {
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.payment-totals .paid {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.payment-totals .pending {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.payment-totals .complete {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.payment-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.payment-input:focus {
+  outline: none;
+  border-color: #9b59b6;
+  box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1);
+}
+
+.payments-table {
+  margin-top: 20px;
+}
+
+.payments-table h3 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+}
+
+.payments-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.payments-table thead {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.payments-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.payments-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.payments-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.no-payments {
+  text-align: center;
+  color: #999;
+  padding: 20px;
+  font-style: italic;
+}
+
+.delete-payment-btn {
+  padding: 6px 10px;
+  border: none;
+  background-color: #e74c3c;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-payment-btn:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+.payments-table th:last-child,
+.payments-table td:last-child {
+  text-align: center;
+  width: 100px;
+}
+
+.save-btn {
+  background-color: #27ae60 !important;
+}
+
+.save-btn:hover {
+  background-color: #229954 !important;
+}
+
+.cancel-btn {
+  background-color: #95a5a6 !important;
+}
+
+.cancel-btn:hover {
+  background-color: #7f8c8d !important;
 }

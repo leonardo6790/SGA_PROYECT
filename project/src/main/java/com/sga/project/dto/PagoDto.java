@@ -12,9 +12,6 @@ import lombok.NoArgsConstructor;
 public class PagoDto {
     private Integer idPago;
     private Integer fechaUltimoAbono;
-    
-    @JsonProperty("ValAbo")  // Mapea el JSON "ValAbo" a este campo
     private Integer valAbo;
-    
     private Integer idAlquiler;
 }

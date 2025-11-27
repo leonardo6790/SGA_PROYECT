@@ -15,6 +15,8 @@ public interface AlquilerArticuloService {
 
     void eliminarAsignacion (Integer ArticuloId, Integer alquilerId);
 
+    AlquilerArticulosDto actualizarEstado(Integer articuloId, Integer alquilerId, Boolean estado, Boolean entregado);
+
     List<AlquilerArticulosDto> listarAlquileres ();
     
     String debugAlquiler(Integer alquilerId);

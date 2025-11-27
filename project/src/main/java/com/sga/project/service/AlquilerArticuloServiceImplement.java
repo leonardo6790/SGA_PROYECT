@@ -70,6 +70,23 @@ public class AlquilerArticuloServiceImplement implements AlquilerArticuloService
     }
 
     @Override
+    public AlquilerArticulosDto actualizarEstado(Integer articuloId, Integer alquilerId, Boolean estado, Boolean entregado) {
+        AlquilerArticulosId id = new AlquilerArticulosId(alquilerId, articuloId);
+        AlquilerArticulos alqArt = alquiArtiRepo.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Asignación no encontrada"));
+        
+        if (estado != null) {
+            alqArt.setEstado(estado);
+        }
+        if (entregado != null) {
+            alqArt.setEntregado(entregado);
+        }
+        
+        AlquilerArticulos actualizado = alquiArtiRepo.save(alqArt);
+        return alquiArtiMap.toAlquilerArticulosDto(actualizado);
+    }
+
+    @Override
     public List<AlquilerArticulosDto> listarAlquileres() {
         return alquiArtiRepo.findAll().stream().map(alquiArtiMap::toAlquilerArticulosDto).toList();
     }

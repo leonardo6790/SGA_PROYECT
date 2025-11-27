@@ -33,6 +33,8 @@ private LocalDate fechaEntrega;
 
 private Boolean estado;
 
+private Boolean entregado;
+
 private Integer precio;
 
 private String observaciones;

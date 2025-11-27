@@ -6,7 +6,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
 import { eliminarArticuloDeAlquiler, marcarArticuloComoEntregado, marcarArticuloComoDevuelto } from "../../../api/alquilerArticulosApi";
 import { obtenerClientePorId } from "../../../api/clientesApi";
+import { crearPago, obtenerPagosPorAlquiler, eliminarPago } from "../../../api/pagoApi";
 import { HiEye } from "react-icons/hi2";
+import { MdPayment } from "react-icons/md";
 
 
 const Orders = () => {
@@ -20,10 +22,18 @@ const Orders = () => {
   const [viewingOrder, setViewingOrder] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
   const [activeTab, setActiveTab] = useState('entregar'); // 'entregar' o 'recibir'
-  
+
+  // Estados para el modal de pagos
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPaymentListModal, setShowPaymentListModal] = useState(false);
+  const [currentPaymentCard, setCurrentPaymentCard] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentList, setPaymentList] = useState([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
+
   // Convertir alquileres a lista de artículos (una tarjeta por artículo)
   const [articleCards, setArticleCards] = useState([]);
-  
+
   useEffect(() => {
     const cargarAlquileres = async () => {
       try {
@@ -37,14 +47,14 @@ const Orders = () => {
         console.log("Alquileres cargados desde la API:", data);
         console.log("Cantidad de alquileres:", data ? data.length : 0);
         setOrders(data || []);
-        
+
         // Convertir cada alquiler en tarjetas individuales por artículo
         const cards = [];
         if (data && data.length > 0) {
           data.forEach(alquiler => {
             console.log("Procesando alquiler:", alquiler);
             console.log("Artículos del alquiler:", alquiler.articulos);
-            
+
             if (alquiler.articulos && alquiler.articulos.length > 0) {
               alquiler.articulos.forEach(articulo => {
                 console.log("Procesando artículo:", articulo);
@@ -95,14 +105,14 @@ const Orders = () => {
         setLoading(false);
       }
     };
-    
+
     cargarAlquileres();
   }, []);
 
   // Separar las órdenes en dos categorías
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   // Órdenes a entregar: no han sido entregados y no han sido devueltos
   const ordersToDeliver = articleCards.filter(card => {
     return !card.entregado && !card.estado;
@@ -124,28 +134,28 @@ const Orders = () => {
       }
       return true;
     }
-    
+
     // Normalizar el texto de búsqueda
     const searchLower = searchText.toLowerCase().trim();
-    
+
     // Buscar por ID de alquiler (coincidencia exacta o al inicio)
     const idAlquilerStr = card.idAlquiler.toString();
     const matchesId = idAlquilerStr === searchText || idAlquilerStr.startsWith(searchText);
-    
+
     // Buscar por nombre de cliente (coincidencia parcial)
-    const matchesNombre = card.nombreCliente && 
-                          card.nombreCliente.toLowerCase().includes(searchLower);
-    
+    const matchesNombre = card.nombreCliente &&
+      card.nombreCliente.toLowerCase().includes(searchLower);
+
     // Buscar por documento de cliente (coincidencia exacta o al inicio)
     const docStr = card.clienteDoc ? card.clienteDoc.toString() : '';
     const matchesDoc = docStr === searchText || docStr.startsWith(searchText);
-    
+
     // Buscar por nombre del artículo (coincidencia parcial)
-    const matchesArticulo = card.articulo && 
-                            card.articulo.toLowerCase().includes(searchLower);
-    
+    const matchesArticulo = card.articulo &&
+      card.articulo.toLowerCase().includes(searchLower);
+
     const matchesSearch = matchesId || matchesNombre || matchesDoc || matchesArticulo;
-    
+
     // Filtro por fecha (solo si está activado el filtro)
     let matchesDate = true;
     if (filterByDate && startDate) {
@@ -153,7 +163,7 @@ const Orders = () => {
       const selectedDate = new Date(startDate);
       matchesDate = cardDate.toDateString() === selectedDate.toDateString();
     }
-    
+
     return matchesSearch && matchesDate;
   });
 
@@ -164,13 +174,13 @@ const Orders = () => {
 
     try {
       console.log(`Eliminando artículo ID: ${card.articuloId} del alquiler ID: ${card.idAlquiler}`);
-      
+
       // Llamar al backend para eliminar el artículo
       await eliminarArticuloDeAlquiler(card.articuloId, card.idAlquiler);
-      
+
       // Eliminar la tarjeta del estado local
       setArticleCards(articleCards.filter(c => c.id !== card.id));
-      
+
       alert('Artículo eliminado exitosamente del alquiler');
     } catch (error) {
       console.error('Error al eliminar artículo:', error);
@@ -180,7 +190,7 @@ const Orders = () => {
 
   const handleEdit = (card) => {
     setEditingOrder(card.id);
-    setEditData({...card});
+    setEditData({ ...card });
   };
 
   const handleUpdateSave = () => {
@@ -198,7 +208,7 @@ const Orders = () => {
     setFilterByDate(true);
     console.log("Buscando por fecha:", startDate);
   };
-  
+
   const handleClearFilters = () => {
     setSearchText("");
     setFilterByDate(false);
@@ -225,12 +235,12 @@ const Orders = () => {
     if (window.confirm(`¿Confirmar que el artículo "${card.articulo}" ha sido entregado al cliente?`)) {
       try {
         await marcarArticuloComoEntregado(card.articuloId, card.idAlquiler);
-        
+
         // Actualizar el estado local
-        setArticleCards(articleCards.map(c => 
-          c.id === card.id ? {...c, entregado: true} : c
+        setArticleCards(articleCards.map(c =>
+          c.id === card.id ? { ...c, entregado: true } : c
         ));
-        
+
         alert("Artículo marcado como entregado. Ahora aparecerá en 'Órdenes a Recibir'");
       } catch (error) {
         console.error("Error al marcar como entregado:", error);
@@ -243,12 +253,12 @@ const Orders = () => {
     if (window.confirm(`¿Confirmar que el artículo "${card.articulo}" ha sido devuelto? El artículo volverá a estar disponible para alquiler.`)) {
       try {
         await marcarArticuloComoDevuelto(card.articuloId, card.idAlquiler);
-        
+
         // Actualizar el estado local - marcar como devuelto
-        setArticleCards(articleCards.map(c => 
-          c.id === card.id ? {...c, estado: true} : c
+        setArticleCards(articleCards.map(c =>
+          c.id === card.id ? { ...c, estado: true } : c
         ));
-        
+
         alert("Artículo marcado como devuelto. El artículo ya está disponible para alquiler nuevamente.");
       } catch (error) {
         console.error("Error al marcar como devuelto:", error);
@@ -257,23 +267,145 @@ const Orders = () => {
     }
   };
 
+  const handleOpenPaymentModal = async (card) => {
+    // Primero cargar los pagos para verificar si está completo
+    try {
+      const pagos = await obtenerPagosPorAlquiler(card.idAlquiler);
+      const totalPagado = pagos.reduce((sum, pago) => sum + (pago.valAbo || 0), 0);
+
+      if (totalPagado >= card.precio) {
+        alert("Este alquiler ya ha sido pagado en su totalidad.");
+        return;
+      }
+
+      setCurrentPaymentCard(card);
+      setPaymentAmount('');
+      setShowPaymentModal(true);
+    } catch (error) {
+      console.error("Error al verificar pagos:", error);
+      alert("Error al verificar el estado de pagos");
+    }
+  };
+
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+    setCurrentPaymentCard(null);
+    setPaymentAmount('');
+  };
+
+  const handleSavePayment = async () => {
+    if (!paymentAmount || paymentAmount <= 0) {
+      alert("Por favor ingresa un monto válido");
+      return;
+    }
+
+    try {
+      // Verificar el saldo pendiente antes de guardar
+      const pagos = await obtenerPagosPorAlquiler(currentPaymentCard.idAlquiler);
+      const totalPagado = pagos.reduce((sum, pago) => sum + (pago.valAbo || 0), 0);
+      const saldoPendiente = currentPaymentCard.precio - totalPagado;
+      const montoPago = parseInt(paymentAmount);
+
+      if (montoPago > saldoPendiente) {
+        alert(`El monto del pago ($${montoPago.toLocaleString()}) supera el saldo pendiente ($${saldoPendiente.toLocaleString()})`);
+        return;
+      }
+
+      // Convertir la fecha actual a formato yyyyMMdd
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const fechaFormatted = parseInt(`${year}${month}${day}`);
+
+      const pagoData = {
+        idAlquiler: currentPaymentCard.idAlquiler,
+        valAbo: montoPago,
+        fechaUltimoAbono: fechaFormatted
+      };
+
+      console.log("Enviando pago:", pagoData);
+      const response = await crearPago(pagoData);
+      console.log("Respuesta del servidor:", response);
+
+      alert("Pago registrado exitosamente");
+      handleClosePaymentModal();
+    } catch (error) {
+      console.error("Error al registrar pago:", error);
+      console.error("Respuesta del error:", error.response?.data);
+      const errorMsg = error.response?.data?.error || error.response?.data?.detalle || error.message;
+      alert(`Error al registrar el pago: ${errorMsg}`);
+    }
+  };
+
+  const handleOpenPaymentList = async (card) => {
+    setCurrentPaymentCard(card);
+    setLoadingPayments(true);
+    setShowPaymentListModal(true);
+
+    try {
+      const pagos = await obtenerPagosPorAlquiler(card.idAlquiler);
+      console.log("Pagos recibidos:", pagos);
+      setPaymentList(pagos);
+    } catch (error) {
+      console.error("Error al cargar pagos:", error);
+      alert("Error al cargar los pagos");
+      setPaymentList([]);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
+  const handleClosePaymentList = () => {
+    setShowPaymentListModal(false);
+    setCurrentPaymentCard(null);
+    setPaymentList([]);
+  };
+
+  const calcularTotalPagado = () => {
+    return paymentList.reduce((sum, pago) => sum + (pago.valAbo || 0), 0);
+  };
+
+  const calcularSaldoPendiente = () => {
+    if (!currentPaymentCard) return 0;
+    const totalPagado = calcularTotalPagado();
+    return currentPaymentCard.precio - totalPagado;
+  };
+
+  const handleDeletePayment = async (idPago) => {
+    if (!window.confirm("¿Estás seguro de eliminar este pago?")) {
+      return;
+    }
+
+    try {
+      await eliminarPago(idPago);
+      // Recargar la lista de pagos
+      const pagos = await obtenerPagosPorAlquiler(currentPaymentCard.idAlquiler);
+      setPaymentList(pagos);
+      alert("Pago eliminado exitosamente");
+    } catch (error) {
+      console.error("Error al eliminar pago:", error);
+      alert("Error al eliminar el pago");
+    }
+  };
+
   return (
     <div className="orders-wrapper">
       <NavbarSeller />
       <aside className="orders-sidebar">
         <h2>Buscar Orden</h2>
-        <input 
-          type="text" 
-          placeholder="Número de orden o cliente" 
-          value={searchText} 
-          onChange={(e) => setSearchText(e.target.value)} 
+        <input
+          type="text"
+          placeholder="Número de orden o cliente"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
         <h2>Filtrar por fecha</h2>
         <div className="calendar-container">
-          <DatePicker 
-            selected={startDate} 
-            onChange={(date) => setStartDate(date)} 
-            inline 
+          <DatePicker
+            selected={startDate}
+            onChange={(date) => setStartDate(date)}
+            inline
             renderCustomHeader={({
               date,
               decreaseMonth,
@@ -290,22 +422,22 @@ const Orders = () => {
           />
         </div>
         <button onClick={handleSearch}>Buscar por fecha</button>
-        <button onClick={handleClearFilters} style={{marginTop: '10px', backgroundColor: '#95a5a6'}}>
+        <button onClick={handleClearFilters} style={{ marginTop: '10px', backgroundColor: '#95a5a6' }}>
           Limpiar filtros
         </button>
       </aside>
 
       <div className="orders-container">
         <h1 className="orders-title">Gestión de Órdenes</h1>
-        
+
         <div className="orders-tabs">
-          <button 
+          <button
             className={`tab-button ${activeTab === 'entregar' ? 'active' : ''}`}
             onClick={() => setActiveTab('entregar')}
           >
             📦 Órdenes a Entregar ({ordersToDeliver.length})
           </button>
-          <button 
+          <button
             className={`tab-button ${activeTab === 'recibir' ? 'active' : ''}`}
             onClick={() => setActiveTab('recibir')}
           >
@@ -321,7 +453,7 @@ const Orders = () => {
         </p>
 
         {loading && <p>Cargando alquileres...</p>}
-        
+
         {!loading && articleCards.length === 0 && (
           <p>No hay alquileres registrados</p>
         )}
@@ -334,50 +466,50 @@ const Orders = () => {
           {filteredCards.map((card) => (
             <div key={card.id} className="order-card">
               <div className="order-header">
-                <span>ID Alquiler</span>
-                <span>Cliente</span>
-                <span>Teléfono</span>
-                <span>Artículo</span>
-                <span>Talla</span>
-                <span>Precio</span>
-                <span>{activeTab === 'entregar' ? 'Fecha Entrega' : 'Fecha Devolución'}</span>
-                <span>Estado</span>
-                <span>Acciones</span>
+                <span className="col-id">ID</span>
+                <span className="col-cliente">Cliente</span>
+                <span className="col-telefono">Teléfono</span>
+                <span className="col-articulo">Artículo</span>
+                <span className="col-talla">Talla</span>
+                <span className="col-precio">Precio</span>
+                <span className="col-fecha">{activeTab === 'entregar' ? 'F. Entrega' : 'F. Devolución'}</span>
+                <span className="col-acciones">Acciones</span>
               </div>
               <div className="order-body">
-                <div className="order-field">#{card.idAlquiler}</div>
-                <div className="order-field">
+                <div className="order-field col-id">#{card.idAlquiler}</div>
+                <div className="order-field col-cliente">
                   <strong>{card.nombreCliente}</strong>
                   <br />
                   <small>Doc: {card.clienteDoc}</small>
                 </div>
-                <div className="order-field">{card.telefono || 'N/A'}</div>
-                <div className="order-field"><strong>{card.articulo}</strong></div>
-                <div className="order-field">{card.talla || 'N/A'}</div>
-                <div className="order-field">${card.precio?.toLocaleString()}</div>
-                <div className="order-field">
+                <div className="order-field col-telefono">{card.telefono || 'N/A'}</div>
+                <div className="order-field col-articulo"><strong>{card.articulo}</strong></div>
+                <div className="order-field col-talla">{card.talla || 'N/A'}</div>
+                <div className="order-field col-precio">${card.precio?.toLocaleString()}</div>
+                <div className="order-field col-fecha">
                   {activeTab === 'entregar' ? card.fechaEntrega : card.fechaRetiro}
                 </div>
-                <div className="order-field">
-                  <span className={`status-badge ${card.estado ? 'devuelto' : 'pendiente'}`}>
-                    {card.estado ? '✓ Devuelto' : '⏳ Pendiente'}
-                  </span>
-                </div>
-                <div className="order-buttons">
-                  <button className="view-btn" onClick={() => handleViewMore(card)} title="Ver más">
-                    <HiEye /> Ver más
+                <div className="order-buttons col-acciones">
+                  <button className="view-btn" onClick={() => handleViewMore(card)} title="Ver detalles">
+                    <HiEye />
+                  </button>
+                  <button className="payment-btn" onClick={() => handleOpenPaymentModal(card)} title="Añadir pago">
+                    <MdPayment />
+                  </button>
+                  <button className="view-payments-btn" onClick={() => handleOpenPaymentList(card)} title="Ver pagos">
+                    💰
                   </button>
                   {activeTab === 'entregar' && (
-                    <button className="deliver-btn" onClick={() => handleMarkAsDelivered(card)}>
-                      ✓ Entregado
+                    <button className="deliver-btn" onClick={() => handleMarkAsDelivered(card)} title="Marcar como entregado">
+                      ✓
                     </button>
                   )}
                   {activeTab === 'recibir' && (
-                    <button className="receive-btn" onClick={() => handleMarkAsReceived(card)}>
-                      ✓ Recibido
+                    <button className="receive-btn" onClick={() => handleMarkAsReceived(card)} title="Marcar como devuelto">
+                      ✓
                     </button>
                   )}
-                  <button className="delete-btn" onClick={() => handleDelete(card)}>Eliminar</button>
+                  <button className="delete-btn" onClick={() => handleDelete(card)} title="Eliminar">🗑</button>
                 </div>
               </div>
               {card.observaciones && (
@@ -394,7 +526,7 @@ const Orders = () => {
         <div className="modal-overlay" onClick={handleCloseView}>
           <div className="modal view-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Detalles de la Orden</h2>
-            
+
             <div className="modal-section">
               <h3>Información del Alquiler</h3>
               <div className="detail-row">
@@ -468,7 +600,121 @@ const Orders = () => {
             </div>
 
             <div className="modal-buttons">
+              <button type="button" onClick={() => handleOpenPaymentList(viewingOrder)}>
+                Ver Pagos
+              </button>
               <button type="button" onClick={handleCloseView}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para añadir pago */}
+      {showPaymentModal && (
+        <div className="modal-overlay" onClick={handleClosePaymentModal}>
+          <div className="modal payment-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>💳 Añadir Pago</h2>
+
+            <div className="payment-info">
+              <p><strong>Alquiler:</strong> #{currentPaymentCard?.idAlquiler}</p>
+              <p><strong>Artículo:</strong> {currentPaymentCard?.articulo}</p>
+              <p><strong>Cliente:</strong> {currentPaymentCard?.nombreCliente}</p>
+              <p><strong>Precio Total:</strong> ${currentPaymentCard?.precio?.toLocaleString()}</p>
+            </div>
+
+            <div className="form-group">
+              <label>Monto del Pago/Abono</label>
+              <input
+                type="number"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                placeholder="Ingrese el monto"
+                min="0"
+                className="payment-input"
+              />
+            </div>
+
+            <div className="modal-buttons">
+              <button type="button" onClick={handleSavePayment} className="save-btn">
+                Guardar Pago
+              </button>
+              <button type="button" onClick={handleClosePaymentModal} className="cancel-btn">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para ver lista de pagos */}
+      {showPaymentListModal && (
+        <div className="modal-overlay" onClick={handleClosePaymentList}>
+          <div className="modal payment-list-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>📋 Historial de Pagos</h2>
+
+            <div className="payment-summary">
+              <p><strong>Alquiler:</strong> #{currentPaymentCard?.idAlquiler}</p>
+              <p><strong>Artículo:</strong> {currentPaymentCard?.articulo}</p>
+              <p><strong>Cliente:</strong> {currentPaymentCard?.nombreCliente}</p>
+              <div className="payment-totals">
+                <p><strong>Precio Total:</strong> ${currentPaymentCard?.precio?.toLocaleString()}</p>
+                <p><strong>Total Pagado:</strong> <span className="paid">${calcularTotalPagado().toLocaleString()}</span></p>
+                <p><strong>Saldo Pendiente:</strong> <span className={calcularSaldoPendiente() > 0 ? "pending" : "complete"}>${calcularSaldoPendiente().toLocaleString()}</span></p>
+              </div>
+            </div>
+
+            <div className="payments-table">
+              <h3>Pagos Registrados</h3>
+              {loadingPayments ? (
+                <p>Cargando pagos...</p>
+              ) : paymentList.length === 0 ? (
+                <p className="no-payments">No hay pagos registrados para este alquiler</p>
+              ) : (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Monto</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paymentList.map((pago, index) => {
+                      // Convertir fecha de formato yyyyMMdd a Date
+                      const fechaStr = pago.fechaUltimoAbono?.toString();
+                      let fechaFormateada = 'N/A';
+                      if (fechaStr && fechaStr.length === 8) {
+                        const year = fechaStr.substring(0, 4);
+                        const month = fechaStr.substring(4, 6);
+                        const day = fechaStr.substring(6, 8);
+                        fechaFormateada = `${day}/${month}/${year}`;
+                      }
+
+                      return (
+                        <tr key={pago.idPago || index}>
+                          <td>{fechaFormateada}</td>
+                          <td>${(pago.valAbo || 0).toLocaleString()}</td>
+                          <td>
+                            <button
+                              className="delete-payment-btn"
+                              onClick={() => handleDeletePayment(pago.idPago)}
+                              title="Eliminar pago"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="modal-buttons">
+              <button type="button" onClick={handleClosePaymentList}>
                 Cerrar
               </button>
             </div>
@@ -481,55 +727,55 @@ const Orders = () => {
           <div className="edit-modal">
             <h2>Actualizar Artículo - Alquiler #{editData.idAlquiler}</h2>
             <label>Cliente</label>
-            <input 
-              type="text" 
-              value={editData.nombreCliente || ''} 
-              onChange={(e)=>setEditData({...editData, nombreCliente:e.target.value})} 
-              placeholder="Nombre del cliente" 
+            <input
+              type="text"
+              value={editData.nombreCliente || ''}
+              onChange={(e) => setEditData({ ...editData, nombreCliente: e.target.value })}
+              placeholder="Nombre del cliente"
               disabled
             />
             <label>Teléfono</label>
-            <input 
-              type="text" 
-              value={editData.telefono || ''} 
-              onChange={(e)=>setEditData({...editData, telefono:e.target.value})} 
-              placeholder="Teléfono" 
+            <input
+              type="text"
+              value={editData.telefono || ''}
+              onChange={(e) => setEditData({ ...editData, telefono: e.target.value })}
+              placeholder="Teléfono"
             />
             <label>Artículo</label>
-            <input 
-              type="text" 
-              value={editData.articulo || ''} 
-              onChange={(e)=>setEditData({...editData, articulo:e.target.value})} 
-              placeholder="Nombre del artículo" 
+            <input
+              type="text"
+              value={editData.articulo || ''}
+              onChange={(e) => setEditData({ ...editData, articulo: e.target.value })}
+              placeholder="Nombre del artículo"
               disabled
             />
             <label>Talla</label>
-            <input 
-              type="text" 
-              value={editData.talla || ''} 
-              onChange={(e)=>setEditData({...editData, talla:e.target.value})} 
-              placeholder="Talla" 
+            <input
+              type="text"
+              value={editData.talla || ''}
+              onChange={(e) => setEditData({ ...editData, talla: e.target.value })}
+              placeholder="Talla"
             />
             <label>Precio</label>
-            <input 
-              type="number" 
-              value={editData.precio || 0} 
-              onChange={(e)=>setEditData({...editData, precio:parseInt(e.target.value)})} 
-              placeholder="Precio" 
+            <input
+              type="number"
+              value={editData.precio || 0}
+              onChange={(e) => setEditData({ ...editData, precio: parseInt(e.target.value) })}
+              placeholder="Precio"
             />
             <label>Estado</label>
-            <select 
-              value={editData.estado ? 'true' : 'false'} 
-              onChange={(e)=>setEditData({...editData, estado: e.target.value === 'true'})}
+            <select
+              value={editData.estado ? 'true' : 'false'}
+              onChange={(e) => setEditData({ ...editData, estado: e.target.value === 'true' })}
             >
               <option value="false">⏳ Pendiente</option>
               <option value="true">✓ Devuelto</option>
             </select>
             <label>Observaciones</label>
-            <textarea 
-              value={editData.observaciones || ''} 
-              onChange={(e)=>setEditData({...editData, observaciones:e.target.value})} 
-              placeholder="Observaciones" 
+            <textarea
+              value={editData.observaciones || ''}
+              onChange={(e) => setEditData({ ...editData, observaciones: e.target.value })}
+              placeholder="Observaciones"
               rows="3"
             />
             <div className="edit-buttons">
