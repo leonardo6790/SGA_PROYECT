@@ -20,8 +20,9 @@ const Inventory = () => {
     talla: "",
     color: "",
     precio: "",
-    foto: "",
-    idCategoria: ""
+    fotoArt: null,
+    idCategoria: "",
+    previewUrl: ""
   });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -119,22 +120,46 @@ const Inventory = () => {
     try {
       console.log("Estado actual newArticle:", newArticle);
       
-      const dataToSend = {
-        nombre: newArticle.nomArt,
-        generoArt: newArticle.genero,
-        tallaArt: newArticle.talla,
-        colorArt: newArticle.color,
-        precioArt: parseInt(newArticle.precio),
-        fotoArt: newArticle.foto,
-        idCategoria: parseInt(newArticle.idCategoria)
-      };
+      // Validar que se haya seleccionado una foto
+      if (!newArticle.fotoArt) {
+        alert("Por favor selecciona una foto");
+        return;
+      }
+
+      // Crear FormData para enviar archivo
+      const formData = new FormData();
+      formData.append("nombre", newArticle.nomArt);
+      formData.append("generoArt", newArticle.genero);
+      formData.append("tallaArt", newArticle.talla);
+      formData.append("colorArt", newArticle.color);
+      formData.append("precioArt", parseInt(newArticle.precio));
+      formData.append("fotoArt", newArticle.fotoArt);
+      formData.append("idCategoria", parseInt(newArticle.idCategoria));
       
-      console.log("Datos a enviar al backend:", dataToSend);
-      console.log("ID Categoría seleccionada:", newArticle.idCategoria, "tipo:", typeof newArticle.idCategoria);
+      console.log("FormData a enviar al backend");
       
-      await crearArticulo(dataToSend);
-      
+      // Enviar al nuevo endpoint que soporta multipart
+      const token = localStorage.getItem("sga_token");
+      const response = await fetch("http://localhost:8080/api/articulos/CrearConFoto", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log("Respuesta del servidor:", responseData);
+      console.log("URL de foto guardada:", responseData.data?.fotoArt);
+
       const data = await obtenerArticulo();
+      console.log("Artículos después de crear:", data);
       setArticulos(data);
       setFilteredArticulos(data); // Actualizar también los filtrados
       
@@ -145,8 +170,9 @@ const Inventory = () => {
         talla: "",
         color: "",
         precio: "",
-        foto: "",
-        idCategoria: ""
+        fotoArt: null,
+        idCategoria: "",
+        previewUrl: ""
       });
       
       alert("Artículo creado exitosamente");
@@ -158,15 +184,45 @@ const Inventory = () => {
 
   const handleCancelCreate = () => {
     setShowCreateModal(false);
+    // Limpiar preview URL si existe
+    if (newArticle.previewUrl) {
+      URL.revokeObjectURL(newArticle.previewUrl);
+    }
     setNewArticle({
       nomArt: "",
       genero: "",
       talla: "",
       color: "",
       precio: "",
-      foto: "",
-      idCategoria: ""
+      fotoArt: null,
+      idCategoria: "",
+      previewUrl: ""
     });
+  };
+
+  const handleFotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith("image/")) {
+        alert("Por favor selecciona un archivo de imagen");
+        return;
+      }
+
+      // Crear preview URL
+      const previewUrl = URL.createObjectURL(file);
+      
+      // Limpiar URL anterior si existe
+      if (newArticle.previewUrl) {
+        URL.revokeObjectURL(newArticle.previewUrl);
+      }
+
+      setNewArticle({
+        ...newArticle,
+        fotoArt: file,
+        previewUrl: previewUrl
+      });
+    }
   };
 
   const handleDeleteArticle = async (idArt, nombreArt) => {
@@ -333,13 +389,24 @@ const Inventory = () => {
                 placeholder="Precio"
                 required
               />
-              <input
-                type="text"
-                value={newArticle.foto}
-                onChange={(e) => setNewArticle({ ...newArticle, foto: e.target.value })}
-                placeholder="URL de la foto"
-                required
-              />
+              <div className="file-input-container">
+                <label htmlFor="foto-input" className="file-input-label">
+                  {newArticle.previewUrl ? "Foto seleccionada ✓" : "Seleccionar foto"}
+                </label>
+                <input
+                  id="foto-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFotoChange}
+                  required
+                  style={{ display: "none" }}
+                />
+                {newArticle.previewUrl && (
+                  <div className="preview-container">
+                    <img src={newArticle.previewUrl} alt="Preview" className="preview-image" />
+                  </div>
+                )}
+              </div>
               <select
                 value={newArticle.idCategoria}
                 onChange={(e) => setNewArticle({ ...newArticle, idCategoria: e.target.value })}

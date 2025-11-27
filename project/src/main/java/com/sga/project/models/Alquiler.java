@@ -58,4 +58,7 @@ public class Alquiler {
 
     @OneToMany(mappedBy = "alquiler")
     private List<AlquilerArticulos> asignacionAlq;
+
+    @OneToMany(mappedBy = "alquiler")
+    private List<Pago> pagos;
 }

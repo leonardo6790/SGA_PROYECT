@@ -42,20 +42,35 @@ export const eliminarArticuloDeAlquiler = async (idArticulo, idAlquiler) => {
 export const marcarArticuloComoEntregado = async (idArticulo, idAlquiler) => {
     try {
         console.log(`Marcando artículo ${idArticulo} del alquiler ${idAlquiler} como entregado`);
+        const bodyData = { 
+            entregado: true,
+            estado: false
+        };
+        console.log("Body enviado:", JSON.stringify(bodyData));
+        
         const response = await fetch(`${BASE_URL}/Actualizar/${idArticulo}/${idAlquiler}`, {
             method: "PUT",
             headers: getAuthHeaders(),
-            body: JSON.stringify({ entregado: true }),
+            body: JSON.stringify(bodyData),
         });
 
+        console.log("Response status:", response.status);
+        const responseText = await response.text();
+        console.log("Response body:", responseText);
+
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Error al marcar como entregado:", errorText);
-            throw new Error(`Error al marcar como entregado: ${response.statusText}`);
+            try {
+                const errorData = JSON.parse(responseText);
+                const errorMessage = errorData.error || errorData.message || errorData.detalle || response.statusText;
+                console.error("Error al marcar como entregado:", errorMessage);
+                throw new Error(errorMessage);
+            } catch (e) {
+                throw new Error(responseText || response.statusText);
+            }
         }
 
         console.log("Artículo marcado como entregado exitosamente");
-        return await response.json();
+        return JSON.parse(responseText);
     } catch (error) {
         console.error("Error en marcarArticuloComoEntregado:", error);
         throw error;
@@ -68,13 +83,17 @@ export const marcarArticuloComoDevuelto = async (idArticulo, idAlquiler) => {
         const response = await fetch(`${BASE_URL}/Actualizar/${idArticulo}/${idAlquiler}`, {
             method: "PUT",
             headers: getAuthHeaders(),
-            body: JSON.stringify({ estado: true }),
+            body: JSON.stringify({ 
+                estado: true,  // Marcado como devuelto
+                entregado: true  // Ya fue entregado antes
+            }),
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Error al marcar como devuelto:", errorText);
-            throw new Error(`Error al marcar como devuelto: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+            const errorMessage = errorData.message || errorData.detalle || response.statusText;
+            console.error("Error al marcar como devuelto:", errorMessage);
+            throw new Error(errorMessage);
         }
 
         console.log("Artículo marcado como devuelto exitosamente");

@@ -102,6 +102,7 @@ class AlquilermapperImplement implements AlquilerMapper {
 
                 // Información adicional del alquiler
                 dto.setEstado(aa.getEstado());
+                dto.setEntregado(aa.getEntregado()); // IMPORTANTE: Asignar el campo entregado
                 dto.setObservaciones(aa.getObservaciones());
                 dto.setFechaEntrega(alquiler.getFechaEnt());
 

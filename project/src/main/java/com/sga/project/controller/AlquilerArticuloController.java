@@ -9,6 +9,8 @@ import com.sga.project.service.AlquilerArticuloService;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,8 +19,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
-
-import java.util.Map;
 
 
 @RestController
@@ -67,16 +67,26 @@ public class AlquilerArticuloController {
     }
     
     @PutMapping("/Actualizar/{idArt}/{idAlq}")
-    public ResponseEntity<AlquilerArticulosDto> actualizarEstado(
+    public ResponseEntity<?> actualizarEstado(
             @PathVariable Integer idArt, 
             @PathVariable Integer idAlq,
             @RequestBody Map<String, Boolean> body) {
         
-        Boolean estado = body.get("estado");
-        Boolean entregado = body.get("entregado");
-        
-        AlquilerArticulosDto actualizado = alquiArtiServi.actualizarEstado(idArt, idAlq, estado, entregado);
-        return ResponseEntity.ok(actualizado);
+        try {
+            Boolean estado = body.get("estado");
+            Boolean entregado = body.get("entregado");
+            
+            AlquilerArticulosDto actualizado = alquiArtiServi.actualizarEstado(idArt, idAlq, estado, entregado);
+            return ResponseEntity.ok(actualizado);
+        } catch (IllegalStateException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(400).body(errorResponse);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error al actualizar estado: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
     }
     
     @GetMapping

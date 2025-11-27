@@ -19,12 +19,14 @@ public class AlquilerArticuloServiceImplement implements AlquilerArticuloService
     private final AlquilerArticuloRepository alquiArtiRepo;
     private final AlquilerArticuloMapper alquiArtiMap;
     private final AlquilerService alquiServi;
+    private final PagoService pagoServi;
 
     public AlquilerArticuloServiceImplement(AlquilerArticuloRepository alquiArtiRepo,
-            AlquilerArticuloMapper alquiArtiMap, AlquilerService alquiServi) {
+            AlquilerArticuloMapper alquiArtiMap, AlquilerService alquiServi, PagoService pagoServi) {
         this.alquiArtiMap = alquiArtiMap;
         this.alquiArtiRepo = alquiArtiRepo;
         this.alquiServi = alquiServi;
+        this.pagoServi = pagoServi;
     }
 
     @Override
@@ -74,6 +76,30 @@ public class AlquilerArticuloServiceImplement implements AlquilerArticuloService
         AlquilerArticulosId id = new AlquilerArticulosId(alquilerId, articuloId);
         AlquilerArticulos alqArt = alquiArtiRepo.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Asignación no encontrada"));
+        
+        // Validar que si se intenta marcar como entregado, el alquiler esté pagado en su totalidad
+        if (entregado != null && entregado && (alqArt.getEntregado() == null || !alqArt.getEntregado())) {
+            // Obtener el total del alquiler
+            Integer totalAlquiler = alqArt.getAlquiler().getTotalAlq();
+            
+            // Calcular el total pagado usando PagoService
+            List<com.sga.project.dto.PagoDto> pagos = pagoServi.getPagosByAlquiler(alquilerId);
+            Integer totalPagado = 0;
+            if (pagos != null && !pagos.isEmpty()) {
+                totalPagado = pagos.stream()
+                    .map(pago -> pago.getValAbo() != null ? pago.getValAbo() : 0)
+                    .reduce(0, Integer::sum);
+            }
+            
+            // Si el total pagado es menor al total del alquiler, lanzar excepción
+            if (totalPagado < totalAlquiler) {
+                Integer saldoPendiente = totalAlquiler - totalPagado;
+                throw new IllegalStateException(
+                    "No se puede entregar este artículo. El alquiler tiene un saldo pendiente de $" + saldoPendiente + 
+                    ". Total a pagar: $" + totalAlquiler + ", Total pagado: $" + totalPagado
+                );
+            }
+        }
         
         if (estado != null) {
             alqArt.setEstado(estado);

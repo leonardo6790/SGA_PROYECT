@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import emailjs from '@emailjs/browser';
 import { obtenerArticulo } from "../../../api/articulosApi";
 import { crearAlquiler } from "../../../api/alquilerApi";
+import { crearPago } from "../../../api/pagoApi";
 
 export default function NewOrder() {
   const location = useLocation();
@@ -39,6 +40,18 @@ export default function NewOrder() {
   const [showObsModal, setShowObsModal] = useState(false);
   const [currentObsIndex, setCurrentObsIndex] = useState(null);
   const [tempObservacion, setTempObservacion] = useState("");
+  
+  // Estados para buscador de artículos
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  
+  // Estados para pagos
+  const [showPaymentPanel, setShowPaymentPanel] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [registeredPayments, setRegisteredPayments] = useState([]);
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [isClosingPanel, setIsClosingPanel] = useState(false);
 
   // Cargar artículos desde la base de datos
   useEffect(() => {
@@ -67,6 +80,37 @@ export default function NewOrder() {
     cargarArticulos();
   }, []);
 
+  // Función para buscar artículos
+  const handleSearchChange = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    if (value.trim() === "") {
+      setShowSearchResults(false);
+      setFilteredProducts([]);
+      return;
+    }
+
+    const filtered = catalog.filter(product => 
+      product.name.toLowerCase().includes(value) ||
+      product.desc.toLowerCase().includes(value) ||
+      product.categoria.toLowerCase().includes(value)
+    );
+
+    setFilteredProducts(filtered);
+    setShowSearchResults(true);
+  };
+
+  const handleSelectFromSearch = (product) => {
+    setSelectedProductId(product.id);
+    setSearchTerm("");
+    setShowSearchResults(false);
+  };
+
+  const closeSearchResults = () => {
+    setShowSearchResults(false);
+  };
+
   const addProductToOrder = () => {
     if (!selectedProductId) {
       alert("Por favor seleccione un artículo");
@@ -87,6 +131,70 @@ export default function NewOrder() {
       }
       return [...prev, { ...prod, cantidad: 1, subtotal: prod.price, observaciones: "" }];
     });
+  };
+
+  // Funciones para pagos
+  const calculateTotal = () => {
+    return orderItems.reduce((sum, it) => sum + (it.cantidad * it.price), 0);
+  };
+
+  const calculateTotalPaid = () => {
+    return registeredPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  };
+
+  const calculateBalance = () => {
+    return calculateTotal() - calculateTotalPaid();
+  };
+
+  const handleAddPayment = async () => {
+    if (!paymentAmount || paymentAmount <= 0) {
+      alert("Por favor ingresa un monto válido");
+      return;
+    }
+
+    const amount = parseInt(paymentAmount);
+    const balance = calculateBalance();
+
+    if (amount > balance) {
+      alert(`El monto del pago ($${amount.toLocaleString()}) supera el saldo pendiente ($${balance.toLocaleString()})`);
+      return;
+    }
+
+    setLoadingPayment(true);
+    try {
+      // Agregar el pago localmente (se guardará en la BD después al crear la orden)
+      setRegisteredPayments([...registeredPayments, { 
+        amount, 
+        date: new Date().toLocaleDateString(),
+        id: Date.now()
+      }]);
+      setPaymentAmount("");
+      alert("Pago registrado exitosamente");
+    } catch (error) {
+      console.error("Error al registrar pago:", error);
+      alert("Error al registrar el pago");
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
+  const handleDeletePayment = (paymentId) => {
+    if (window.confirm("¿Estás seguro de eliminar este pago?")) {
+      setRegisteredPayments(registeredPayments.filter(p => p.id !== paymentId));
+    }
+  };
+
+  const handleTogglePaymentPanel = () => {
+    if (showPaymentPanel) {
+      setIsClosingPanel(true);
+      setTimeout(() => {
+        setShowPaymentPanel(false);
+        setIsClosingPanel(false);
+      }, 300);
+    } else {
+      setShowPaymentPanel(true);
+      setIsClosingPanel(false);
+    }
   };
 
   const buildItemsHtml = () => {
@@ -135,7 +243,7 @@ export default function NewOrder() {
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
 
-  const total = orderItems.reduce((s, it) => s + (it.subtotal || it.price * it.cantidad), 0);
+  const total = calculateTotal();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -193,6 +301,40 @@ export default function NewOrder() {
       // Guardar en la base de datos
       const response = await crearAlquiler(alquilerData);
       console.log("Alquiler guardado:", response);
+
+      // Guardar los pagos registrados si existen
+      if (registeredPayments.length > 0) {
+        try {
+          const idAlquiler = response.data?.id_alquiler || response.id_alquiler || response.data?.id || response.id;
+          
+          if (!idAlquiler) {
+            console.error("No se pudo obtener el ID del alquiler. Response:", response);
+            alert("Advertencia: Se creó el alquiler pero no se pudieron registrar los pagos automáticamente. Por favor, regístralos manualmente en la sección de órdenes.");
+            throw new Error("ID de alquiler no disponible");
+          }
+          
+          for (const payment of registeredPayments) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const fechaFormatted = parseInt(`${year}${month}${day}`);
+
+            const pagoData = {
+              idAlquiler: idAlquiler,
+              valAbo: payment.amount,
+              fechaUltimoAbono: fechaFormatted
+            };
+
+            console.log("Registrando pago:", pagoData);
+            await crearPago(pagoData);
+          }
+          console.log("Pagos registrados exitosamente");
+        } catch (errorPago) {
+          console.error("Error al registrar pagos:", errorPago);
+          // No bloqueamos si falla el registro de pagos
+        }
+      }
 
       // Mostrar mensaje de éxito
       setPopupMessage('Alquiler creado exitosamente');
@@ -281,26 +423,40 @@ export default function NewOrder() {
           <h2>Productos a Alquilar</h2>
 
           <div className="product-select-row">
-            <select
-              className="product-select"
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              disabled={catalog.length === 0}
-            >
-              {catalog.length === 0 ? (
-                <option value="">Cargando artículos...</option>
-              ) : (
-                catalog.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — ${p.price.toLocaleString()} — {p.desc}
-                  </option>
-                ))
+            <div className="search-container">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="🔍 Buscar por nombre, talla, color, categoría..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onFocus={() => searchTerm && setShowSearchResults(true)}
+              />
+              {showSearchResults && (
+                <div className="search-results">
+                  {filteredProducts.length === 0 ? (
+                    <div className="search-no-results">No se encontraron artículos</div>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="search-result-item"
+                        onClick={() => handleSelectFromSearch(product)}
+                      >
+                        <div className="result-name">{product.name}</div>
+                        <div className="result-desc">{product.desc}</div>
+                        <div className="result-price">${product.price.toLocaleString()}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
               )}
-            </select>
+            </div>
+
             <button
               className="nc-button add-btn"
               onClick={addProductToOrder}
-              disabled={catalog.length === 0}
+              disabled={catalog.length === 0 || !selectedProductId}
             >
               Añadir al pedido
             </button>
@@ -357,6 +513,87 @@ export default function NewOrder() {
               <span className="total-amount">${total.toLocaleString()}</span>
             </div>
           </div>
+        </div>
+
+        {/* Panel de Pagos */}
+        <div className="payment-panel">
+          <div className="payment-header">
+            <h2>💳 Pagos del Cliente</h2>
+            <button 
+              className="payment-toggle-btn"
+              onClick={handleTogglePaymentPanel}
+              aria-expanded={showPaymentPanel}
+              title={showPaymentPanel ? 'Contraer panel' : 'Expandir panel'}
+            >
+              {showPaymentPanel ? '▼' : '▶'}
+            </button>
+          </div>
+
+          {showPaymentPanel && (
+            <div className={`payment-content ${isClosingPanel ? 'closing' : ''}`}>
+              <div className="payment-summary">
+                <div className="summary-item">
+                  <span className="label">Total a Pagar:</span>
+                  <span className="amount">${total.toLocaleString()}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Total Pagado:</span>
+                  <span className="amount paid">${calculateTotalPaid().toLocaleString()}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">Saldo Pendiente:</span>
+                  <span className={`amount ${calculateBalance() > 0 ? 'pending' : 'complete'}`}>
+                    ${calculateBalance().toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="payment-form">
+                <label>Agregar Pago</label>
+                <div className="payment-input-group">
+                  <input
+                    type="number"
+                    className="payment-input"
+                    placeholder="Monto del pago"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    min="0"
+                    disabled={loadingPayment || calculateBalance() <= 0}
+                  />
+                  <button 
+                    className="payment-add-btn"
+                    onClick={handleAddPayment}
+                    disabled={loadingPayment || calculateBalance() <= 0 || !paymentAmount}
+                  >
+                    {loadingPayment ? 'Registrando...' : 'Registrar Pago'}
+                  </button>
+                </div>
+              </div>
+
+              {registeredPayments.length > 0 && (
+                <div className="payments-history">
+                  <h3>Pagos Registrados</h3>
+                  <div className="payments-list">
+                    {registeredPayments.map((payment) => (
+                      <div key={payment.id} className="payment-item">
+                        <div className="payment-info">
+                          <span className="payment-amount">${payment.amount.toLocaleString()}</span>
+                          <span className="payment-date">{payment.date}</span>
+                        </div>
+                        <button 
+                          className="payment-delete-btn"
+                          onClick={() => handleDeletePayment(payment.id)}
+                          title="Eliminar pago"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="form-actions">
