@@ -16,7 +16,7 @@ public class WebConfig {
             @Override 
             public void addCorsMappings(@NonNull CorsRegistry registry){
                 registry.addMapping("/**") // Permitir todos los endpoints
-                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000") // Múltiples puertos
+                        .allowedOriginPatterns("*")  // Permitir cualquier origen con patrón
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")
                         .allowCredentials(true)
