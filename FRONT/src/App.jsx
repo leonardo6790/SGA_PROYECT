@@ -8,6 +8,7 @@ import NewClient from "./pages/Seller_view/New_client/New_client.component";
 import NewOrder from "./pages/Seller_view/New_order/New_order.component";
 import Inventory from "./pages/Seller_view/Inventory/inventory.component";
 import Orders from "./pages/Seller_view/Orders/orders.component";
+import Reports from "./pages/Seller_view/Reports/reports.component";
 import Clients from "./pages/Customer_view/Clients/Clients.component";
 import Catalog from "./pages/Customer_view/Catalog/catalog.component";
 import Faq from "./pages/Customer_view/Faq/Faq.component";
@@ -44,6 +45,7 @@ function AppContent() {
           <Route path="new-client" element={<NewClient />} />
           <Route path="new-order" element={<NewOrder />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="clients" element={<Clients />} />
         </Route>
       </Routes>

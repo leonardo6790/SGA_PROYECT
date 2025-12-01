@@ -34,6 +34,7 @@ const NavbarSeller = () => {
         <Link to="/home-seller/new-rent" className="link-navbar-seller"><li>Nuevo Alquiler</li></Link>
         <Link to="/home-seller/inventory" className="link-navbar-seller"><li>Inventario</li></Link>
         <Link to="/home-seller/orders" className="link-navbar-seller"><li>Órdenes</li></Link>
+        <Link to="/home-seller/reports" className="link-navbar-seller"><li>Reportes</li></Link>
         <Link to="/home-seller/clients" className="link-navbar-seller"><li>Clientes</li></Link>
       </ul>
 
