@@ -62,13 +62,23 @@ class AlquilermapperImplement implements AlquilerMapper {
         // Obtener información del cliente antes de procesar artículos
         String nombreCliente = null;
         Long telCliente = null;
+        Integer clienteDoc = null;
         try {
             if (alquiler.getCliente() != null) {
-                nombreCliente = alquiler.getCliente().getNombre1() + " " + alquiler.getCliente().getApellido();
+                Hibernate.initialize(alquiler.getCliente()); // Forzar inicialización
+                nombreCliente = (alquiler.getCliente().getNombre1() != null ? alquiler.getCliente().getNombre1() : "") + 
+                               " " + 
+                               (alquiler.getCliente().getApellido() != null ? alquiler.getCliente().getApellido() : "");
+                nombreCliente = nombreCliente.trim();
+                if (nombreCliente.isEmpty()) {
+                    nombreCliente = "Cliente #" + alquiler.getCliente().getDocCliente();
+                }
                 telCliente = alquiler.getCliente().getNumTel();
+                clienteDoc = alquiler.getCliente().getDocCliente();
             }
         } catch (Exception e) {
-            // Si hay problema con el proxy, los valores quedarán null
+            System.err.println("Error al cargar información del cliente: " + e.getMessage());
+            nombreCliente = clienteDoc != null ? "Cliente #" + clienteDoc : "Cliente no disponible";
         }
 
         // Cargar artículos directamente desde el repositorio
@@ -115,9 +125,8 @@ class AlquilermapperImplement implements AlquilerMapper {
         }
 
         // Cargar información del cliente de forma segura
-        Integer clienteDoc = null;
         try {
-            if (alquiler.getCliente() != null) {
+            if (alquiler.getCliente() != null && clienteDoc == null) {
                 if (Hibernate.isInitialized(alquiler.getCliente())) {
                     clienteDoc = alquiler.getCliente().getDocCliente();
                 } else {
@@ -127,12 +136,7 @@ class AlquilermapperImplement implements AlquilerMapper {
                 }
             }
         } catch (Exception e) {
-            // Si falla la inicialización, intentar con el repositorio directamente
-            // Buscar en los artículos si tienen información del cliente
-            if (!articulosDto.isEmpty() && articulosDto.get(0).getNomCliente() != null) {
-                // Ya tenemos información del cliente en los artículos
-                clienteDoc = null; // Se mostrará el nombre del cliente desde los artículos
-            }
+            System.err.println("Error al cargar documento del cliente: " + e.getMessage());
         }
 
 

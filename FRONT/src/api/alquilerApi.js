@@ -123,3 +123,39 @@ export const actualizarAlquiler = async (id, alquilerData) => {
     throw error;
   }
 };
+
+export const marcarComoEntregado = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/entregar/${id}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al marcar como entregado: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error en marcarComoEntregado:", error);
+    throw error;
+  }
+};
+
+export const marcarComoDevuelto = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/devolver/${id}`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al marcar como devuelto: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error en marcarComoDevuelto:", error);
+    throw error;
+  }
+};

@@ -45,7 +45,11 @@ public ArticuloDto saveArticulo (ArticuloDto articuloDto) {
 @Override
 @Transactional
 public List<ArticuloDto> getListArticulos () {
-    return artiRepo.findAll().stream().map(artiMap::toArticuloDto).toList();
+    // Solo retornar artículos disponibles (activo = true)
+    return artiRepo.findAll().stream()
+        .filter(articulo -> articulo.getActivo() != null && articulo.getActivo())
+        .map(artiMap::toArticuloDto)
+        .toList();
 }
 
 @Override

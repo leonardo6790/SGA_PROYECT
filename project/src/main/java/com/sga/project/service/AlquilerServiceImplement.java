@@ -67,16 +67,26 @@ public class AlquilerServiceImplement implements AlquilerService {
                         .orElseThrow(
                                 () -> new EntityNotFoundException("Artículo no encontrado: " + artDto.getArticuloId()));
 
+                // Verificar si el artículo está disponible
+                if (!articulo.getActivo()) {
+                    throw new IllegalStateException("El artículo " + articulo.getNomArt() + " no está disponible para alquilar");
+                }
+
                 AlquilerArticulosId id = new AlquilerArticulosId(alquiGuardado.getId(), articulo.getId());
                 AlquilerArticulos aa = new AlquilerArticulos();
                 aa.setId(id);
                 aa.setAlquiler(alquiGuardado);
                 aa.setArticulo(articulo);
                 aa.setPrecio(artDto.getPrecio());
-                aa.setEstado(artDto.getEstado() != null ? artDto.getEstado() : false);
+                aa.setEstado(artDto.getEstado() != null ? artDto.getEstado() : false); // false = no devuelto
+                aa.setEntregado(false); // Inicialmente no entregado
                 aa.setObservaciones(artDto.getObservaciones());
 
                 alquiArtiRepo.save(aa);
+
+                // Marcar el artículo como no disponible
+                articulo.setActivo(false);
+                articuloRepo.save(articulo);
             }
         }
 
@@ -163,6 +173,45 @@ public class AlquilerServiceImplement implements AlquilerService {
         alquiler.setActivo(activo);
         Alquiler alquilerActualizado = alquiRepo.save(alquiler);
         return alquiMap.toAlquilerDto(alquilerActualizado);
+    }
+
+    @Override
+    @Transactional
+    public void marcarArticulosComoEntregados(Integer idAlquiler) {
+        // Verificar que el alquiler existe
+        Alquiler alquiler = alquiRepo.findById(idAlquiler)
+            .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado con ID: " + idAlquiler));
+        
+        // Obtener todos los artículos del alquiler
+        List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(idAlquiler);
+        
+        // Marcar todos como entregados
+        for (AlquilerArticulos aa : articulos) {
+            aa.setEntregado(true);
+            alquiArtiRepo.save(aa);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void marcarArticulosComoDevueltos(Integer idAlquiler) {
+        // Verificar que el alquiler existe
+        Alquiler alquiler = alquiRepo.findById(idAlquiler)
+            .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado con ID: " + idAlquiler));
+        
+        // Obtener todos los artículos del alquiler
+        List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(idAlquiler);
+        
+        // Marcar todos como devueltos y hacer artículos disponibles de nuevo
+        for (AlquilerArticulos aa : articulos) {
+            aa.setEstado(true); // true = devuelto
+            alquiArtiRepo.save(aa);
+            
+            // Marcar el artículo como disponible nuevamente
+            Articulo articulo = aa.getArticulo();
+            articulo.setActivo(true);
+            articuloRepo.save(articulo);
+        }
     }
 
 }

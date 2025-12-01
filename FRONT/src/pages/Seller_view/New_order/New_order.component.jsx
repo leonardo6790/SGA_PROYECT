@@ -91,10 +91,13 @@ export default function NewOrder() {
       return;
     }
 
+    // Filtrar artículos que NO estén ya en el pedido
+    const articulosEnPedido = orderItems.map(item => item.id);
     const filtered = catalog.filter(product => 
-      product.name.toLowerCase().includes(value) ||
+      !articulosEnPedido.includes(product.id) && // Excluir artículos ya agregados
+      (product.name.toLowerCase().includes(value) ||
       product.desc.toLowerCase().includes(value) ||
-      product.categoria.toLowerCase().includes(value)
+      product.categoria.toLowerCase().includes(value))
     );
 
     setFilteredProducts(filtered);
@@ -118,19 +121,32 @@ export default function NewOrder() {
     }
     const prod = catalog.find((p) => p.id === Number(selectedProductId));
     if (!prod) return;
-    setOrderItems((prev) => {
-      const existingIndex = prev.findIndex((it) => it.id === prod.id);
-      if (existingIndex > -1) {
-        // merge: increment quantity and update subtotal
-        const items = [...prev];
-        const item = { ...items[existingIndex] };
-        item.cantidad = (item.cantidad || 1) + 1;
-        item.subtotal = item.cantidad * item.price;
-        items[existingIndex] = item;
-        return items;
-      }
-      return [...prev, { ...prod, cantidad: 1, subtotal: prod.price, observaciones: "" }];
-    });
+    
+    // Verificar si el artículo ya está en el pedido
+    const existingIndex = orderItems.findIndex((it) => it.id === prod.id);
+    if (existingIndex > -1) {
+      alert("Este artículo ya está agregado al pedido. Cada vestido es único y solo se puede agregar una vez.");
+      return;
+    }
+    
+    // Agregar el artículo con cantidad fija de 1
+    setOrderItems((prev) => [...prev, { ...prod, cantidad: 1, subtotal: prod.price, observaciones: "" }]);
+    
+    // Limpiar la selección y refrescar búsqueda si está activa
+    setSelectedProductId("");
+    if (searchTerm.trim() !== "") {
+      handleSearchChange({ target: { value: searchTerm } });
+    }
+  };
+
+  const removeProductFromOrder = (index) => {
+    setOrderItems((prev) => prev.filter((_, idx) => idx !== index));
+    // Si hay una búsqueda activa, refrescar los resultados
+    if (searchTerm.trim() !== "") {
+      setTimeout(() => {
+        handleSearchChange({ target: { value: searchTerm } });
+      }, 100);
+    }
   };
 
   // Funciones para pagos
@@ -453,6 +469,23 @@ export default function NewOrder() {
               )}
             </div>
 
+            {/* Vista previa del producto seleccionado */}
+            {selectedProductId && catalog.find((p) => p.id === Number(selectedProductId)) && (
+              <div className="selected-product-preview">
+                <div className="preview-content">
+                  <div className="preview-name">
+                    {catalog.find((p) => p.id === Number(selectedProductId)).name}
+                  </div>
+                  <div className="preview-desc">
+                    {catalog.find((p) => p.id === Number(selectedProductId)).desc}
+                  </div>
+                  <div className="preview-price">
+                    ${catalog.find((p) => p.id === Number(selectedProductId)).price.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               className="nc-button add-btn"
               onClick={addProductToOrder}
@@ -465,23 +498,14 @@ export default function NewOrder() {
           <div className="order-items-table">
             <div className="table-header">
               <span>Artículo</span>
-              <span>Cantidad</span>
               <span>Precio</span>
               <span>Observaciones</span>
-              <span>Subtotal</span>
+              <span>Acciones</span>
             </div>
             {orderItems.length === 0 && <div className="empty">No hay productos añadidos</div>}
             {orderItems.map((it, idx) => (
               <div className="table-row" key={idx}>
                 <span className="col-name">{it.name}</span>
-                <span className="col-qty">
-                  <input
-                    type="number"
-                    min={1}
-                    value={it.cantidad}
-                    onChange={(e) => updateQuantity(idx, e.target.value)}
-                  />
-                </span>
                 <span className="col-price">${it.price.toLocaleString()}</span>
                 <span className="col-obs">
                   <div className="obs-container">
@@ -502,15 +526,22 @@ export default function NewOrder() {
                     </button>
                   </div>
                 </span>
-                <span className="col-sub">${(it.cantidad * it.price).toLocaleString()}</span>
+                <span className="col-actions">
+                  <button 
+                    className="remove-item-btn"
+                    onClick={() => removeProductFromOrder(idx)}
+                    title="Quitar producto"
+                  >
+                    −
+                  </button>
+                </span>
               </div>
             ))}
             <div className="table-footer">
               <span>Total</span>
               <span></span>
-              <span></span>
-              <span></span>
               <span className="total-amount">${total.toLocaleString()}</span>
+              <span></span>
             </div>
           </div>
         </div>

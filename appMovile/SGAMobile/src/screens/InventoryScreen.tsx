@@ -4,485 +4,725 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  SafeAreaView,
-  ActivityIndicator,
-  RefreshControl,
   TouchableOpacity,
-  Alert,
-  TextInput,
+  Image,
   Modal,
+  ScrollView,
+  RefreshControl,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { articulosService } from '../services/articulosService';
-import { Articulo, Categoria } from '../types';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../utils/constants';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Button, Input, Card } from '../components/ui';
+import { colors, gradients, spacing, fontSizes, borderRadius, shadows } from '../theme/colors';
+import {
+  obtenerArticulos,
+  crearArticulo,
+  actualizarArticulo,
+  Articulo,
+  ArticuloCreate,
+} from '../api/articulosApi';
+import { obtenerCategorias, Categoria } from '../api/categoriasApi';
 
-export const InventoryScreen: React.FC = () => {
+
+export default function InventoryScreen() {
   const [articulos, setArticulos] = useState<Articulo[]>([]);
-  const [filteredArticulos, setFilteredArticulos] = useState<Articulo[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [selectedCategoria, setSelectedCategoria] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editPrice, setEditPrice] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedArticulo, setSelectedArticulo] = useState<Articulo | null>(null);
+  
+  // Form states
+  const [formData, setFormData] = useState<ArticuloCreate>({
+    nombre: '',
+    generoArt: '',
+    tallaArt: '',
+    colorArt: '',
+    precioArt: 0,
+    activo: true,
+    idCategoria: 0,
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadData();
+    cargarDatos();
   }, []);
 
-  useEffect(() => {
-    filterArticulos();
-  }, [selectedCategoria, articulos]);
-
-  const loadData = async () => {
+  const cargarDatos = async () => {
     try {
       setLoading(true);
       const [articulosData, categoriasData] = await Promise.all([
-        articulosService.getAll(),
-        articulosService.getCategorias(),
+        obtenerArticulos(),
+        obtenerCategorias(),
       ]);
       setArticulos(articulosData);
       setCategorias(categoriasData);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al cargar datos');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudieron cargar los datos');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterArticulos = () => {
-    if (selectedCategoria === null) {
-      setFilteredArticulos(articulos);
-    } else {
-      setFilteredArticulos(articulos.filter(art => art.categoria.id === selectedCategoria));
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await cargarDatos();
     setRefreshing(false);
   };
 
-  const handleCategoryPress = (categoryId: number) => {
-    setSelectedCategoria(selectedCategoria === categoryId ? null : categoryId);
+  const filteredArticulos = articulos.filter((articulo) => {
+    const matchesSearch =
+      articulo.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      articulo.colorArt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      articulo.tallaArt.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory ? articulo.idCategoria === selectedCategory : true;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleCreate = async () => {
+    if (!formData.nombre || !formData.precioArt || !formData.idCategoria) {
+      Alert.alert('Error', 'Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await crearArticulo(formData);
+      Alert.alert('Éxito', 'Artículo creado correctamente');
+      setShowCreateModal(false);
+      resetForm();
+      await cargarDatos();
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo crear el artículo');
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleEditPrice = (articulo: Articulo) => {
-    setEditingId(articulo.id);
-    setEditPrice(articulo.valorAlquiler.toString());
+  const handleEdit = async () => {
+    if (!selectedArticulo) return;
+
+    try {
+      setSaving(true);
+      await actualizarArticulo(selectedArticulo.idArt, {
+        ...formData,
+        idArt: selectedArticulo.idArt,
+      });
+      Alert.alert('Éxito', 'Artículo actualizado correctamente');
+      setShowEditModal(false);
+      resetForm();
+      await cargarDatos();
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo actualizar el artículo');
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSavePrice = async () => {
-    if (!editingId) return;
-    
-    // TODO: Implementar actualización de precio cuando el backend lo soporte
-    Alert.alert('Info', 'Función de edición en desarrollo');
-    setEditingId(null);
+  const openEditModal = (articulo: Articulo) => {
+    setSelectedArticulo(articulo);
+    setFormData({
+      nombre: articulo.nombre,
+      generoArt: articulo.generoArt,
+      tallaArt: articulo.tallaArt,
+      colorArt: articulo.colorArt,
+      precioArt: articulo.precioArt,
+      activo: articulo.activo,
+      idCategoria: articulo.idCategoria,
+    });
+    setShowEditModal(true);
   };
 
-  const handleDelete = (articulo: Articulo) => {
-    Alert.alert(
-      'Confirmar eliminación',
-      `¿Estás seguro de eliminar "${articulo.nombreArticulo}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            // TODO: Implementar eliminación cuando el backend lo soporte
-            Alert.alert('Info', 'Función de eliminación en desarrollo');
-          },
-        },
-      ]
-    );
+  const resetForm = () => {
+    setFormData({
+      nombre: '',
+      generoArt: '',
+      tallaArt: '',
+      colorArt: '',
+      precioArt: 0,
+      activo: true,
+      idCategoria: 0,
+    });
+    setSelectedArticulo(null);
   };
 
-  const renderArticulo = ({ item }: { item: Articulo }) => (
-    <View style={styles.articuloCard}>
-      <View style={styles.articuloHeader}>
-        <Text style={styles.articuloName}>{item.nombreArticulo}</Text>
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleEditPrice(item)}
-          >
-            <Text style={styles.actionIcon}>✏️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDelete(item)}
-          >
-            <Text style={styles.actionIcon}>🗑️</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <Text style={styles.category}>📁 {item.categoria.nombreCategoria}</Text>
-      <Text style={styles.description}>{item.descripcion}</Text>
-      
-      <View style={styles.priceRow}>
-        <Text style={styles.priceLabel}>Precio de alquiler:</Text>
-        <Text style={styles.price}>${item.valorAlquiler.toLocaleString('es-CO')}</Text>
-      </View>
-      
-      <View style={styles.stockRow}>
-        <Text style={styles.stockLabel}>Stock:</Text>
-        <View style={[
-          styles.stockBadge,
-          item.stock > 0 ? styles.inStock : styles.outOfStock
-        ]}>
-          <Text style={styles.stockText}>
-            {item.stock > 0 ? `${item.stock} disponible(s)` : 'Agotado'}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderCategoria = ({ item }: { item: Categoria }) => (
+  const renderArticuloCard = ({ item }: { item: Articulo }) => (
     <TouchableOpacity
-      style={[
-        styles.categoryChip,
-        selectedCategoria === item.id && styles.categoryChipSelected
-      ]}
-      onPress={() => handleCategoryPress(item.id)}
+      style={styles.articleCard}
+      onPress={() => {
+        setSelectedArticulo(item);
+        setShowDetailModal(true);
+      }}
     >
-      <Text style={[
-        styles.categoryChipText,
-        selectedCategoria === item.id && styles.categoryChipTextSelected
-      ]}>
-        {item.nombreCategoria}
-      </Text>
+      <Card>
+        {item.fotoArt && (
+          <Image source={{ uri: item.fotoArt }} style={styles.articleImage} resizeMode="cover" />
+        )}
+        <View style={styles.articleInfo}>
+          <Text style={styles.articleName}>{item.nombre}</Text>
+          <Text style={styles.articleDetails}>
+            {item.generoArt} • Talla: {item.tallaArt} • {item.colorArt}
+          </Text>
+          <View style={styles.articleFooter}>
+            <Text style={styles.articlePrice}>${item.precioArt.toLocaleString()}</Text>
+            <View style={[styles.statusBadge, item.activo ? styles.available : styles.rented]}>
+              <Text style={styles.statusText}>{item.activo ? 'Disponible' : 'Alquilado'}</Text>
+            </View>
+          </View>
+        </View>
+      </Card>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Cargando inventario...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>📦 Inventario</Text>
-        <Text style={styles.subtitle}>
-          {filteredArticulos.length} artículo(s)
-        </Text>
-      </View>
+    <View style={styles.container}>
+      <LinearGradient colors={gradients.purple} style={styles.header}>
+        <Text style={styles.headerTitle}>📦 Inventario</Text>
+        <Text style={styles.headerSubtitle}>{articulos.length} artículos</Text>
+      </LinearGradient>
 
-      {categorias.length > 0 && (
-        <View style={styles.categoriesSection}>
-          <Text style={styles.sectionTitle}>Filtrar por categoría:</Text>
-          <FlatList
-            horizontal
-            data={categorias}
-            renderItem={renderCategoria}
-            keyExtractor={(item) => item.id.toString()}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesList}
+      <View style={styles.content}>
+        {/* Search and Filters */}
+        <View style={styles.searchContainer}>
+          <Input
+            placeholder="🔍 Buscar por nombre, talla, color..."
+            value={searchTerm}
+            onChangeText={setSearchTerm}
           />
         </View>
-      )}
 
-      <FlatList
-        data={filteredArticulos}
-        renderItem={renderArticulo}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>📭</Text>
-            <Text style={styles.emptyTitle}>No hay artículos</Text>
-            <Text style={styles.emptySubtitle}>
-              {selectedCategoria
-                ? 'No hay artículos en esta categoría'
-                : 'No se encontraron artículos en el inventario'}
+        {/* Category Filters */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
+          <TouchableOpacity
+            style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
+            onPress={() => setSelectedCategory(null)}
+          >
+            <Text style={[styles.categoryText, !selectedCategory && styles.categoryTextActive]}>
+              Todos
             </Text>
-          </View>
-        }
-      />
+          </TouchableOpacity>
+          {categorias.map((cat) => (
+            <TouchableOpacity
+              key={cat.idCate}
+              style={[styles.categoryChip, selectedCategory === cat.idCate && styles.categoryChipActive]}
+              onPress={() => setSelectedCategory(cat.idCate)}
+            >
+              <Text
+                style={[styles.categoryText, selectedCategory === cat.idCate && styles.categoryTextActive]}
+              >
+                {cat.nomCate}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
-      <Modal
-        visible={editingId !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setEditingId(null)}
-      >
+        {/* Articles List */}
+        <FlatList
+          data={filteredArticulos}
+          renderItem={renderArticuloCard}
+          keyExtractor={(item) => item.idArt.toString()}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.listContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No se encontraron artículos</Text>
+            </View>
+          }
+        />
+
+        {/* Floating Action Button */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => {
+            resetForm();
+            setShowCreateModal(true);
+          }}
+        >
+          <LinearGradient colors={gradients.primary} style={styles.fabGradient}>
+            <Text style={styles.fabText}>+</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+
+      {/* Create Modal */}
+      <Modal visible={showCreateModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Editar Precio</Text>
-            
-            <TextInput
-              style={styles.input}
-              value={editPrice}
-              onChangeText={setEditPrice}
-              keyboardType="numeric"
-              placeholder="Precio de alquiler"
-            />
-            
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setEditingId(null)}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>Crear Nuevo Artículo</Text>
               
-              <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
-                onPress={handleSavePrice}
-              >
-                <Text style={styles.saveButtonText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
+              <Input
+                label="Nombre *"
+                value={formData.nombre}
+                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+                placeholder="Ej: Vestido Elegante Rojo"
+              />
+
+              <Input
+                label="Género"
+                value={formData.generoArt}
+                onChangeText={(text) => setFormData({ ...formData, generoArt: text })}
+                placeholder="Ej: Femenino, Masculino"
+              />
+
+              <Input
+                label="Talla"
+                value={formData.tallaArt}
+                onChangeText={(text) => setFormData({ ...formData, tallaArt: text })}
+                placeholder="Ej: S, M, L"
+              />
+
+              <Input
+                label="Color"
+                value={formData.colorArt}
+                onChangeText={(text) => setFormData({ ...formData, colorArt: text })}
+                placeholder="Ej: Rojo, Azul"
+              />
+
+              <Input
+                label="Precio *"
+                value={formData.precioArt.toString()}
+                onChangeText={(text) => setFormData({ ...formData, precioArt: parseInt(text) || 0 })}
+                placeholder="Ej: 150000"
+                keyboardType="numeric"
+              />
+
+              <Text style={styles.label}>Categoría *</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesSelect}>
+                {categorias.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.idCate}
+                    style={[
+                      styles.categoryOption,
+                      formData.idCategoria === cat.idCate && styles.categoryOptionActive,
+                    ]}
+                    onPress={() => setFormData({ ...formData, idCategoria: cat.idCate })}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryOptionText,
+                        formData.idCategoria === cat.idCate && styles.categoryOptionTextActive,
+                      ]}
+                    >
+                      {cat.nomCate}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.modalButtons}>
+                <Button title="Cancelar" variant="outline" onPress={() => setShowCreateModal(false)} />
+                <View style={{ width: spacing.md }} />
+                <Button title="Crear" onPress={handleCreate} loading={saving} />
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+
+      {/* Detail Modal */}
+      <Modal visible={showDetailModal} animationType="fade" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedArticulo && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {selectedArticulo.fotoArt && (
+                  <Image
+                    source={{ uri: selectedArticulo.fotoArt }}
+                    style={styles.detailImage}
+                    resizeMode="cover"
+                  />
+                )}
+                <Text style={styles.detailTitle}>{selectedArticulo.nombre}</Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Género:</Text>
+                  <Text style={styles.detailValue}>{selectedArticulo.generoArt}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Talla:</Text>
+                  <Text style={styles.detailValue}>{selectedArticulo.tallaArt}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Color:</Text>
+                  <Text style={styles.detailValue}>{selectedArticulo.colorArt}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Precio:</Text>
+                  <Text style={styles.detailPrice}>${selectedArticulo.precioArt.toLocaleString()}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Estado:</Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      selectedArticulo.activo ? styles.available : styles.rented,
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {selectedArticulo.activo ? 'Disponible' : 'Alquilado'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.modalButtons}>
+                  <Button
+                    title="Cerrar"
+                    variant="outline"
+                    onPress={() => setShowDetailModal(false)}
+                  />
+                  <View style={{ width: spacing.md }} />
+                  <Button
+                    title="Editar"
+                    onPress={() => {
+                      setShowDetailModal(false);
+                      openEditModal(selectedArticulo);
+                    }}
+                  />
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal visible={showEditModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>Editar Artículo</Text>
+              
+              <Input
+                label="Nombre *"
+                value={formData.nombre}
+                onChangeText={(text) => setFormData({ ...formData, nombre: text })}
+              />
+
+              <Input
+                label="Género"
+                value={formData.generoArt}
+                onChangeText={(text) => setFormData({ ...formData, generoArt: text })}
+              />
+
+              <Input
+                label="Talla"
+                value={formData.tallaArt}
+                onChangeText={(text) => setFormData({ ...formData, tallaArt: text })}
+              />
+
+              <Input
+                label="Color"
+                value={formData.colorArt}
+                onChangeText={(text) => setFormData({ ...formData, colorArt: text })}
+              />
+
+              <Input
+                label="Precio *"
+                value={formData.precioArt.toString()}
+                onChangeText={(text) => setFormData({ ...formData, precioArt: parseInt(text) || 0 })}
+                keyboardType="numeric"
+              />
+
+              <Text style={styles.label}>Categoría *</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesSelect}>
+                {categorias.map((cat) => (
+                  <TouchableOpacity
+                    key={cat.idCate}
+                    style={[
+                      styles.categoryOption,
+                      formData.idCategoria === cat.idCate && styles.categoryOptionActive,
+                    ]}
+                    onPress={() => setFormData({ ...formData, idCategoria: cat.idCate })}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryOptionText,
+                        formData.idCategoria === cat.idCate && styles.categoryOptionTextActive,
+                      ]}
+                    >
+                      {cat.nomCate}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.modalButtons}>
+                <Button title="Cancelar" variant="outline" onPress={() => setShowEditModal(false)} />
+                <View style={{ width: spacing.md }} />
+                <Button title="Guardar" onPress={handleEdit} loading={saving} />
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
-};
+}
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.backgroundGray,
   },
-  centerContainer: {
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.backgroundGray,
   },
   loadingText: {
-    marginTop: SPACING.md,
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    marginTop: spacing.md,
+    fontSize: fontSizes.md,
+    color: colors.textSecondary,
   },
   header: {
-    padding: SPACING.lg,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
+    padding: spacing.xl,
+    paddingTop: spacing.xxl + 20,
+    borderBottomLeftRadius: borderRadius.xl,
+    borderBottomRightRadius: borderRadius.xl,
   },
-  title: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
+  headerTitle: {
+    fontSize: fontSizes.xxxl,
+    fontWeight: 'bold',
+    color: colors.textWhite,
   },
-  subtitle: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+  headerSubtitle: {
+    fontSize: fontSizes.md,
+    color: colors.textWhite,
+    opacity: 0.9,
+    marginTop: spacing.xs,
   },
-  categoriesSection: {
-    backgroundColor: COLORS.white,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.light,
+  content: {
+    flex: 1,
+    padding: spacing.md,
   },
-  sectionTitle: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.sm,
+  searchContainer: {
+    marginBottom: spacing.md,
   },
-  categoriesList: {
-    paddingHorizontal: SPACING.lg,
+  categoriesContainer: {
+    marginBottom: spacing.md,
+    maxHeight: 50,
   },
   categoryChip: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.light,
-    marginRight: SPACING.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+    backgroundColor: colors.gray100,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  categoryChipSelected: {
-    backgroundColor: COLORS.primary,
+  categoryChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  categoryChipText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.text,
-  },
-  categoryChipTextSelected: {
-    color: COLORS.white,
+  categoryText: {
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
     fontWeight: '600',
+  },
+  categoryTextActive: {
+    color: colors.textWhite,
   },
   listContent: {
-    padding: SPACING.lg,
+    paddingBottom: 80,
   },
-  articuloCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  articuloHeader: {
-    flexDirection: 'row',
+  row: {
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SPACING.sm,
+    marginBottom: spacing.md,
   },
-  articuloName: {
+  articleCard: {
     flex: 1,
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '600',
-    color: COLORS.text,
+    marginHorizontal: spacing.xs,
+    maxWidth: '48%',
   },
-  actions: {
-    flexDirection: 'row',
-    gap: SPACING.xs,
+  articleImage: {
+    width: '100%',
+    height: 180,
+    borderTopLeftRadius: borderRadius.md,
+    borderTopRightRadius: borderRadius.md,
   },
-  actionButton: {
-    padding: SPACING.xs,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.light,
+  articleInfo: {
+    padding: spacing.sm,
   },
-  deleteButton: {
-    backgroundColor: '#ffebee',
+  articleName: {
+    fontSize: fontSizes.md,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
-  actionIcon: {
-    fontSize: FONT_SIZES.lg,
+  articleDetails: {
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
+    marginBottom: spacing.sm,
   },
-  category: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.primary,
-    marginBottom: SPACING.xs,
-  },
-  description: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.md,
-  },
-  priceRow: {
+  articleFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.sm,
   },
-  priceLabel: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  price: {
-    fontSize: FONT_SIZES.lg,
+  articlePrice: {
+    fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: COLORS.success,
+    color: colors.primary,
   },
-  stockRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: borderRadius.sm,
   },
-  stockLabel: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+  available: {
+    backgroundColor: colors.successLight + '20',
   },
-  stockBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.md,
+  rented: {
+    backgroundColor: colors.warningLight + '20',
   },
-  inStock: {
-    backgroundColor: '#e8f5e9',
-  },
-  outOfStock: {
-    backgroundColor: '#ffebee',
-  },
-  stockText: {
-    fontSize: FONT_SIZES.xs,
+  statusText: {
+    fontSize: fontSizes.xs,
     fontWeight: '600',
+    color: colors.textPrimary,
   },
   emptyContainer: {
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    paddingVertical: SPACING.xl * 2,
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
   },
   emptyText: {
-    fontSize: 64,
-    marginBottom: SPACING.md,
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
   },
-  emptyTitle: {
-    fontSize: FONT_SIZES.xl,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: SPACING.xs,
+  fab: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    right: spacing.xl,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    ...shadows.large,
   },
-  emptySubtitle: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
+  fabGradient: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fabText: {
+    fontSize: 32,
+    color: colors.textWhite,
+    fontWeight: '300',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.lg,
+    padding: spacing.md,
   },
   modalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
     width: '100%',
-    maxWidth: 400,
+    maxHeight: '90%',
   },
   modalTitle: {
-    fontSize: FONT_SIZES.xl,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: SPACING.lg,
+    fontSize: fontSizes.xxl,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
   },
-  input: {
+  label: {
+    fontSize: fontSizes.sm,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  categoriesSelect: {
+    marginBottom: spacing.md,
+    maxHeight: 50,
+  },
+  categoryOption: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+    backgroundColor: colors.gray100,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: COLORS.light,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    fontSize: FONT_SIZES.md,
-    marginBottom: SPACING.lg,
+    borderColor: colors.border,
   },
-  modalActions: {
+  categoryOptionActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  categoryOptionText: {
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  categoryOptionTextActive: {
+    color: colors.textWhite,
+  },
+  modalButtons: {
     flexDirection: 'row',
-    gap: SPACING.md,
+    marginTop: spacing.xl,
   },
-  modalButton: {
-    flex: 1,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
+  detailImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.lg,
+  },
+  detailTitle: {
+    fontSize: fontSizes.xxl,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray100,
+    marginBottom: spacing.sm,
   },
-  cancelButton: {
-    backgroundColor: COLORS.light,
-  },
-  saveButton: {
-    backgroundColor: COLORS.primary,
-  },
-  cancelButtonText: {
-    fontSize: FONT_SIZES.md,
+  detailLabel: {
+    fontSize: fontSizes.md,
+    color: colors.textSecondary,
     fontWeight: '600',
-    color: COLORS.text,
   },
-  saveButtonText: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.white,
+  detailValue: {
+    fontSize: fontSizes.md,
+    color: colors.textPrimary,
+  },
+  detailPrice: {
+    fontSize: fontSizes.xl,
+    fontWeight: 'bold',
+    color: colors.primary,
   },
 });

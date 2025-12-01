@@ -84,5 +84,27 @@ import jakarta.validation.Valid;
         return ResponseEntity.ok(alquilerActualizado);
     }
 
+    @PutMapping("entregar/{id}")
+    public ResponseEntity<?> marcarComoEntregado(@PathVariable Integer id) {
+        try {
+            alquiServi.marcarArticulosComoEntregados(id);
+            return ResponseEntity.ok(Map.of("mensaje", "Artículos marcados como entregados exitosamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al marcar artículos como entregados", "detalle", e.getMessage()));
+        }
+    }
+
+    @PutMapping("devolver/{id}")
+    public ResponseEntity<?> marcarComoDevuelto(@PathVariable Integer id) {
+        try {
+            alquiServi.marcarArticulosComoDevueltos(id);
+            return ResponseEntity.ok(Map.of("mensaje", "Artículos marcados como devueltos y disponibles para alquilar nuevamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al marcar artículos como devueltos", "detalle", e.getMessage()));
+        }
+    }
+
 
 }

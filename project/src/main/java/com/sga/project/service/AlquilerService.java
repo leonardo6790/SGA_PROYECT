@@ -12,4 +12,6 @@ public void deleteAlquiler (Integer idAlquiler);
 public AlquilerDto updateAlquiler (AlquilerDto alquilerDto);
 public void calcularTotalAlquiler (Integer idAlquiler);
 public AlquilerDto toggleActivoAlquiler(Integer idAlquiler, Boolean activo);
+public void marcarArticulosComoEntregados(Integer idAlquiler);
+public void marcarArticulosComoDevueltos(Integer idAlquiler);
 }
