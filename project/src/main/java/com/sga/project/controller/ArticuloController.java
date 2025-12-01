@@ -60,6 +60,11 @@ public class ArticuloController {
             @RequestParam(value = "colorArt", required = false) String colorArt,
             @RequestParam("fotoArt") MultipartFile fotoArt) {
         try {
+            System.out.println("=== CREANDO ARTÍCULO CON FOTO ===");
+            System.out.println("Nombre archivo recibido: " + fotoArt.getOriginalFilename());
+            System.out.println("Tamaño archivo: " + fotoArt.getSize() + " bytes");
+            System.out.println("Content-Type: " + fotoArt.getContentType());
+            
             // Validar que la foto no esté vacía
             if (fotoArt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -68,6 +73,7 @@ public class ArticuloController {
 
             // Guardar la foto y obtener la URL
             String fotoUrl = guardarImagen(fotoArt);
+            System.out.println("URL generada: " + fotoUrl);
 
             // Crear el DTO del artículo
             ArticuloDto articuloDto = new ArticuloDto();
@@ -176,38 +182,5 @@ public class ArticuloController {
     public ResponseEntity<ArticuloDto> desactivarArticulo(@PathVariable Integer id) {
         ArticuloDto articuloActualizado = artiServi.toggleActivoArticulo(id, false);
         return ResponseEntity.ok(articuloActualizado);
-    }
-
-    //Endpoint para servir imágenes
-    @GetMapping("/uploads/articulos/{filename:.+}")
-    public ResponseEntity<byte[]> descargarImagen(@PathVariable String filename) throws IOException {
-        String userHome = System.getProperty("user.home");
-        String filePath = userHome + File.separator + "AppData" + File.separator + "SGA" + File.separator + "uploads" + File.separator + "articulos" + File.separator + filename;
-        
-        File file = new File(filePath);
-        if (!file.exists()) {
-            System.out.println("Archivo no encontrado: " + filePath);
-            return ResponseEntity.notFound().build();
-        }
-        
-        System.out.println("Sirviendo imagen: " + filePath);
-        
-        byte[] fileContent = Files.readAllBytes(file.toPath());
-        
-        // Detectar tipo de contenido basado en extensión
-        String contentType = "application/octet-stream";
-        if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
-            contentType = "image/jpeg";
-        } else if (filename.endsWith(".png")) {
-            contentType = "image/png";
-        } else if (filename.endsWith(".gif")) {
-            contentType = "image/gif";
-        } else if (filename.endsWith(".webp")) {
-            contentType = "image/webp";
-        }
-        
-        return ResponseEntity.ok()
-                .header("Content-Type", contentType)
-                .body(fileContent);
     }
 }

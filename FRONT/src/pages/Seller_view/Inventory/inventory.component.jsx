@@ -287,7 +287,7 @@ const Inventory = () => {
           {filteredArticulos.map((art) => (
             <div key={art.idArt} className="player-card">
               <img
-                src={art.fotoArt}
+                src={`http://localhost:8080${art.fotoArt}`}
                 alt={art.nombre}
                 className="player-image"
               />

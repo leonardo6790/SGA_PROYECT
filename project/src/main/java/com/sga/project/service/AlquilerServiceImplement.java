@@ -110,9 +110,24 @@ public class AlquilerServiceImplement implements AlquilerService {
     }
 
     @Override
+    @Transactional
     public void deleteAlquiler(Integer idAlquiler) {
         Alquiler alqui = alquiRepo.findById(idAlquiler)
                 .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado por el ID: " + idAlquiler));
+        
+        // Primero eliminar los pagos asociados
+        List<Pago> pagos = pagoRepo.findByAlquilerId(idAlquiler);
+        if (pagos != null && !pagos.isEmpty()) {
+            pagoRepo.deleteAll(pagos);
+        }
+        
+        // Luego eliminar los artículos del alquiler
+        List<AlquilerArticulos> articulosAlquiler = alquiArtiRepo.findByAlquilerId(idAlquiler);
+        if (articulosAlquiler != null && !articulosAlquiler.isEmpty()) {
+            alquiArtiRepo.deleteAll(articulosAlquiler);
+        }
+        
+        // Finalmente eliminar el alquiler
         alquiRepo.delete(alqui);
     }
 
