@@ -49,7 +49,7 @@ export const obtenerPagosPorAlquiler = async (idAlquiler) => {
 
 export const obtenerTodosLosPagos = async () => {
     try {
-        const response = await fetch(BASE_URL, {
+        const response = await fetch(`${BASE_URL}/ConsultarPagos`, {
             method: "GET",
             headers: getAuthHeaders(),
         });

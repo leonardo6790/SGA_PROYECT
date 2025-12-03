@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import HomePage from "./pages/Customer_view/Home_page/Home.page";
 import SignIn from "./pages/Customer_view/Sign-in/Sign-in.page";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -14,6 +14,9 @@ import Catalog from "./pages/Customer_view/Catalog/catalog.component";
 import Faq from "./pages/Customer_view/Faq/Faq.component";
 import WhatsappButton from "./components/Customer_components/Whatsapp_icon/whatsapp.component";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import ProtectedAdminRoute from "./components/Auth/ProtectedAdminRoute";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContextDefinition";
 
 function App() {
   return <AppContent />;
@@ -45,7 +48,11 @@ function AppContent() {
           <Route path="new-client" element={<NewClient />} />
           <Route path="new-order" element={<NewOrder />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="reports" element={
+            <ProtectedAdminRoute>
+              <Reports />
+            </ProtectedAdminRoute>
+          } />
           <Route path="clients" element={<Clients />} />
         </Route>
       </Routes>

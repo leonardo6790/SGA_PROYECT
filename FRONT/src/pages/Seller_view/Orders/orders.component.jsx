@@ -119,77 +119,84 @@ const Orders = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Órdenes a entregar: no han sido entregados al cliente
+  // Órdenes a entregar: no han sido entregados al cliente (entregado: false)
   const ordersToDeliver = articleCards.filter(card => {
     return !card.entregado;
   });
 
-  // Órdenes a recibir: ya fueron entregados al cliente (sin importar si fueron devueltos o no)
+  // Órdenes a recibir: ya fueron entregados al cliente PERO NO devueltos (entregado: true, estado: false)
   const ordersToReceive = articleCards.filter(card => {
-    return card.entregado;
+    return card.entregado && !card.estado;
   });
 
   console.log("Órdenes a entregar:", ordersToDeliver.length);
   console.log("Órdenes a recibir:", ordersToReceive.length);
-  ordersToReceive.forEach(card => {
-    console.log("Card a recibir:", { entregado: card.entregado, estado: card.estado, articulo: card.articulo });
-  });
 
   // Filtrar tarjetas según búsqueda y fecha (solo si filterByDate está activo)
-  const filteredCards = (activeTab === 'entregar' ? ordersToDeliver : ordersToReceive).filter(card => {
-    // Si no hay búsqueda, solo aplicar filtro de fecha si está activo
-    if (searchText === "") {
+  const filteredCards = (() => {
+    let cardsToFilter;
+    
+    if (activeTab === 'entregar') {
+      cardsToFilter = ordersToDeliver;
+    } else if (activeTab === 'recibir') {
+      cardsToFilter = ordersToReceive;
+    }
+    
+    return cardsToFilter.filter(card => {
+      // Si no hay búsqueda, solo aplicar filtro de fecha si está activo
+      if (searchText === "") {
+        if (filterByDate && startDate) {
+          // Convertir ambas fechas a formato YYYY-MM-DD para comparación correcta sin problemas de zona horaria
+          const cardDateStr = card.fechaEntrega; // Ya debería estar en formato YYYY-MM-DD
+          const selectedDateStr = startDate.toISOString().split('T')[0]; // Convertir a YYYY-MM-DD
+          return cardDateStr === selectedDateStr;
+        }
+        return true;
+      }
+
+      // Normalizar el texto de búsqueda
+      const searchLower = searchText.toLowerCase().trim();
+      const searchLength = searchText.trim().length;
+
+      // Determinar si el búsqueda es numérica
+      const isNumericSearch = /^\d+$/.test(searchText.trim());
+
+      let matchesSearch = false;
+
+      if (isNumericSearch) {
+        // Si tiene menos de 5 dígitos: buscar por ID de alquiler
+        if (searchLength < 5) {
+          const idAlquilerStr = card.idAlquiler.toString();
+          matchesSearch = idAlquilerStr === searchText.trim() || idAlquilerStr.startsWith(searchText.trim());
+        }
+        // Si tiene 5 o más dígitos: buscar por número de cliente (documento)
+        else {
+          const docStr = card.clienteDoc ? card.clienteDoc.toString() : '';
+          matchesSearch = docStr === searchText.trim() || docStr.startsWith(searchText.trim());
+        }
+      } else {
+        // Si no es numérico, buscar por nombre de cliente o artículo
+        const matchesNombre = card.nombreCliente &&
+          card.nombreCliente.toLowerCase().includes(searchLower);
+
+        const matchesArticulo = card.articulo &&
+          card.articulo.toLowerCase().includes(searchLower);
+
+        matchesSearch = matchesNombre || matchesArticulo;
+      }
+
+      // Filtro por fecha (solo si está activado el filtro)
+      let matchesDate = true;
       if (filterByDate && startDate) {
-        // Convertir ambas fechas a formato YYYY-MM-DD para comparación correcta sin problemas de zona horaria
-        const cardDateStr = card.fechaEntrega; // Ya debería estar en formato YYYY-MM-DD
-        const selectedDateStr = startDate.toISOString().split('T')[0]; // Convertir a YYYY-MM-DD
-        return cardDateStr === selectedDateStr;
+        // Convertir ambas fechas a formato YYYY-MM-DD para comparación correcta
+        const cardDateStr = card.fechaEntrega;
+        const selectedDateStr = startDate.toISOString().split('T')[0];
+        matchesDate = cardDateStr === selectedDateStr;
       }
-      return true;
-    }
 
-    // Normalizar el texto de búsqueda
-    const searchLower = searchText.toLowerCase().trim();
-    const searchLength = searchText.trim().length;
-
-    // Determinar si el búsqueda es numérica
-    const isNumericSearch = /^\d+$/.test(searchText.trim());
-
-    let matchesSearch = false;
-
-    if (isNumericSearch) {
-      // Si tiene menos de 5 dígitos: buscar por ID de alquiler
-      if (searchLength < 5) {
-        const idAlquilerStr = card.idAlquiler.toString();
-        matchesSearch = idAlquilerStr === searchText.trim() || idAlquilerStr.startsWith(searchText.trim());
-      }
-      // Si tiene 5 o más dígitos: buscar por número de cliente (documento)
-      else {
-        const docStr = card.clienteDoc ? card.clienteDoc.toString() : '';
-        matchesSearch = docStr === searchText.trim() || docStr.startsWith(searchText.trim());
-      }
-    } else {
-      // Si no es numérico, buscar por nombre de cliente o artículo
-      const matchesNombre = card.nombreCliente &&
-        card.nombreCliente.toLowerCase().includes(searchLower);
-
-      const matchesArticulo = card.articulo &&
-        card.articulo.toLowerCase().includes(searchLower);
-
-      matchesSearch = matchesNombre || matchesArticulo;
-    }
-
-    // Filtro por fecha (solo si está activado el filtro)
-    let matchesDate = true;
-    if (filterByDate && startDate) {
-      // Convertir ambas fechas a formato YYYY-MM-DD para comparación correcta
-      const cardDateStr = card.fechaEntrega;
-      const selectedDateStr = startDate.toISOString().split('T')[0];
-      matchesDate = cardDateStr === selectedDateStr;
-    }
-
-    return matchesSearch && matchesDate;
-  });
+      return matchesSearch && matchesDate;
+    });
+  })();
 
   const handleDelete = async (card) => {
     if (!window.confirm(`¿Estás seguro de eliminar el artículo "${card.articulo}" del alquiler #${card.idAlquiler}?`)) {
@@ -689,7 +696,9 @@ const Orders = () => {
         <p className="orders-subtitle">
           {searchText || filterByDate
             ? `Mostrando ${filteredCards.length} resultado(s)${searchText ? ` para "${searchText}"` : ''}${filterByDate ? ` (fecha: ${startDate.toLocaleDateString()})` : ''}`
-            : `${activeTab === 'entregar' ? 'Órdenes pendientes de entrega' : 'Órdenes pendientes de devolución'} (${filteredCards.length} artículos)`
+            : activeTab === 'entregar' 
+              ? `Órdenes pendientes de entrega (${filteredCards.length} artículos)`
+              : `Órdenes pendientes de devolución (${filteredCards.length} artículos)`
           }
         </p>
 

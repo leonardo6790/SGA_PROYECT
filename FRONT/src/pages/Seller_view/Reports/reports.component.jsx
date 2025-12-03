@@ -4,7 +4,7 @@ import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Na
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
-import { obtenerPagosPorAlquiler } from "../../../api/pagoApi";
+import { obtenerTodosLosPagos } from "../../../api/pagoApi";
 import { HiEye } from "react-icons/hi2";
 
 const Reports = () => {
@@ -14,7 +14,7 @@ const Reports = () => {
   const [endDate, setEndDate] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [filterByDate, setFilterByDate] = useState(false);
-  const [activeTab, setActiveTab] = useState('alquileres'); // 'alquileres' o 'pagos'
+  const [activeTab, setActiveTab] = useState('alquileres'); // 'alquileres', 'pagos' o 'devueltos'
   const [reportData, setReportData] = useState([]);
   const [viewingDetail, setViewingDetail] = useState(null);
 
@@ -66,33 +66,49 @@ const Reports = () => {
         articulos: alquiler.articulos || []
       }));
       setReportData(reporteAlquileres);
-    } else {
-      // Crear reporte de pagos
-      const reportePagos = [];
-      for (const alquiler of alquileresData) {
-        try {
-          const pagos = await obtenerPagosPorAlquiler(alquiler.id_alquiler);
-          if (pagos && pagos.length > 0) {
-            pagos.forEach(pago => {
-              reportePagos.push({
-                idPago: pago.idPago,
-                idAlquiler: alquiler.id_alquiler,
-                clienteDoc: alquiler.clienteDoc,
-                nombreCliente: alquiler.articulos && alquiler.articulos.length > 0 
-                  ? alquiler.articulos[0].nomCliente 
-                  : 'N/A',
-                montoPago: pago.montoPago,
-                fechaPago: pago.fechaPago,
-                metodoPago: pago.metodoPago || 'Efectivo',
-                totalAlquiler: alquiler.totalAlquiler
-              });
-            });
-          }
-        } catch (error) {
-          console.error(`Error al cargar pagos del alquiler ${alquiler.id_alquiler}:`, error);
-        }
+    } else if (activeTab === 'pagos') {
+      // Crear reporte de pagos - Obtener TODOS los pagos de una sola vez
+      try {
+        const todosPagos = await obtenerTodosLosPagos();
+        const reportePagos = todosPagos.map(pago => ({
+          idPago: pago.idPago,
+          idAlquiler: pago.alquiler?.id_alquiler || pago.idAlquiler,
+          clienteDoc: pago.alquiler?.clienteDoc || 'N/A',
+          nombreCliente: pago.alquiler?.articulos && pago.alquiler.articulos.length > 0 
+            ? pago.alquiler.articulos[0].nomCliente 
+            : 'N/A',
+          montoPago: pago.valAbo || pago.valorAbono || pago.montoPago,
+          fechaPago: pago.fechaUltimoAbono || pago.fechaPago,
+          metodoPago: pago.metodoPago || 'Efectivo',
+          totalAlquiler: pago.alquiler?.totalAlquiler || 0
+        }));
+        setReportData(reportePagos);
+      } catch (error) {
+        console.error("Error al cargar pagos:", error);
+        setReportData([]);
       }
-      setReportData(reportePagos);
+    } else if (activeTab === 'devueltos') {
+      // Crear reporte de alquileres completados (entregados y devueltos)
+      const reporteDevueltos = alquileresData
+        .flatMap(alquiler => 
+          (alquiler.articulos || [])
+            .filter(articulo => articulo.entregado && articulo.estado)
+            .map(articulo => ({
+              id: `${alquiler.id_alquiler}-${articulo.articuloId}`,
+              idAlquiler: alquiler.id_alquiler,
+              clienteDoc: alquiler.clienteDoc,
+              nombreCliente: articulo.nomCliente || 'N/A',
+              articulo: articulo.nomArticulo,
+              talla: articulo.tallaArticulo,
+              precio: articulo.precio,
+              fechaAlquiler: alquiler.fechaAlquiler,
+              fechaEntrega: alquiler.fechaEntrega,
+              fechaRetiro: alquiler.fechaRetiro,
+              estado: '✓ Devuelto',
+              articulos: [articulo]
+            }))
+        );
+      setReportData(reporteDevueltos);
     }
   };
 
@@ -122,13 +138,53 @@ const Reports = () => {
     // Filtro por rango de fechas
     let matchesDate = true;
     if (filterByDate && (startDate || endDate)) {
-      const itemDate = new Date(activeTab === 'alquileres' ? item.fechaAlquiler : item.fechaPago);
-      if (startDate && endDate) {
-        matchesDate = itemDate >= startDate && itemDate <= endDate;
-      } else if (startDate) {
-        matchesDate = itemDate >= startDate;
-      } else if (endDate) {
-        matchesDate = itemDate <= endDate;
+      // Obtener la fecha del item según el tab activo
+      let dateFieldName;
+      if (activeTab === 'alquileres') {
+        dateFieldName = 'fechaAlquiler';
+      } else if (activeTab === 'pagos') {
+        dateFieldName = 'fechaPago';
+      } else {
+        dateFieldName = 'fechaEntrega';
+      }
+
+      const itemDateValue = item[dateFieldName];
+      if (itemDateValue) {
+        let itemDate;
+        
+        // Manejar tanto strings como números (Integer timestamps)
+        if (typeof itemDateValue === 'string') {
+          // Convertir string de fecha (YYYY-MM-DD) a Date
+          const [year, month, day] = itemDateValue.split('-').map(Number);
+          itemDate = new Date(year, month - 1, day);
+        } else if (typeof itemDateValue === 'number') {
+          // Si es un número, interpretarlo como un timestamp o formato YYYYMMDD
+          const dateStr = itemDateValue.toString();
+          if (dateStr.length === 8) {
+            // Formato YYYYMMDD
+            const year = parseInt(dateStr.substring(0, 4));
+            const month = parseInt(dateStr.substring(4, 6));
+            const day = parseInt(dateStr.substring(6, 8));
+            itemDate = new Date(year, month - 1, day);
+          } else {
+            // Si es un timestamp, convertir directamente
+            itemDate = new Date(itemDateValue);
+          }
+        }
+
+        if (itemDate) {
+          // Convertir las fechas del picker a dates normalizadas
+          const start = startDate ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()) : null;
+          const end = endDate ? new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()) : null;
+
+          if (start && end) {
+            matchesDate = itemDate >= start && itemDate <= end;
+          } else if (start) {
+            matchesDate = itemDate >= start;
+          } else if (end) {
+            matchesDate = itemDate <= end;
+          }
+        }
       }
     }
 
@@ -148,8 +204,16 @@ const Reports = () => {
         completados,
         pendientes
       };
-    } else {
+    } else if (activeTab === 'pagos') {
       const total = filteredData.reduce((sum, item) => sum + (item.montoPago || 0), 0);
+      
+      return {
+        total: filteredData.length,
+        totalMonto: total
+      };
+    } else {
+      // devueltos
+      const total = filteredData.reduce((sum, item) => sum + (item.precio || 0), 0);
       
       return {
         total: filteredData.length,
@@ -286,6 +350,12 @@ const Reports = () => {
           >
             Pagos
           </button>
+          <button
+            className={`tab-button ${activeTab === 'devueltos' ? 'active' : ''}`}
+            onClick={() => setActiveTab('devueltos')}
+          >
+            ✓ Entregados y Devueltos
+          </button>
         </div>
 
         {/* Tabla de datos */}
@@ -333,7 +403,7 @@ const Reports = () => {
                 <p className="no-data">No hay alquileres para mostrar</p>
               )}
             </>
-          ) : (
+          ) : activeTab === 'pagos' ? (
             <>
               <div className="report-card">
                 <div className="report-header">
@@ -364,6 +434,47 @@ const Reports = () => {
                 ))
               ) : (
                 <p className="no-data">No hay pagos para mostrar</p>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="report-card">
+                <div className="report-header">
+                  <span>ID</span>
+                  <span>Cliente</span>
+                  <span>Documento</span>
+                  <span>F. Entrega</span>
+                  <span>F. Retiro</span>
+                  <span>Artículos</span>
+                  <span>Total</span>
+                  <span>Estado</span>
+                  <span>Acciones</span>
+                </div>
+              </div>
+              {filteredData.length > 0 ? (
+                filteredData.map((articulo) => (
+                  <div key={articulo.id} className="report-card">
+                    <div className="report-body">
+                      <span className="report-field">{articulo.idAlquiler}</span>
+                      <span className="report-field">{articulo.nombreCliente}</span>
+                      <span className="report-field">{articulo.clienteDoc}</span>
+                      <span className="report-field">{articulo.fechaEntrega}</span>
+                      <span className="report-field">{articulo.fechaRetiro}</span>
+                      <span className="report-field">{articulo.articulo}</span>
+                      <span className="report-field">${articulo.precio?.toLocaleString()}</span>
+                      <span className={`report-field status-badge ${articulo.estado === '✓ Devuelto' ? 'completed' : 'pending'}`}>
+                        {articulo.estado}
+                      </span>
+                      <span className="report-field">
+                        <button className="view-btn" onClick={() => handleViewDetail(articulo)}>
+                          <HiEye />
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="no-data">No hay alquileres para mostrar</p>
               )}
             </>
           )}

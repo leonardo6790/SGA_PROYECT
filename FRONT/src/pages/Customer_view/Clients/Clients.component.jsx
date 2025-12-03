@@ -113,6 +113,12 @@ const Clients = () => {
       setClients(data);
       setFilteredClients(data); // Actualizar también los filtrados
       
+      // Actualizar también el cliente que se está visualizando en el modal
+      const clienteActualizado = data.find(c => c.doc === editingId);
+      if (clienteActualizado) {
+        setViewingClient(clienteActualizado);
+      }
+      
       setEditingId(null);
       setEditedData({
         nomcli1: "",
@@ -329,7 +335,7 @@ const Clients = () => {
             >
               <option value="">Seleccione tipo de documento</option>
               {tiposDoc.map((tipo) => (
-                <option key={tipo.id_tipoDoc} value={tipo.id_tipoDoc}>
+                <option key={tipo.idTipoDoc} value={tipo.idTipoDoc}>
                   {tipo.nomDoc}
                 </option>
               ))}
@@ -397,7 +403,7 @@ const Clients = () => {
                 <span className="detail-label">Tipo de Documento:</span>
                 <span className="detail-value">
                   {viewingClient.idTipoDoc 
-                    ? tiposDoc.find(t => t.id_tipoDoc === viewingClient.idTipoDoc)?.nomDoc || "N/A"
+                    ? tiposDoc.find(t => t.idTipoDoc === viewingClient.idTipoDoc)?.nomDoc || "N/A"
                     : "N/A"}
                 </span>
               </div>

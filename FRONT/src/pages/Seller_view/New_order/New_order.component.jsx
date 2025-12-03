@@ -397,9 +397,21 @@ export default function NewOrder() {
     } catch (error) {
       console.error("Error al crear alquiler:", error);
       setLoading(false);
-      setPopupMessage(`Error al crear alquiler: ${error.message}`);
+      
+      // Parsear el mensaje de error de forma más amigable
+      let mensajeError = 'Lo sentimos, hubo un error al crear el alquiler';
+      
+      if (error.message && error.message.includes('409')) {
+        mensajeError = 'Lo sentimos, este artículo ya está alquilado para esa fecha';
+      } else if (error.message && error.message.includes('ya está alquilado')) {
+        mensajeError = 'Lo sentimos, este artículo ya está alquilado para esa fecha';
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      setPopupMessage(mensajeError);
       setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 3000);
+      setTimeout(() => setShowPopup(false), 4000);
     }
   };
 
@@ -642,9 +654,10 @@ export default function NewOrder() {
         )}
 
         {showPopup && (
-          <div className="nc-popup">
+          <div className="nc-popup nc-popup-error">
             <div className="nc-popup-content">
-              <p>{popupMessage || 'Correo enviado exitosamente'}</p>
+              <div className="nc-popup-icon">⚠️</div>
+              <p className="nc-popup-message">{popupMessage || 'Correo enviado exitosamente'}</p>
             </div>
           </div>
         )}
