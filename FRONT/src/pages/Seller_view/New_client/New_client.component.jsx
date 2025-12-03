@@ -4,7 +4,7 @@ import HomeSellerImage from "../../../assets/HomeSellerImage.png";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { useNavigate, useLocation } from "react-router-dom";
 import { crearCliente } from "../../../api/clientesApi";
-import { obtenerBarrios } from "../../../api/barriosApi";
+import { obtenerBarrios, crearBarrio } from "../../../api/barriosApi";
 import { obtenerTiposDoc } from "../../../api/tipoDocApi";
 
 export default function NewClient() {
@@ -14,6 +14,11 @@ export default function NewClient() {
   
   const [barrios, setBarrios] = useState([]);
   const [tiposDoc, setTiposDoc] = useState([]);
+  const [showCreateBarrioModal, setShowCreateBarrioModal] = useState(false);
+  const [newBarrioData, setNewBarrioData] = useState({
+    nombreBarrio: "",
+    descripcion: ""
+  });
   
   const [formData, setFormData] = useState({
     doc: documentoRecibido,
@@ -63,6 +68,44 @@ export default function NewClient() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleOpenCreateBarrioModal = () => {
+    setShowCreateBarrioModal(true);
+  };
+
+  const handleCloseCreateBarrioModal = () => {
+    setShowCreateBarrioModal(false);
+    setNewBarrioData({
+      nombreBarrio: "",
+      descripcion: ""
+    });
+  };
+
+  const handleCreateBarrio = async (e) => {
+    e.preventDefault();
+    
+    if (!newBarrioData.nombreBarrio.trim()) {
+      alert("El nombre del barrio es obligatorio");
+      return;
+    }
+
+    try {
+      const nuevoBarrio = await crearBarrio(newBarrioData);
+      
+      // Recargar la lista de barrios
+      const barriosActualizados = await obtenerBarrios();
+      setBarrios(barriosActualizados);
+      
+      // Seleccionar automáticamente el nuevo barrio en el formulario
+      setFormData(prev => ({ ...prev, idBarrio: nuevoBarrio.idBarrio }));
+      
+      handleCloseCreateBarrioModal();
+      alert("Barrio creado exitosamente");
+    } catch (error) {
+      console.error("Error al crear barrio:", error);
+      alert(`Error al crear el barrio: ${error.message}`);
+    }
   };
 
   const handleCrearCliente = async (e) => {
@@ -190,20 +233,30 @@ export default function NewClient() {
               <input type="text" name="direCli" value={formData.direCli} onChange={handleChange} className="nc-input" required />
             </label>
 
-            <label className="nc-field">
+            <label className="nc-field nc-field-with-button">
               <span className="nc-label">Barrio *</span>
-              <select name="idBarrio" value={formData.idBarrio || ""} onChange={handleChange} className="nc-input" required>
-                <option value="" disabled>Seleccione un barrio</option>
-                {barrios.length > 0 ? (
-                  barrios.map((barrio) => (
-                    <option key={barrio.idBarrio} value={barrio.idBarrio}>
-                      {barrio.nombreBarrio}
-                    </option>
-                  ))
-                ) : (
-                  <option value="" disabled>Cargando...</option>
-                )}
-              </select>
+              <div className="nc-barrio-container">
+                <select name="idBarrio" value={formData.idBarrio || ""} onChange={handleChange} className="nc-input" required>
+                  <option value="" disabled>Seleccione un barrio</option>
+                  {barrios.length > 0 ? (
+                    barrios.map((barrio) => (
+                      <option key={barrio.idBarrio} value={barrio.idBarrio}>
+                        {barrio.nombreBarrio}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>Cargando...</option>
+                  )}
+                </select>
+                <button 
+                  type="button" 
+                  className="nc-create-barrio-btn"
+                  onClick={handleOpenCreateBarrioModal}
+                  title="Crear nuevo barrio"
+                >
+                  + Nuevo Barrio
+                </button>
+              </div>
             </label>
           </div>
 
@@ -217,6 +270,49 @@ export default function NewClient() {
           </div>
         </form>
       </div>
+
+      {showCreateBarrioModal && (
+        <div className="nc-modal-overlay" onClick={handleCloseCreateBarrioModal}>
+          <form className="nc-modal" onSubmit={handleCreateBarrio} onClick={(e) => e.stopPropagation()}>
+            <h2>Crear Nuevo Barrio</h2>
+            <label className="nc-modal-field">
+              <span className="nc-modal-label">Nombre del barrio *</span>
+              <input
+                type="text"
+                value={newBarrioData.nombreBarrio}
+                onChange={(e) =>
+                  setNewBarrioData({ ...newBarrioData, nombreBarrio: e.target.value })
+                }
+                className="nc-modal-input"
+                required
+              />
+            </label>
+            <label className="nc-modal-field">
+              <span className="nc-modal-label">Descripción (opcional)</span>
+              <textarea
+                value={newBarrioData.descripcion}
+                onChange={(e) =>
+                  setNewBarrioData({ ...newBarrioData, descripcion: e.target.value })
+                }
+                className="nc-modal-textarea"
+                rows="4"
+              />
+            </label>
+            <div className="nc-modal-buttons">
+              <button type="submit" className="nc-button primary">
+                Crear Barrio
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseCreateBarrioModal}
+                className="nc-button ghost"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

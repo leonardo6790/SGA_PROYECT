@@ -30,3 +30,27 @@ export const obtenerBarrios = async () => {
         throw error;
     }
 };
+
+export const crearBarrio = async (barrioData) => {
+    try {
+        const headers = getAuthHeaders();
+        
+        const res = await fetch(`${BASE_URL}/crear`, { 
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(barrioData),
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Error response:', res.status, errorText);
+            throw new Error(`Error al crear barrio: ${res.status} - ${errorText}`);
+        }
+        
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error al crear barrio:", error);
+        throw error;
+    }
+};

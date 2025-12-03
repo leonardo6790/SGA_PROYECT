@@ -1,8 +1,8 @@
 // Constantes de la aplicación
 
 // URL del backend - Cambiar según tu configuración
-export const API_BASE_URL = 'http://192.168.40.148:8080/api'; // Para dispositivo físico y Expo Go
-// export const API_BASE_URL = 'http://10.0.2.2:8080/api'; // Para emulador de Android
+// export const API_BASE_URL = 'http://192.168.40.148:8080/api'; // Para dispositivo físico y Expo Go
+export const API_BASE_URL = 'http://10.0.2.2:8080/api'; // Para emulador de Android
 // export const API_BASE_URL = 'http://localhost:8080/api'; // Para desarrollo web
 
 // AsyncStorage Keys

@@ -672,6 +672,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-left: 5px;
 }
 
 .delete-payment-btn:hover {
@@ -679,10 +680,87 @@
   transform: scale(1.05);
 }
 
+.edit-payment-btn {
+  padding: 6px 10px;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+
+.edit-payment-btn:hover {
+  background-color: #2980b9;
+  transform: scale(1.05);
+}
+
+.save-payment-btn {
+  padding: 6px 10px;
+  border: none;
+  background-color: #27ae60;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+}
+
+.save-payment-btn:hover {
+  background-color: #229954;
+  transform: scale(1.05);
+}
+
+.cancel-payment-btn {
+  padding: 6px 10px;
+  border: none;
+  background-color: #95a5a6;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+}
+
+.cancel-payment-btn:hover {
+  background-color: #7f8c8d;
+  transform: scale(1.05);
+}
+
+.edit-payment-input {
+  padding: 6px 10px;
+  border: 2px solid #3498db;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 120px;
+  text-align: right;
+}
+
+.edit-payment-input:focus {
+  outline: none;
+  border-color: #2980b9;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
 .payments-table th:last-child,
 .payments-table td:last-child {
   text-align: center;
-  width: 100px;
+  width: 120px;
 }
 
 .save-btn {

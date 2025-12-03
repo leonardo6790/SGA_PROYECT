@@ -5,7 +5,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
 import { obtenerTodosLosPagos } from "../../../api/pagoApi";
-import { HiEye } from "react-icons/hi2";
+import { obtenerUsuario, crearUsuario } from "../../../api/usuariosApi";
+import { obtenerBarrios } from "../../../api/barriosApi";
+import { obtenerTiposDoc } from "../../../api/tipoDocApi";
+import { HiEye, HiPlus } from "react-icons/hi2";
 
 const Reports = () => {
   const [alquileres, setAlquileres] = useState([]);
@@ -14,9 +17,27 @@ const Reports = () => {
   const [endDate, setEndDate] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [filterByDate, setFilterByDate] = useState(false);
-  const [activeTab, setActiveTab] = useState('alquileres'); // 'alquileres', 'pagos' o 'devueltos'
+  const [activeTab, setActiveTab] = useState('alquileres'); // 'alquileres', 'pagos', 'devueltos' o 'vendedores'
   const [reportData, setReportData] = useState([]);
   const [viewingDetail, setViewingDetail] = useState(null);
+  const [vendedores, setVendedores] = useState([]);
+  const [showCreateVendedorModal, setShowCreateVendedorModal] = useState(false);
+  const [barrios, setBarrios] = useState([]);
+  const [tiposDoc, setTiposDoc] = useState([]);
+  const [newVendedorData, setNewVendedorData] = useState({
+    numDocumento: "",
+    nombre1: "",
+    nombre2: "",
+    apellido1: "",
+    apellido2: "",
+    dire: "",
+    tele: "",
+    correoElectronico: "",
+    contra: "",
+    idBarrio: null,
+    idTipoDoc: null,
+    idRol: 2 // 2 = VENDEDOR
+  });
 
   useEffect(() => {
     cargarDatos();
@@ -32,9 +53,18 @@ const Reports = () => {
         return;
       }
       
-      const alquileresData = await obtenerAlquileres();
+      const [alquileresData, vendedoresData, barriosData, tiposDocData] = await Promise.all([
+        obtenerAlquileres(),
+        obtenerUsuario(),
+        obtenerBarrios(),
+        obtenerTiposDoc()
+      ]);
+      
       console.log("Alquileres cargados:", alquileresData);
       setAlquileres(alquileresData || []);
+      setVendedores(vendedoresData || []);
+      setBarrios(barriosData || []);
+      setTiposDoc(tiposDocData || []);
       
       // Procesar datos para reportes
       await procesarReportes(alquileresData || []);
@@ -109,14 +139,28 @@ const Reports = () => {
             }))
         );
       setReportData(reporteDevueltos);
+    } else if (activeTab === 'vendedores') {
+      // Crear reporte de vendedores (filtrar solo vendedores, no admins)
+      const reporteVendedores = vendedores
+        .filter(user => user.idRol === 2) // 2 = VENDEDOR
+        .map(vendedor => ({
+          numDocumento: vendedor.numDocumento,
+          nombreCompleto: `${vendedor.nombre1} ${vendedor.nombre2 || ''} ${vendedor.apellido1} ${vendedor.apellido2 || ''}`.trim(),
+          correo: vendedor.correoElectronico,
+          telefono: vendedor.tele,
+          direccion: vendedor.dire,
+          barrio: vendedor.nomBar || 'N/A',
+          activo: vendedor.activo
+        }));
+      setReportData(reporteVendedores);
     }
   };
 
   useEffect(() => {
-    if (alquileres.length > 0) {
+    if (alquileres.length > 0 || vendedores.length > 0) {
       procesarReportes(alquileres);
     }
-  }, [activeTab]);
+  }, [activeTab, vendedores]);
 
   const filteredData = reportData.filter(item => {
     // Filtro por búsqueda
@@ -230,6 +274,74 @@ const Reports = () => {
 
   const closeDetailModal = () => {
     setViewingDetail(null);
+  };
+
+  const handleOpenCreateVendedorModal = () => {
+    setShowCreateVendedorModal(true);
+  };
+
+  const handleCloseCreateVendedorModal = () => {
+    setShowCreateVendedorModal(false);
+    setNewVendedorData({
+      numDocumento: "",
+      nombre1: "",
+      nombre2: "",
+      apellido1: "",
+      apellido2: "",
+      dire: "",
+      tele: "",
+      correoElectronico: "",
+      contra: "",
+      idBarrio: null,
+      idTipoDoc: null,
+      idRol: 2
+    });
+  };
+
+  const handleCreateVendedor = async (e) => {
+    e.preventDefault();
+    
+    // Validar campos requeridos
+    if (!newVendedorData.numDocumento || !newVendedorData.nombre1 || !newVendedorData.apellido1 || 
+        !newVendedorData.correoElectronico || !newVendedorData.contra || !newVendedorData.tele) {
+      alert("Por favor complete los campos obligatorios");
+      return;
+    }
+
+    try {
+      const vendedorData = {
+        numDocumento: parseInt(newVendedorData.numDocumento),
+        nombre1: newVendedorData.nombre1,
+        nombre2: newVendedorData.nombre2 || null,
+        apellido1: newVendedorData.apellido1,
+        apellido2: newVendedorData.apellido2 || null,
+        dire: newVendedorData.dire || null,
+        tele: parseInt(newVendedorData.tele),
+        correoElectronico: newVendedorData.correoElectronico,
+        contra: newVendedorData.contra,
+        activo: true,
+        idBarrio: newVendedorData.idBarrio ? parseInt(newVendedorData.idBarrio) : null,
+        idTipoDoc: newVendedorData.idTipoDoc ? parseInt(newVendedorData.idTipoDoc) : null,
+        idRol: 2 // VENDEDOR
+      };
+      
+      await crearUsuario(vendedorData);
+      
+      // Recargar vendedores
+      const vendedoresActualizados = await obtenerUsuario();
+      setVendedores(vendedoresActualizados);
+      
+      // Actualizar reporte si estamos en el tab de vendedores
+      if (activeTab === 'vendedores') {
+        await procesarReportes(alquileres);
+      }
+      
+      handleCloseCreateVendedorModal();
+      alert("Vendedor creado exitosamente");
+    } catch (error) {
+      console.error("Error al crear vendedor:", error);
+      alert(`Error al crear el vendedor: ${error.message}`);
+    }
   };
 
   if (loading) {
@@ -356,6 +468,12 @@ const Reports = () => {
           >
             ✓ Entregados y Devueltos
           </button>
+          <button
+            className={`tab-button ${activeTab === 'vendedores' ? 'active' : ''}`}
+            onClick={() => setActiveTab('vendedores')}
+          >
+            👥 Vendedores
+          </button>
         </div>
 
         {/* Tabla de datos */}
@@ -436,7 +554,7 @@ const Reports = () => {
                 <p className="no-data">No hay pagos para mostrar</p>
               )}
             </>
-          ) : (
+          ) : activeTab === 'devueltos' ? (
             <>
               <div className="report-card">
                 <div className="report-header">
@@ -475,6 +593,45 @@ const Reports = () => {
                 ))
               ) : (
                 <p className="no-data">No hay alquileres para mostrar</p>
+              )}
+            </>
+          ) : (
+            // Tab de Vendedores
+            <>
+              <div className="vendedores-header">
+                <button className="create-vendedor-btn" onClick={handleOpenCreateVendedorModal}>
+                  <HiPlus /> Crear Nuevo Vendedor
+                </button>
+              </div>
+              <div className="report-card">
+                <div className="report-header">
+                  <span>Documento</span>
+                  <span>Nombre Completo</span>
+                  <span>Correo</span>
+                  <span>Teléfono</span>
+                  <span>Dirección</span>
+                  <span>Barrio</span>
+                  <span>Estado</span>
+                </div>
+              </div>
+              {filteredData.length > 0 ? (
+                filteredData.map((vendedor) => (
+                  <div key={vendedor.numDocumento} className="report-card">
+                    <div className="report-body-vendedores">
+                      <span className="report-field">{vendedor.numDocumento}</span>
+                      <span className="report-field">{vendedor.nombreCompleto}</span>
+                      <span className="report-field">{vendedor.correo}</span>
+                      <span className="report-field">{vendedor.telefono}</span>
+                      <span className="report-field">{vendedor.direccion || 'N/A'}</span>
+                      <span className="report-field">{vendedor.barrio}</span>
+                      <span className={`report-field status-badge ${vendedor.activo ? 'completed' : 'pending'}`}>
+                        {vendedor.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="no-data">No hay vendedores para mostrar</p>
               )}
             </>
           )}
@@ -520,6 +677,143 @@ const Reports = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal de crear vendedor */}
+      {showCreateVendedorModal && (
+        <div className="modal-overlay" onClick={handleCloseCreateVendedorModal}>
+          <form className="modal-content vendedor-modal" onSubmit={handleCreateVendedor} onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modal-close" onClick={handleCloseCreateVendedorModal}>×</button>
+            <h2>Crear Nuevo Vendedor</h2>
+            
+            <div className="vendedor-form-grid">
+              <div className="form-field">
+                <label>Número de Documento *</label>
+                <input
+                  type="text"
+                  value={newVendedorData.numDocumento}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, numDocumento: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Tipo de Documento *</label>
+                <select
+                  value={newVendedorData.idTipoDoc || ""}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, idTipoDoc: e.target.value })}
+                  required
+                >
+                  <option value="">Seleccione</option>
+                  {tiposDoc.map(tipo => (
+                    <option key={tipo.id_tipoDoc} value={tipo.id_tipoDoc}>
+                      {tipo.nomDoc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Primer Nombre *</label>
+                <input
+                  type="text"
+                  value={newVendedorData.nombre1}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, nombre1: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Segundo Nombre</label>
+                <input
+                  type="text"
+                  value={newVendedorData.nombre2}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, nombre2: e.target.value })}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Primer Apellido *</label>
+                <input
+                  type="text"
+                  value={newVendedorData.apellido1}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, apellido1: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Segundo Apellido</label>
+                <input
+                  type="text"
+                  value={newVendedorData.apellido2}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, apellido2: e.target.value })}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Correo Electrónico *</label>
+                <input
+                  type="email"
+                  value={newVendedorData.correoElectronico}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, correoElectronico: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Teléfono *</label>
+                <input
+                  type="text"
+                  value={newVendedorData.tele}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, tele: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Contraseña *</label>
+                <input
+                  type="password"
+                  value={newVendedorData.contra}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, contra: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Dirección</label>
+                <input
+                  type="text"
+                  value={newVendedorData.dire}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, dire: e.target.value })}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Barrio</label>
+                <select
+                  value={newVendedorData.idBarrio || ""}
+                  onChange={(e) => setNewVendedorData({ ...newVendedorData, idBarrio: e.target.value })}
+                >
+                  <option value="">Seleccione</option>
+                  {barrios.map(barrio => (
+                    <option key={barrio.idBarrio} value={barrio.idBarrio}>
+                      {barrio.nombreBarrio}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-buttons">
+              <button type="submit" className="submit-btn">Crear Vendedor</button>
+              <button type="button" className="cancel-btn" onClick={handleCloseCreateVendedorModal}>
+                Cancelar
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

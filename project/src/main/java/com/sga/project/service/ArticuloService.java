@@ -15,4 +15,5 @@ public ArticuloDto updateArticulo (ArticuloUpdateDto artiUpdateDto);
 public List<ArticuloDto> getArticulosByName (String nomArt);
 public List<ArticuloDto> getArticulosByCate (String nomCate);
 public ArticuloDto toggleActivoArticulo(Integer idArt, Boolean activo);
+public boolean verificarDisponibilidadPorFechas(Integer idArt, String fechaInicio, String fechaFin);
 }
