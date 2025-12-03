@@ -11,6 +11,9 @@ import {
   ClientsScreen,
   OrdersScreen,
   NewRentScreen,
+  NewClientScreen,
+  NewOrderScreen,
+  AddArticleScreen,
 } from '../screens';
 import { COLORS } from '../utils/constants';
 import { ActivityIndicator, View, Text } from 'react-native';
@@ -32,17 +35,6 @@ const SellerTabNavigator = () => {
         },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Catálogo',
-          tabBarIcon: ({ size }) => (
-            <Text style={{ fontSize: size }}>📦</Text>
-          ),
-          headerShown: false,
-        }}
-      />
       <Tab.Screen
         name="Inventory"
         component={InventoryScreen}
@@ -148,6 +140,28 @@ const MainStack = () => {
         component={NewRentScreen}
         options={{
           title: 'Nuevo Alquiler',
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="NewClient"
+        component={NewClientScreen}
+        options={{
+          title: 'Registrar Cliente',
+        }}
+      />
+      <Stack.Screen
+        name="NewOrder"
+        component={NewOrderScreen}
+        options={{
+          title: 'Nueva Orden',
+        }}
+      />
+      <Stack.Screen
+        name="AddArticle"
+        component={AddArticleScreen}
+        options={{
+          title: 'Agregar Artículo',
           presentation: 'modal',
         }}
       />

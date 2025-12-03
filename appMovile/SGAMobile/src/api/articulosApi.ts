@@ -1,16 +1,4 @@
-import axios from 'axios';
-
-const API_URL = 'http://172.16.110.42:8080/api/articulos';
-
-// Configurar axios para incluir el token
-const getAuthHeaders = () => {
-  // En React Native usarías AsyncStorage
-  const token = ''; // Obtener de AsyncStorage
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+import { api } from './axiosConfig';
 
 export interface Articulo {
   idArt: number;
@@ -39,9 +27,7 @@ export interface ArticuloCreate {
 // Obtener todos los artículos disponibles
 export const obtenerArticulos = async (): Promise<Articulo[]> => {
   try {
-    const response = await axios.get(API_URL, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get('/articulos');
     return response.data;
   } catch (error) {
     console.error('Error al obtener artículos:', error);
@@ -52,9 +38,7 @@ export const obtenerArticulos = async (): Promise<Articulo[]> => {
 // Obtener artículo por ID
 export const obtenerArticuloPorId = async (id: number): Promise<Articulo> => {
   try {
-    const response = await axios.get(`${API_URL}/ConsultarById/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/articulos/ConsultarById/${id}`);
     return response.data;
   } catch (error) {
     console.error('Error al obtener artículo:', error);
@@ -65,9 +49,7 @@ export const obtenerArticuloPorId = async (id: number): Promise<Articulo> => {
 // Crear artículo
 export const crearArticulo = async (articulo: ArticuloCreate): Promise<Articulo> => {
   try {
-    const response = await axios.post(`${API_URL}/Crear`, articulo, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.post('/articulos/Crear', articulo);
     return response.data.data || response.data;
   } catch (error) {
     console.error('Error al crear artículo:', error);
@@ -78,11 +60,9 @@ export const crearArticulo = async (articulo: ArticuloCreate): Promise<Articulo>
 // Crear artículo con foto
 export const crearArticuloConFoto = async (formData: FormData): Promise<Articulo> => {
   try {
-    const token = ''; // Obtener de AsyncStorage
-    const response = await axios.post(`${API_URL}/CrearConFoto`, formData, {
+    const response = await api.post('/articulos/CrearConFoto', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-        ...(token && { Authorization: `Bearer ${token}` }),
       },
     });
     return response.data.data || response.data;
@@ -98,9 +78,7 @@ export const actualizarArticulo = async (
   articulo: Partial<ArticuloCreate> & { idArt: number }
 ): Promise<Articulo> => {
   try {
-    const response = await axios.put(`${API_URL}/Actualizar/${id}`, articulo, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.put(`/articulos/Actualizar/${id}`, articulo);
     return response.data;
   } catch (error) {
     console.error('Error al actualizar artículo:', error);
@@ -111,9 +89,7 @@ export const actualizarArticulo = async (
 // Buscar artículos por nombre
 export const buscarArticulosPorNombre = async (nombre: string): Promise<Articulo[]> => {
   try {
-    const response = await axios.get(`${API_URL}/BuscarPorNombre/${nombre}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/articulos/BuscarPorNombre/${nombre}`);
     return response.data;
   } catch (error) {
     console.error('Error al buscar artículos:', error);
@@ -124,9 +100,7 @@ export const buscarArticulosPorNombre = async (nombre: string): Promise<Articulo
 // Buscar artículos por categoría
 export const buscarArticulosPorCategoria = async (categoria: string): Promise<Articulo[]> => {
   try {
-    const response = await axios.get(`${API_URL}/BuscarPorCategoria/${categoria}`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await api.get(`/articulos/BuscarPorCategoria/${categoria}`);
     return response.data;
   } catch (error) {
     console.error('Error al buscar artículos por categoría:', error);

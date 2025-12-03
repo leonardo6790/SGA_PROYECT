@@ -12,12 +12,20 @@ import {
 } from 'react-native';
 import { alquileresService, Alquiler } from '../services/alquileresService';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../utils/constants';
+import { useFocusEffect } from '@react-navigation/native';
 
-export const OrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
   const [alquileres, setAlquileres] = useState<Alquiler[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'entregar' | 'recibir'>('entregar');
+
+  // Recargar cuando la pantalla recibe foco
+  useFocusEffect(
+    React.useCallback(() => {
+      loadAlquileres();
+    }, [])
+  );
 
   useEffect(() => {
     loadAlquileres();
@@ -39,6 +47,10 @@ export const OrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setRefreshing(true);
     await loadAlquileres();
     setRefreshing(false);
+  };
+
+  const handleNuevoAlquiler = () => {
+    navigation.navigate('NewRent');
   };
 
   const handleMarcarEntregado = async (alquilerId: number, articuloId: number) => {
@@ -239,7 +251,7 @@ export const OrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('NewRent')}
+        onPress={handleNuevoAlquiler}
       >
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>

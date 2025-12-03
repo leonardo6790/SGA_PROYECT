@@ -21,7 +21,7 @@ export const obtenerArticulo = async () => {
         console.log("Respuesta recibida:", res.status, res.statusText);
         
         if (!res.ok) {
-            const errorText = await res.text();
+            const errorText = await res.text();ya                                                                                                                           
             console.error('Error response:', res.status, errorText);
             throw new Error(`Error al obtener articulos: ${res.status} - ${errorText}`);
         }

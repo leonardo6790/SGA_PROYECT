@@ -51,6 +51,12 @@ public class ClientesController {
             return ResponseEntity.ok(clientesDto);
         }
     
+    @GetMapping("consultarDoc/{doc}")
+        public ResponseEntity<ClientesDto> searchbydoc(@PathVariable Integer doc){
+            ClientesDto clientesDto = cs.getClienteById(doc);
+            return ResponseEntity.ok(clientesDto);
+        }
+    
     @PutMapping("actualizar/{id}")
         public ResponseEntity<ClientesDto> update(@PathVariable Integer id,@Valid @RequestBody ClientesDto clientesDto) {
             clientesDto.setDoc(id);

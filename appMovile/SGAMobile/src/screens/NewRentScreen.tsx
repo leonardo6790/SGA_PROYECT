@@ -4,30 +4,25 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
+  Image,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { clientesService } from '../services/clientesService';
-import { articulosService } from '../services/articulosService';
-import { alquileresService } from '../services/alquileresService';
+import { obtenerClientes } from '../api/clientesApi';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../utils/constants';
 
 export const NewRentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [documento, setDocumento] = useState('');
+  const [clientes, setClientes] = useState<any[]>([]);
   const [clienteEncontrado, setClienteEncontrado] = useState<any>(null);
-  const [searchingCliente, setSearchingCliente] = useState(false);
-  const [articulos, setArticulos] = useState<any[]>([]);
-  const [selectedArticulos, setSelectedArticulos] = useState<number[]>([]);
-  const [fechaAlquiler, setFechaAlquiler] = useState(new Date().toISOString().split('T')[0]);
-  const [fechaEntrega, setFechaEntrega] = useState('');
-  const [fechaRetiro, setFechaRetiro] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [mensaje, setMensaje] = useState('Por favor escribe el documento');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadArticulos();
+    cargarClientes();
   }, []);
 
   useEffect(() => {
@@ -35,202 +30,97 @@ export const NewRentScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
       buscarCliente();
     } else {
       setClienteEncontrado(null);
+      setMensaje('Por favor escribe el documento');
     }
-  }, [documento]);
+  }, [documento, clientes]);
 
-  const loadArticulos = async () => {
+  const cargarClientes = async () => {
     try {
-      const data = await articulosService.getAll();
-      setArticulos(data);
-    } catch (error: any) {
-      Alert.alert('Error', 'Error al cargar artículos');
-    }
-  };
-
-  const buscarCliente = async () => {
-    try {
-      setSearchingCliente(true);
-      const cliente = await clientesService.getByDocumento(parseInt(documento));
-      setClienteEncontrado(cliente);
-    } catch (error: any) {
-      console.error('Error buscando cliente:', error);
-    } finally {
-      setSearchingCliente(false);
-    }
-  };
-
-  const toggleArticulo = (articuloId: number) => {
-    if (selectedArticulos.includes(articuloId)) {
-      setSelectedArticulos(selectedArticulos.filter(id => id !== articuloId));
-    } else {
-      setSelectedArticulos([...selectedArticulos, articuloId]);
-    }
-  };
-
-  const handleCrearAlquiler = async () => {
-    // Validaciones
-    if (!clienteEncontrado) {
-      Alert.alert('Error', 'Debe buscar y seleccionar un cliente');
-      return;
-    }
-
-    if (selectedArticulos.length === 0) {
-      Alert.alert('Error', 'Debe seleccionar al menos un artículo');
-      return;
-    }
-
-    if (!fechaEntrega || !fechaRetiro) {
-      Alert.alert('Error', 'Debe especificar las fechas de entrega y retiro');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      const alquilerData = {
-        clienteDoc: clienteEncontrado.documento,
-        fechaAlquiler: fechaAlquiler,
-        fechaEntrega: fechaEntrega,
-        fechaRetiro: fechaRetiro,
-        articulos: selectedArticulos.map(id => ({
-          articuloId: id,
-          cantidad: 1,
-        })),
-      };
-
-      await alquileresService.create(alquilerData);
-      
-      Alert.alert('Éxito', 'Alquiler creado correctamente', [
-        {
-          text: 'OK',
-          onPress: () => {
-            navigation.goBack();
-          },
-        },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al crear el alquiler');
+      const data = await obtenerClientes();
+      setClientes(data);
+    } catch (error) {
+      console.error('Error al cargar clientes:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNuevoCliente = () => {
-    Alert.alert(
-      'Nuevo Cliente',
-      'Función de crear cliente en desarrollo. Por ahora, el cliente debe ser creado desde la web.',
-      [{ text: 'OK' }]
-    );
+  const buscarCliente = () => {
+    const user = clientes.find((e) => String(e.doc) === documento.trim());
+    if (user) {
+      setClienteEncontrado(user);
+      setMensaje('El cliente ha sido encontrado en la base de datos');
+    } else {
+      setClienteEncontrado(null);
+      setMensaje('Cliente no encontrado :(');
+    }
   };
 
+
+  const handleContinuar = () => {
+    if (clienteEncontrado) {
+      // Navegar a la pantalla de nueva orden con los datos del cliente
+      navigation.navigate('NewOrder', { cliente: clienteEncontrado });
+    } else {
+      // Navegar a la pantalla de nuevo cliente con el documento
+      navigation.navigate('NewClient', { documento: documento });
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🏪 Nuevo Alquiler</Text>
-        </View>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.formSection}>
+            <Text style={styles.title}>Bienvenido</Text>
+            <Text style={styles.subtitle}>Por favor, Ingresa el documento</Text>
+            <Text style={styles.label}>Cédula de Ciudadanía</Text>
 
-        {/* Búsqueda de cliente */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Buscar Cliente</Text>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Número de documento..."
-            value={documento}
-            onChangeText={setDocumento}
-            keyboardType="numeric"
-            maxLength={10}
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Escribe aquí..."
+              value={documento}
+              onChangeText={setDocumento}
+              keyboardType="numeric"
+              maxLength={10}
+              onSubmitEditing={handleContinuar}
+            />
 
-          {searchingCliente && (
-            <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: SPACING.md }} />
-          )}
-
-          {clienteEncontrado ? (
-            <View style={styles.clienteCard}>
-              <Text style={styles.clienteCardTitle}>✓ Cliente encontrado</Text>
-              <Text style={styles.clienteCardText}>
-                {clienteEncontrado.primerNombre} {clienteEncontrado.primerApellido}
-              </Text>
-              <Text style={styles.clienteCardDetail}>
-                📧 {clienteEncontrado.email}
-              </Text>
-              <Text style={styles.clienteCardDetail}>
-                📞 {clienteEncontrado.telefono}
-              </Text>
-            </View>
-          ) : documento.length >= 7 && !searchingCliente ? (
-            <View style={styles.notFoundCard}>
-              <Text style={styles.notFoundText}>❌ Cliente no encontrado</Text>
-              <TouchableOpacity style={styles.newClientButton} onPress={handleNuevoCliente}>
-                <Text style={styles.newClientButtonText}>+ Crear Nuevo Cliente</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Fechas */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Fechas</Text>
-          
-          <Text style={styles.label}>Fecha de Entrega:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={fechaEntrega}
-            onChangeText={setFechaEntrega}
-          />
-
-          <Text style={styles.label}>Fecha de Retiro:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={fechaRetiro}
-            onChangeText={setFechaRetiro}
-          />
-        </View>
-
-        {/* Selección de artículos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Seleccionar Artículos ({selectedArticulos.length})</Text>
-          
-          {articulos.map((articulo) => (
-            <TouchableOpacity
-              key={articulo.id}
-              style={[
-                styles.articuloItem,
-                selectedArticulos.includes(articulo.id) && styles.articuloItemSelected
-              ]}
-              onPress={() => toggleArticulo(articulo.id)}
+            <TouchableOpacity 
+              style={styles.button}
+              onPress={handleContinuar}
             >
-              <View style={styles.checkbox}>
-                {selectedArticulos.includes(articulo.id) && (
-                  <Text style={styles.checkmark}>✓</Text>
-                )}
-              </View>
-              
-              <View style={styles.articuloInfo}>
-                <Text style={styles.articuloName}>{articulo.nombreArticulo}</Text>
-                <Text style={styles.articuloPrice}>
-                  ${articulo.valorAlquiler.toLocaleString('es-CO')}
-                </Text>
-              </View>
+              <Text style={styles.buttonText}>Continuar</Text>
             </TouchableOpacity>
-          ))}
-        </View>
 
-        <TouchableOpacity
-          style={[styles.createButton, loading && styles.createButtonDisabled]}
-          onPress={handleCrearAlquiler}
-          disabled={loading}
-        >
-          <Text style={styles.createButtonText}>
-            {loading ? 'Creando...' : '✓ Crear Alquiler'}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+            <View style={styles.statusSection}>
+              <Text style={styles.statusIcon}>
+                {clienteEncontrado ? '✅' : documento.length >= 7 ? '❌' : '📄'}
+              </Text>
+              <Text style={[
+                styles.statusText,
+                clienteEncontrado && styles.statusTextSuccess,
+                !clienteEncontrado && documento.length >= 7 && styles.statusTextError
+              ]}>
+                {mensaje}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -239,147 +129,83 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  scrollContent: {
-    padding: SPACING.lg,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
-  header: {
-    marginBottom: SPACING.lg,
+  loadingText: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+  },
+  content: {
+    flex: 1,
+    padding: SPACING.xl,
+    justifyContent: 'center',
+  },
+  formSection: {
+    width: '100%',
   },
   title: {
-    fontSize: FONT_SIZES.xxl,
+    fontSize: FONT_SIZES.xxxl,
     fontWeight: '700',
-    color: COLORS.text,
-  },
-  section: {
-    marginBottom: SPACING.xl,
-  },
-  sectionTitle: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '600',
     color: COLORS.text,
     marginBottom: SPACING.md,
   },
+  subtitle: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginBottom: SPACING.xs,
+  },
   label: {
     fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
     color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
-    marginTop: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   input: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: COLORS.light,
+    borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    fontSize: FONT_SIZES.md,
-    color: COLORS.text,
-  },
-  clienteCard: {
-    backgroundColor: '#e8f5e9',
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    marginTop: SPACING.md,
-  },
-  clienteCardTitle: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.success,
-    marginBottom: SPACING.xs,
-  },
-  clienteCardText: {
+    padding: SPACING.lg,
     fontSize: FONT_SIZES.lg,
-    fontWeight: '600',
     color: COLORS.text,
-    marginBottom: SPACING.xs,
+    marginBottom: SPACING.xl,
   },
-  clienteCardDetail: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  notFoundCard: {
-    backgroundColor: '#ffebee',
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    marginTop: SPACING.md,
-    alignItems: 'center',
-  },
-  notFoundText: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.danger,
-    marginBottom: SPACING.md,
-  },
-  newClientButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: BORDER_RADIUS.md,
-  },
-  newClientButtonText: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.white,
-  },
-  articuloItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  articuloItemSelected: {
-    borderColor: COLORS.primary,
-    backgroundColor: '#e3f2fd',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    marginRight: SPACING.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkmark: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-  articuloInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  articuloName: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.text,
-    flex: 1,
-  },
-  articuloPrice: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '600',
-    color: COLORS.success,
-  },
-  createButton: {
+  button: {
     backgroundColor: COLORS.primary,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
     alignItems: 'center',
-    marginTop: SPACING.lg,
     marginBottom: SPACING.xl,
   },
-  createButtonDisabled: {
-    opacity: 0.6,
-  },
-  createButtonText: {
+  buttonText: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  statusSection: {
+    alignItems: 'center',
+    marginTop: SPACING.lg,
+  },
+  statusIcon: {
+    fontSize: 80,
+    marginBottom: SPACING.md,
+  },
+  statusText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  statusTextSuccess: {
+    color: COLORS.success,
+    fontWeight: '600',
+  },
+  statusTextError: {
+    color: COLORS.danger,
+    fontWeight: '600',
   },
 });

@@ -78,7 +78,7 @@ export const alquileresService = {
   // Obtener todos los alquileres
   async getAll(): Promise<Alquiler[]> {
     try {
-      const response = await api.get<AlquilerBackend[]>('/alquileres');
+      const response = await api.get<AlquilerBackend[]>('/alquiler');
       return response.data.map(mapAlquilerBackendToAlquiler);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener alquileres');
@@ -88,7 +88,7 @@ export const alquileresService = {
   // Obtener alquiler por ID
   async getById(id: number): Promise<Alquiler> {
     try {
-      const response = await api.get<AlquilerBackend>(`/alquileres/${id}`);
+      const response = await api.get<AlquilerBackend>(`/alquiler/ConsultarById/${id}`);
       return mapAlquilerBackendToAlquiler(response.data);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener alquiler');
@@ -98,7 +98,7 @@ export const alquileresService = {
   // Crear alquiler
   async create(alquilerData: CreateAlquilerDTO): Promise<Alquiler> {
     try {
-      const response = await api.post<AlquilerBackend>('/alquileres/Crear', alquilerData);
+      const response = await api.post<AlquilerBackend>('/alquiler/CrearAlquiler', alquilerData);
       return mapAlquilerBackendToAlquiler(response.data);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al crear alquiler');
@@ -108,7 +108,10 @@ export const alquileresService = {
   // Marcar artículo como entregado
   async marcarComoEntregado(alquilerId: number, articuloId: number): Promise<void> {
     try {
-      await api.put(`/alquilerArticulos/marcarEntregado/${alquilerId}/${articuloId}`);
+      await api.put(`/AlquilerArticulos/Actualizar/${articuloId}/${alquilerId}`, {
+        entregado: true,
+        estado: false // false = no devuelto
+      });
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al marcar como entregado');
     }
@@ -117,7 +120,10 @@ export const alquileresService = {
   // Marcar artículo como devuelto
   async marcarComoDevuelto(alquilerId: number, articuloId: number): Promise<void> {
     try {
-      await api.put(`/alquilerArticulos/marcarDevuelto/${alquilerId}/${articuloId}`);
+      await api.put(`/AlquilerArticulos/Actualizar/${articuloId}/${alquilerId}`, {
+        entregado: true,
+        estado: true // true = devuelto
+      });
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al marcar como devuelto');
     }
@@ -126,7 +132,7 @@ export const alquileresService = {
   // Eliminar artículo de alquiler
   async eliminarArticulo(alquilerId: number, articuloId: number): Promise<void> {
     try {
-      await api.delete(`/alquilerArticulos/eliminar/${alquilerId}/${articuloId}`);
+      await api.delete(`/AlquilerArticulos/eliminar/${alquilerId}/${articuloId}`);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al eliminar artículo');
     }

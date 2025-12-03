@@ -12,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button, Input, Card } from '../components/ui';
 import { colors, gradients, spacing, fontSizes, borderRadius, shadows } from '../theme/colors';
@@ -24,8 +25,11 @@ import {
 } from '../api/articulosApi';
 import { obtenerCategorias, Categoria } from '../api/categoriasApi';
 
+interface InventoryScreenProps {
+  navigation?: any;
+}
 
-export default function InventoryScreen() {
+export default function InventoryScreen({ navigation }: InventoryScreenProps) {
   const [articulos, setArticulos] = useState<Articulo[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +58,13 @@ export default function InventoryScreen() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // Recargar cuando la pantalla recibe foco
+  useFocusEffect(
+    React.useCallback(() => {
+      cargarDatos();
+    }, [])
+  );
 
   const cargarDatos = async () => {
     try {
@@ -255,8 +266,12 @@ export default function InventoryScreen() {
         <TouchableOpacity
           style={styles.fab}
           onPress={() => {
-            resetForm();
-            setShowCreateModal(true);
+            if (navigation) {
+              navigation.navigate('AddArticle');
+            } else {
+              resetForm();
+              setShowCreateModal(true);
+            }
           }}
         >
           <LinearGradient colors={gradients.primary} style={styles.fabGradient}>

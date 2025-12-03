@@ -2,7 +2,6 @@ import api from '../api/axiosConfig';
 import { API_BASE_URL } from '../utils/constants';
 
 export interface ClienteBackend {
-  idCliente: number;
   doc: number;
   nomcli1: string;
   nomcli2?: string;
@@ -11,10 +10,9 @@ export interface ClienteBackend {
   direCli: string;
   numeroCli: number;
   correoElectronico: string;
+  activo?: boolean;
   idBarrio: number;
-  nomBarrio: string;
   idTipoDoc: number;
-  nomTipoDoc: string;
 }
 
 export interface Cliente {
@@ -53,7 +51,7 @@ export interface CreateClienteDTO {
 // Mapper
 const mapClienteBackendToCliente = (backend: ClienteBackend): Cliente => {
   return {
-    id: backend.idCliente,
+    id: backend.doc, // El documento es el ID
     documento: backend.doc,
     primerNombre: backend.nomcli1,
     segundoNombre: backend.nomcli2,
@@ -64,11 +62,11 @@ const mapClienteBackendToCliente = (backend: ClienteBackend): Cliente => {
     email: backend.correoElectronico,
     barrio: {
       id: backend.idBarrio,
-      nombre: backend.nomBarrio,
+      nombre: 'Barrio', // Placeholder, se puede cargar después
     },
     tipoDocumento: {
       id: backend.idTipoDoc,
-      nombre: backend.nomTipoDoc,
+      nombre: 'Documento', // Placeholder, se puede cargar después
     },
   };
 };
@@ -77,7 +75,7 @@ export const clientesService = {
   // Obtener todos los clientes
   async getAll(): Promise<Cliente[]> {
     try {
-      const response = await api.get<ClienteBackend[]>('/clientes');
+      const response = await api.get<ClienteBackend[]>('/cli');
       return response.data.map(mapClienteBackendToCliente);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener clientes');
@@ -87,7 +85,7 @@ export const clientesService = {
   // Obtener cliente por ID
   async getById(id: number): Promise<Cliente> {
     try {
-      const response = await api.get<ClienteBackend>(`/clientes/${id}`);
+      const response = await api.get<ClienteBackend>(`/cli/consultarId/${id}`);
       return mapClienteBackendToCliente(response.data);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al obtener cliente');
@@ -108,7 +106,7 @@ export const clientesService = {
   // Crear cliente
   async create(clienteData: CreateClienteDTO): Promise<Cliente> {
     try {
-      const response = await api.post<ClienteBackend>('/clientes/Crear', clienteData);
+      const response = await api.post<ClienteBackend>('/cli/crear', clienteData);
       return mapClienteBackendToCliente(response.data);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al crear cliente');
@@ -118,7 +116,7 @@ export const clientesService = {
   // Actualizar cliente
   async update(id: number, clienteData: Partial<CreateClienteDTO>): Promise<Cliente> {
     try {
-      const response = await api.put<ClienteBackend>(`/clientes/Actualizar/${id}`, clienteData);
+      const response = await api.put<ClienteBackend>(`/cli/actualizar/${id}`, clienteData);
       return mapClienteBackendToCliente(response.data);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al actualizar cliente');
@@ -128,7 +126,7 @@ export const clientesService = {
   // Eliminar cliente
   async delete(id: number): Promise<void> {
     try {
-      await api.delete(`/clientes/Eliminar/${id}`);
+      await api.delete(`/cli/borrar/${id}`);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Error al eliminar cliente');
     }
