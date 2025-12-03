@@ -15,9 +15,9 @@ public class ArticuloUpdateDto {
     private String colorArt;
 
     @NotNull
-    private Integer precioArti;
+    private Integer precioArt;
 
-    private String fotoArti;
+    private String fotoArt;
     private Boolean activo;
     private Integer idCategoria;
 }

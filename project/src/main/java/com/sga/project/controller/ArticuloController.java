@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import com.sga.project.dto.ArticuloDto;
-import com.sga.project.dto.ArticuloUpdateDto;
 import com.sga.project.service.ArticuloService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -153,9 +152,9 @@ public class ArticuloController {
     }
 
     @PutMapping("Actualizar/{id}")
-    public ResponseEntity<ArticuloDto> actualizarArticulo (@PathVariable Integer id, @Valid @RequestBody ArticuloUpdateDto artiUpDto) {
-        artiUpDto.setIdArt(id);
-        ArticuloDto artiActualizado = artiServi.updateArticulo(artiUpDto);
+    public ResponseEntity<ArticuloDto> actualizarArticulo (@PathVariable Integer id, @Valid @RequestBody ArticuloDto artiDto) {
+        artiDto.setIdArt(id);
+        ArticuloDto artiActualizado = artiServi.updateArticulo(artiDto);
         return ResponseEntity.ok(artiActualizado);
     }
 

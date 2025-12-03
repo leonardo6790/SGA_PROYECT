@@ -46,8 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/articulos/**").hasRole("ADMIN")
                         
-                        // PAGOS: Solo ADMIN puede acceder (vendedor NO puede ver, editar ni eliminar)
-                        .requestMatchers("/api/pagos/**").hasRole("ADMIN")
+                        // PAGOS: ADMIN y VENDEDOR pueden acceder (crear, consultar y actualizar)
+                        .requestMatchers("/api/pagos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         
                         // Endpoints para ADMIN y VENDEDOR
                         .requestMatchers("/api/AlquilerArticulos/**").hasAnyRole("ADMIN", "VENDEDOR")

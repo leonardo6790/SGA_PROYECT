@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import com.sga.project.dto.PagoDto;
 import com.sga.project.mapper.PagoMapper;
+import com.sga.project.models.Alquiler;
 import com.sga.project.models.Pago;
+import com.sga.project.repositoryes.AlquilerRepositoryes;
 import com.sga.project.repositoryes.PagoRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +19,12 @@ public class PagoServiceImplement implements PagoService {
 
     private final PagoRepositoryes pr;
     private final PagoMapper pm;
+    private final AlquilerRepositoryes ar;
 
-    public PagoServiceImplement(PagoRepositoryes pr, PagoMapper pm) {
+    public PagoServiceImplement(PagoRepositoryes pr, PagoMapper pm, AlquilerRepositoryes ar) {
         this.pm = pm;
         this.pr = pr;
+        this.ar = ar;
     }
 
     @Override
@@ -80,15 +84,19 @@ public class PagoServiceImplement implements PagoService {
         Integer fechaComoEntero = Integer.parseInt(fechaActual.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
 
         // Actualizar los campos
-        pagoExistente.setValorAbono(pagoDto.getValAbo());
+        if (pagoDto.getValAbo() != null) {
+            pagoExistente.setValorAbono(pagoDto.getValAbo());
+        }
         pagoExistente.setFechaUltimoAbono(fechaComoEntero);
         
         // Si se proporciona un nuevo alquiler, actualizarlo
-        if (pagoDto.getIdAlquiler() != null && !pagoDto.getIdAlquiler().equals(pagoExistente.getAlquiler().getId())) {
-            Pago pagoConNuevoAlquiler = pm.toPago(pagoDto);
-            pagoConNuevoAlquiler.setId_pago(pagoExistente.getId_pago());
-            pagoConNuevoAlquiler.setFechaUltimoAbono(fechaComoEntero);
-            return pm.toPagoDto(pr.save(pagoConNuevoAlquiler));
+        if (pagoDto.getIdAlquiler() != null) {
+            Integer alquilerActualId = pagoExistente.getAlquiler() != null ? pagoExistente.getAlquiler().getId() : null;
+            if (!pagoDto.getIdAlquiler().equals(alquilerActualId)) {
+                Alquiler nuevoAlquiler = ar.findById(pagoDto.getIdAlquiler())
+                    .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado con ID: " + pagoDto.getIdAlquiler()));
+                pagoExistente.setAlquiler(nuevoAlquiler);
+            }
         }
 
         // Guardar los cambios

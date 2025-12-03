@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import com.sga.project.dto.ArticuloDto;
-import com.sga.project.dto.ArticuloUpdateDto;
 import com.sga.project.mapper.ArticuloMapper;
 import com.sga.project.models.Articulo;
 import com.sga.project.models.Categoria;
@@ -61,41 +60,43 @@ public void deleteArticulo (Integer idArt){
 
 @Override
 @Transactional
-public ArticuloDto updateArticulo (ArticuloUpdateDto artiUpdateDto) {
-    Articulo art = artiRepo.findById(artiUpdateDto.getIdArt())
+public ArticuloDto updateArticulo (ArticuloDto articuloDto) {
+    Articulo art = artiRepo.findById(articuloDto.getIdArt())
     .orElseThrow(() -> new EntityNotFoundException("Articulo no encontrado"));
 
     // Actualizar campos si se proporcionan
-    if (artiUpdateDto.getNombre() != null && !artiUpdateDto.getNombre().isEmpty()) {
-        art.setNomArt(artiUpdateDto.getNombre());
+    if (articuloDto.getNombre() != null && !articuloDto.getNombre().isEmpty()) {
+        art.setNomArt(articuloDto.getNombre());
     }
     
-    if (artiUpdateDto.getGeneroArt() != null) {
-        art.setGenero(artiUpdateDto.getGeneroArt());
+    if (articuloDto.getGeneroArt() != null) {
+        art.setGenero(articuloDto.getGeneroArt());
     }
     
-    if (artiUpdateDto.getTallaArt() != null) {
-        art.setTalla(artiUpdateDto.getTallaArt());
+    if (articuloDto.getTallaArt() != null) {
+        art.setTalla(articuloDto.getTallaArt());
     }
     
-    if (artiUpdateDto.getColorArt() != null) {
-        art.setColor(artiUpdateDto.getColorArt());
+    if (articuloDto.getColorArt() != null) {
+        art.setColor(articuloDto.getColorArt());
     }
 
-    art.setPrecio(artiUpdateDto.getPrecioArti());
-    
-    if (artiUpdateDto.getFotoArti() != null) {
-        art.setFoto(artiUpdateDto.getFotoArti());
+    if (articuloDto.getPrecioArt() != null) {
+        art.setPrecio(articuloDto.getPrecioArt());
     }
     
-    if (artiUpdateDto.getActivo() != null) {
-        art.setActivo(artiUpdateDto.getActivo());
+    if (articuloDto.getFotoArt() != null) {
+        art.setFoto(articuloDto.getFotoArt());
+    }
+    
+    if (articuloDto.getActivo() != null) {
+        art.setActivo(articuloDto.getActivo());
     }
     
     // Si se proporciona una nueva categoría, actualizarla
-    if (artiUpdateDto.getIdCategoria() != null) {
-        Categoria categoria = cateRepo.findById(artiUpdateDto.getIdCategoria())
-            .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada con ID: " + artiUpdateDto.getIdCategoria()));
+    if (articuloDto.getIdCategoria() != null) {
+        Categoria categoria = cateRepo.findById(articuloDto.getIdCategoria())
+            .orElseThrow(() -> new EntityNotFoundException("Categoría no encontrada con ID: " + articuloDto.getIdCategoria()));
         art.setCategoria(categoria);
     }
 

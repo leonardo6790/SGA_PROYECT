@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +39,7 @@ public class PagoController {
 
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @PostMapping("/AñadirPago")
     public ResponseEntity<?> crear(@Valid @RequestBody PagoDto pagoDto) {
         try {
@@ -63,17 +65,20 @@ public class PagoController {
 
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @GetMapping("/ConsultarById/{idPago}")
     public PagoDto getPagoById(@PathVariable Integer idPago) {
         return pagoRepo.findById(idPago).map(pagoMap::toPagoDto)
                 .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado por el ID: " + idPago));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @GetMapping("/ConsultarPagos")
     public List<PagoDto> getListPagos() {
         return pagoRepo.findAll().stream().map(pagoMap::toPagoDto).toList();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @GetMapping("/alquiler/{idAlquiler}")
     public ResponseEntity<List<PagoDto>> getPagosByAlquiler(@PathVariable Integer idAlquiler) {
         try {
@@ -83,7 +88,7 @@ public class PagoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/Eliminar/{idPago}")
     public void deletePago(@PathVariable Integer idPago) {
         Pago pago = pagoRepo.findById(idPago).orElseThrow(() -> new EntityNotFoundException("Pago no encontrado"));
