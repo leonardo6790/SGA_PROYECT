@@ -1,7 +1,9 @@
 package com.sga.project.controller;
 
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,9 +24,35 @@ public class UsuarioController {
     private UsuarioService us;
 
     @PostMapping("/crear")
-    public ResponseEntity<UsuarioDto> saveUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
-        UsuarioDto guardalo = us.saveUsuario(usuarioDto);
-        return ResponseEntity.ok(guardalo);
+    public ResponseEntity<?> saveUsuario(@Valid @RequestBody UsuarioDto usuarioDto) {
+        try {
+            // Validar que idRol no sea nulo (es obligatorio)
+            if (usuarioDto.getIdRol() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "El rol (idRol) es obligatorio"));
+            }
+            
+            // Validar que idBarrio no sea nulo (es obligatorio)
+            if (usuarioDto.getIdBarrio() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "El barrio (idBarrio) es obligatorio"));
+            }
+            
+            // Validar que idTipoDoc no sea nulo (es obligatorio)
+            if (usuarioDto.getIdTipoDoc() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "El tipo de documento (idTipoDoc) es obligatorio"));
+            }
+            
+            UsuarioDto guardalo = us.saveUsuario(usuarioDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(guardalo);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al crear el usuario: " + e.getMessage()));
+        }
     }
     
     @DeleteMapping("/borrar/{id}")

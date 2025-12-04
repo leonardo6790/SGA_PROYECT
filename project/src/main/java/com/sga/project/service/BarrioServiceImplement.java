@@ -43,6 +43,7 @@ public class BarrioServiceImplement implements BarrioService {
     @Transactional
     public List<BarrioDto> getListBarrios() {
         return barrioRepository.findAll().stream()
+            .filter(barrio -> barrio.getActivo() != null && barrio.getActivo())
             .map(barrioMapper::toBarrioDto)
             .toList();
     }
@@ -52,7 +53,9 @@ public class BarrioServiceImplement implements BarrioService {
     public void deleteBarrio(Integer id_barrio) {
         Barrio barrio = barrioRepository.findById(id_barrio)
             .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado por id: " + id_barrio));
-        barrioRepository.delete(barrio);
+        // Soft delete: marcar como inactivo en lugar de eliminar
+        barrio.setActivo(false);
+        barrioRepository.save(barrio);
     }
 
     @Override

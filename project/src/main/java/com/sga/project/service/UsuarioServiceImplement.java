@@ -4,6 +4,7 @@ import java.util.List;
 
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.sga.project.dto.UsuarioDto;
 import com.sga.project.mapper.UsuarioMapper;
@@ -27,13 +28,15 @@ private final UsuarioRepositoryes usuRepo;
 private final RolRepositoryes rolRepo;
 private final BarrioRepositoryes barRepo;
 private final TipoDocRepositoryes tipDocRepo;
+private final PasswordEncoder passwordEncoder;
 
-public UsuarioServiceImplement (UsuarioMapper usuMap, UsuarioRepositoryes usuRepo, RolRepositoryes rolRepo, BarrioRepositoryes barRepo, TipoDocRepositoryes tipDocRepo) {
+public UsuarioServiceImplement (UsuarioMapper usuMap, UsuarioRepositoryes usuRepo, RolRepositoryes rolRepo, BarrioRepositoryes barRepo, TipoDocRepositoryes tipDocRepo, PasswordEncoder passwordEncoder) {
     this.usuMap = usuMap;
     this.usuRepo = usuRepo;
     this.rolRepo = rolRepo;
     this.barRepo = barRepo;
     this.tipDocRepo = tipDocRepo;
+    this.passwordEncoder = passwordEncoder;
     
 }
 
@@ -46,6 +49,12 @@ public UsuarioDto getUsuario (Integer numDoc) {
 @Transactional
 public UsuarioDto saveUsuario (UsuarioDto usuDto) {
     Usuario usuario = usuMap.toUsuario(usuDto);
+    
+    // Encriptar la contraseña antes de guardar
+    if (usuario.getContraseña() != null && !usuario.getContraseña().isEmpty()) {
+        usuario.setContraseña(passwordEncoder.encode(usuario.getContraseña()));
+    }
+    
     Usuario usuGuardado = usuRepo.save(usuario);
     return usuMap.toUsuarioDto(usuGuardado);
 

@@ -11,7 +11,8 @@ import com.sga.project.repositoryes.RolRepositoryes;
 import com.sga.project.repositoryes.TipoDocRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 
-@Component class UsuarioMapperImplement implements UsuarioMapper {
+@Component
+public class UsuarioMapperImplement implements UsuarioMapper {
     private final BarrioRepositoryes barRep;
     private final RolRepositoryes rolRep;
     private final TipoDocRepositoryes tipRe;
@@ -38,17 +39,33 @@ import jakarta.persistence.EntityNotFoundException;
     usuario.setContraseña(usuarioDto.getContra());
     usuario.setActivo(usuarioDto.getActivo() != null ? usuarioDto.getActivo() : true);
     
-    Barrio barrio = barRep.findById(usuarioDto.getIdBarrio())
-    .orElseThrow(() -> new EntityNotFoundException("barrio no encontrado"));
-    usuario.setBarrio(barrio);
+    // Validar y asignar Barrio
+    if (usuarioDto.getIdBarrio() != null) {
+        Barrio barrio = barRep.findById(usuarioDto.getIdBarrio())
+            .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado con ID: " + usuarioDto.getIdBarrio()));
+        usuario.setBarrio(barrio);
+    } else {
+        throw new EntityNotFoundException("El ID del barrio es requerido");
+    }
 
-    Rol rol = rolRep.findById(usuarioDto.getIdRol())
-    .orElseThrow(() -> new EntityNotFoundException("rol no encontrado"));
-    usuario.setRol(rol);
+    // Validar y asignar Rol
+    if (usuarioDto.getIdRol() != null) {
+        Rol rol = rolRep.findById(usuarioDto.getIdRol())
+            .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con ID: " + usuarioDto.getIdRol()));
+        usuario.setRol(rol);
+    } else {
+        throw new EntityNotFoundException("El ID del rol es requerido");
+    }
 
-    TipoDoc tipoDoc = tipRe.findById(usuarioDto.getIdTipoDoc())
-    .orElseThrow(() -> new EntityNotFoundException("tipo de documento no encontrado mi papacho"));
-    usuario.setTipoDoc(tipoDoc);
+    // Validar y asignar TipoDoc
+    if (usuarioDto.getIdTipoDoc() != null) {
+        TipoDoc tipoDoc = tipRe.findById(usuarioDto.getIdTipoDoc())
+            .orElseThrow(() -> new EntityNotFoundException("Tipo de documento no encontrado con ID: " + usuarioDto.getIdTipoDoc()));
+        usuario.setTipoDoc(tipoDoc);
+    } else {
+        throw new EntityNotFoundException("El ID del tipo de documento es requerido");
+    }
+    
     return usuario;
     }
     
@@ -70,8 +87,8 @@ import jakarta.persistence.EntityNotFoundException;
         usuario.getActivo(),
         usuario.getBarrio() != null ? usuario.getBarrio().getId_barrio() : null,
         usuario.getBarrio() != null? usuario.getBarrio().getNomBar() : null,
-        usuario.getRol() != null ? usuario.getRol().getId_rol() : null,
-        usuario.getTipoDoc() != null ? usuario.getTipoDoc().getId_tipoDoc() : null
+        usuario.getTipoDoc() != null ? usuario.getTipoDoc().getId_tipoDoc() : null,
+        usuario.getRol() != null ? usuario.getRol().getId_rol() : null
     );
     }
 

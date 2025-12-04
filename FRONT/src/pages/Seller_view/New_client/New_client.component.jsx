@@ -4,7 +4,7 @@ import HomeSellerImage from "../../../assets/HomeSellerImage.png";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import { useNavigate, useLocation } from "react-router-dom";
 import { crearCliente } from "../../../api/clientesApi";
-import { obtenerBarrios, crearBarrio } from "../../../api/barriosApi";
+import { obtenerBarrios, crearBarrio, eliminarBarrio } from "../../../api/barriosApi";
 import { obtenerTiposDoc } from "../../../api/tipoDocApi";
 
 export default function NewClient() {
@@ -15,6 +15,9 @@ export default function NewClient() {
   const [barrios, setBarrios] = useState([]);
   const [tiposDoc, setTiposDoc] = useState([]);
   const [showCreateBarrioModal, setShowCreateBarrioModal] = useState(false);
+  const [showDeleteBarrioModal, setShowDeleteBarrioModal] = useState(false);
+  const [barrioSearchText, setBarrioSearchText] = useState("");
+  const [showBarrioDropdown, setShowBarrioDropdown] = useState(false);
   const [newBarrioData, setNewBarrioData] = useState({
     nombreBarrio: "",
     descripcion: ""
@@ -58,6 +61,17 @@ export default function NewClient() {
     cargarDatos();
   }, []);
 
+  // Cerrar dropdown cuando se hace click afuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showBarrioDropdown && !e.target.closest('.nc-barrio-search-wrapper')) {
+        setShowBarrioDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showBarrioDropdown]);
+
   // Actualizar el documento si llega desde New_rent
   useEffect(() => {
     if (documentoRecibido) {
@@ -68,6 +82,30 @@ export default function NewClient() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleBarrioSearch = (e) => {
+    const value = e.target.value;
+    setBarrioSearchText(value);
+    // Limpiar la selección cuando el usuario empieza a escribir algo nuevo
+    if (value && formData.idBarrio) {
+      setFormData((prev) => ({ ...prev, idBarrio: null }));
+    }
+    setShowBarrioDropdown(true);
+  };
+
+  const handleSelectBarrio = (barrio) => {
+    setFormData((prev) => ({ ...prev, idBarrio: barrio.idBarrio }));
+    setBarrioSearchText(barrio.nombreBarrio);
+    setShowBarrioDropdown(false);
+  };
+
+  const filteredBarrios = barrios.filter(barrio =>
+    barrio.nombreBarrio.toLowerCase().includes(barrioSearchText.toLowerCase())
+  );
+
+  const getSelectedBarrioName = () => {
+    return barrioSearchText;
   };
 
   const handleOpenCreateBarrioModal = () => {
@@ -105,6 +143,38 @@ export default function NewClient() {
     } catch (error) {
       console.error("Error al crear barrio:", error);
       alert(`Error al crear el barrio: ${error.message}`);
+    }
+  };
+
+  const handleOpenDeleteBarrioModal = () => {
+    setShowDeleteBarrioModal(true);
+  };
+
+  const handleCloseDeleteBarrioModal = () => {
+    setShowDeleteBarrioModal(false);
+  };
+
+  const handleDeleteBarrio = async (idBarrio) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este barrio?")) {
+      return;
+    }
+
+    try {
+      await eliminarBarrio(idBarrio);
+      
+      // Recargar la lista de barrios
+      const barriosActualizados = await obtenerBarrios();
+      setBarrios(barriosActualizados);
+      
+      // Si el barrio eliminado estaba seleccionado, seleccionar otro
+      if (formData.idBarrio === idBarrio && barriosActualizados.length > 0) {
+        setFormData(prev => ({ ...prev, idBarrio: barriosActualizados[0].idBarrio }));
+      }
+      
+      alert("Barrio eliminado exitosamente");
+    } catch (error) {
+      console.error("Error al eliminar barrio:", error);
+      alert(`Error al eliminar el barrio: ${error.message}`);
     }
   };
 
@@ -236,18 +306,36 @@ export default function NewClient() {
             <label className="nc-field nc-field-with-button">
               <span className="nc-label">Barrio *</span>
               <div className="nc-barrio-container">
-                <select name="idBarrio" value={formData.idBarrio || ""} onChange={handleChange} className="nc-input" required>
-                  <option value="" disabled>Seleccione un barrio</option>
-                  {barrios.length > 0 ? (
-                    barrios.map((barrio) => (
-                      <option key={barrio.idBarrio} value={barrio.idBarrio}>
-                        {barrio.nombreBarrio}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="" disabled>Cargando...</option>
+                <div className="nc-barrio-search-wrapper">
+                  <input
+                    type="text"
+                    className="nc-input"
+                    placeholder="Buscar barrio..."
+                    value={barrioSearchText || getSelectedBarrioName()}
+                    onChange={handleBarrioSearch}
+                    onFocus={() => setShowBarrioDropdown(true)}
+                    required={!formData.idBarrio}
+                  />
+                  {showBarrioDropdown && (
+                    <div className="nc-barrio-dropdown">
+                      {filteredBarrios.length > 0 ? (
+                        filteredBarrios.map((barrio) => (
+                          <div
+                            key={barrio.idBarrio}
+                            className="nc-barrio-option"
+                            onClick={() => handleSelectBarrio(barrio)}
+                          >
+                            {barrio.nombreBarrio}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="nc-barrio-option nc-no-results">
+                          No se encontraron barrios
+                        </div>
+                      )}
+                    </div>
                   )}
-                </select>
+                </div>
                 <button 
                   type="button" 
                   className="nc-create-barrio-btn"
@@ -311,6 +399,53 @@ export default function NewClient() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Botón para eliminar barrio en esquina inferior derecha */}
+      <button 
+        className="nc-delete-barrio-btn"
+        onClick={handleOpenDeleteBarrioModal}
+        title="Eliminar barrio"
+      >
+        🗑️
+      </button>
+
+      {/* Modal para eliminar barrio */}
+      {showDeleteBarrioModal && (
+        <div className="nc-modal-overlay" onClick={handleCloseDeleteBarrioModal}>
+          <div className="nc-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Eliminar Barrio</h2>
+            <p>Selecciona un barrio para desactivarlo:</p>
+            <div className="nc-delete-barrio-list">
+              {barrios.length > 0 ? (
+                barrios.map((barrio) => (
+                  <div key={barrio.idBarrio} className="nc-delete-barrio-item">
+                    <span>{barrio.nombreBarrio}</span>
+                    <button
+                      type="button"
+                      className="nc-delete-barrio-item-btn"
+                      onClick={() => handleDeleteBarrio(barrio.idBarrio)}
+                      title="Desactivar este barrio"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="nc-no-results">No hay barrios disponibles</p>
+              )}
+            </div>
+            <div className="nc-modal-buttons">
+              <button
+                type="button"
+                onClick={handleCloseDeleteBarrioModal}
+                className="nc-button ghost"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
