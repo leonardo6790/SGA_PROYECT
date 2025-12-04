@@ -253,14 +253,19 @@
   border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.report-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .report-header {
   display: grid;
-  grid-template-columns: 60px 150px 120px 100px 100px 100px 80px 100px 100px 80px;
-  gap: 10px;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 12px;
   font-weight: bold;
-  padding: 15px 20px;
+  padding: 18px 20px;
   border-bottom: 2px solid #e0e0e0;
   background-color: #f8f9fa;
   align-items: center;
@@ -270,29 +275,41 @@
   text-align: center;
   font-size: 13px;
   color: #555;
+  word-wrap: break-word;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .report-body {
   display: grid;
-  grid-template-columns: 60px 150px 120px 100px 100px 100px 80px 100px 100px 80px;
-  gap: 10px;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 12px;
   align-items: center;
-  padding: 15px 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
 }
 
 .report-body-payments {
   display: grid;
-  grid-template-columns: 80px 100px 150px 120px 100px 120px 100px 120px;
-  gap: 10px;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 12px;
   align-items: center;
-  padding: 15px 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
 }
 
 .report-field {
-  padding: 5px;
+  padding: 8px 5px;
   text-align: center;
   font-size: 14px;
   color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .status-badge {
@@ -358,11 +375,11 @@
 
 .modal-content {
   background-color: white;
-  padding: 40px;
+  padding: 30px;
   border-radius: 16px;
   max-width: 700px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
@@ -443,6 +460,12 @@
     grid-template-columns: repeat(10, 1fr);
     font-size: 12px;
   }
+  
+  .vendedores-report-header,
+  .report-body-vendedores {
+    grid-template-columns: repeat(7, 1fr);
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -481,15 +504,20 @@
 
   .report-header,
   .report-body,
-  .report-body-payments {
+  .report-body-payments,
+  .vendedores-report-header,
+  .report-body-vendedores {
     display: flex;
     flex-direction: column;
     text-align: left;
   }
 
   .report-header span,
-  .report-field {
+  .report-field,
+  .vendedores-report-header span {
     text-align: left;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
   }
 }
 
@@ -521,24 +549,49 @@
   box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
 }
 
+/* Header simétrico para vendedores */
+.vendedores-report-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  font-weight: bold;
+  padding: 18px 20px;
+  border-bottom: 2px solid #e0e0e0;
+  background-color: #f8f9fa;
+  align-items: center;
+}
+
+.vendedores-report-header span {
+  text-align: center;
+  font-size: 13px;
+  color: #555;
+  word-wrap: break-word;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .report-body-vendedores {
   display: grid;
-  grid-template-columns: 1fr 2fr 2fr 1.5fr 2fr 1.5fr 1fr;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
   align-items: center;
-  padding: 15px 20px;
+  padding: 18px 20px;
   border-bottom: 1px solid #eee;
 }
 
 /* Modal de crear vendedor */
 .vendedor-modal {
-  max-width: 800px;
-  width: 90%;
+  max-width: 600px;
+  width: 95%;
+  max-height: 95vh;
+  overflow-y: auto;
 }
 
 .vendedor-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
   margin: 20px 0;
 }
 

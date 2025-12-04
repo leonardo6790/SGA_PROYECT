@@ -3,9 +3,7 @@ package com.sga.project.mapper;
 import org.springframework.stereotype.Component;
 
 import com.sga.project.dto.ClientesDto;
-import com.sga.project.models.Barrio;
 import com.sga.project.models.Clientes;
-import com.sga.project.models.TipoDoc;
 
 @Component
 public class ClientesMapperImplement implements ClientesMapper {

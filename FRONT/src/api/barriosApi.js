@@ -54,3 +54,25 @@ export const crearBarrio = async (barrioData) => {
         throw error;
     }
 };
+
+export const eliminarBarrio = async (idBarrio) => {
+    try {
+        const headers = getAuthHeaders();
+        
+        const res = await fetch(`${BASE_URL}/borrar/${idBarrio}`, { 
+            method: "DELETE",
+            headers: headers,
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Error response:', res.status, errorText);
+            throw new Error(`Error al eliminar barrio: ${res.status} - ${errorText}`);
+        }
+        
+        return res.status === 204 ? null : await res.json();
+    } catch (error) {
+        console.error("Error al eliminar barrio:", error);
+        throw error;
+    }
+};

@@ -61,6 +61,8 @@ const Reports = () => {
       ]);
       
       console.log("Alquileres cargados:", alquileresData);
+      console.log("Usuarios cargados:", vendedoresData);
+      console.log("Usuarios con roles:", vendedoresData?.map(u => ({ numDoc: u.numDocumento, nombre: u.nombre1, idRol: u.idRol })));
       setAlquileres(alquileresData || []);
       setVendedores(vendedoresData || []);
       setBarrios(barriosData || []);
@@ -141,8 +143,14 @@ const Reports = () => {
       setReportData(reporteDevueltos);
     } else if (activeTab === 'vendedores') {
       // Crear reporte de vendedores (filtrar solo vendedores, no admins)
+      console.log("Filtrando vendedores de:", vendedores);
+      console.log("Total de usuarios:", vendedores.length);
+      
       const reporteVendedores = vendedores
-        .filter(user => user.idRol === 2) // 2 = VENDEDOR
+        .filter(user => {
+          console.log(`Usuario: ${user.nombre1}, idRol: ${user.idRol}, tipo: ${typeof user.idRol}`);
+          return user.idRol === 2 || user.idRol === '2';  // Aceptar both number y string
+        })
         .map(vendedor => ({
           numDocumento: vendedor.numDocumento,
           nombreCompleto: `${vendedor.nombre1} ${vendedor.nombre2 || ''} ${vendedor.apellido1} ${vendedor.apellido2 || ''}`.trim(),
@@ -150,8 +158,11 @@ const Reports = () => {
           telefono: vendedor.tele,
           direccion: vendedor.dire,
           barrio: vendedor.nomBar || 'N/A',
-          activo: vendedor.activo
+          activo: vendedor.activo,
+          idRol: vendedor.idRol
         }));
+      
+      console.log("Vendedores filtrados:", reporteVendedores);
       setReportData(reporteVendedores);
     }
   };
@@ -160,22 +171,33 @@ const Reports = () => {
     if (alquileres.length > 0 || vendedores.length > 0) {
       procesarReportes(alquileres);
     }
-  }, [activeTab, vendedores]);
+  }, [activeTab, vendedores, alquileres]);
 
   const filteredData = reportData.filter(item => {
     // Filtro por búsqueda
     let matchesSearch = true;
     if (searchText) {
       const searchLower = searchText.toLowerCase().trim();
-      const isNumericSearch = /^\d+$/.test(searchText.trim());
+      const searchTrimmed = searchText.trim();
+      const isNumericSearch = /^\d+$/.test(searchTrimmed);
 
       if (isNumericSearch) {
-        matchesSearch = 
-          item.id?.toString().includes(searchText) ||
-          item.idAlquiler?.toString().includes(searchText) ||
-          item.clienteDoc?.toString().includes(searchText);
+        // Buscar por ID de alquiler o documento del cliente
+        const searchNum = searchTrimmed;
+        
+        // Verificar todas las variaciones posibles de ID
+        const idAlquilerMatch = item.idAlquiler?.toString() === searchNum || item.id?.toString() === searchNum;
+        const idAlquilerContains = item.idAlquiler?.toString().includes(searchNum) || item.id?.toString().includes(searchNum);
+        const docContains = item.clienteDoc?.toString().includes(searchNum);
+        const numDocContains = item.numDocumento?.toString().includes(searchNum);
+        
+        matchesSearch = idAlquilerMatch || idAlquilerContains || docContains || numDocContains;
       } else {
-        matchesSearch = item.nombreCliente?.toLowerCase().includes(searchLower);
+        // Buscar por nombre del cliente
+        const nombreClienteMatch = item.nombreCliente?.toLowerCase().includes(searchLower);
+        const nombreCompletoMatch = item.nombreCompleto?.toLowerCase().includes(searchLower);
+        
+        matchesSearch = nombreClienteMatch || nombreCompletoMatch;
       }
     }
 
@@ -277,6 +299,21 @@ const Reports = () => {
   };
 
   const handleOpenCreateVendedorModal = () => {
+    // Limpiar el estado antes de abrir el modal
+    setNewVendedorData({
+      numDocumento: "",
+      nombre1: "",
+      nombre2: "",
+      apellido1: "",
+      apellido2: "",
+      dire: "",
+      tele: "",
+      correoElectronico: "",
+      contra: "",
+      idBarrio: null,
+      idTipoDoc: null,
+      idRol: 2
+    });
     setShowCreateVendedorModal(true);
   };
 
@@ -304,28 +341,72 @@ const Reports = () => {
     // Validar campos requeridos
     if (!newVendedorData.numDocumento || !newVendedorData.nombre1 || !newVendedorData.apellido1 || 
         !newVendedorData.correoElectronico || !newVendedorData.contra || !newVendedorData.tele) {
-      alert("Por favor complete los campos obligatorios");
+      alert("Por favor complete los campos obligatorios (Documento, Nombre, Apellido, Correo, Contraseña, Teléfono)");
+      return;
+    }
+
+    // Validar que documento sea un número válido
+    const numDocumento = parseInt(newVendedorData.numDocumento);
+    if (isNaN(numDocumento) || numDocumento <= 0) {
+      alert("El número de documento debe ser un número válido");
+      return;
+    }
+
+    // Validar que teléfono sea un número válido
+    const telefono = parseInt(newVendedorData.tele);
+    if (isNaN(telefono) || telefono <= 0) {
+      alert("El teléfono debe ser un número válido");
+      return;
+    }
+
+    // Validar que seleccione barrio y tipo de documento
+    if (!newVendedorData.idBarrio) {
+      alert("Por favor selecciona un barrio");
+      return;
+    }
+
+    if (!newVendedorData.idTipoDoc) {
+      alert("Por favor selecciona un tipo de documento");
       return;
     }
 
     try {
       const vendedorData = {
         numDocumento: parseInt(newVendedorData.numDocumento),
-        nombre1: newVendedorData.nombre1,
-        nombre2: newVendedorData.nombre2 || null,
-        apellido1: newVendedorData.apellido1,
-        apellido2: newVendedorData.apellido2 || null,
-        dire: newVendedorData.dire || null,
+        nombre1: newVendedorData.nombre1.trim(),
+        nombre2: newVendedorData.nombre2.trim() || null,
+        apellido1: newVendedorData.apellido1.trim(),
+        apellido2: newVendedorData.apellido2.trim() || null,
+        dire: newVendedorData.dire.trim() || null,
         tele: parseInt(newVendedorData.tele),
-        correoElectronico: newVendedorData.correoElectronico,
+        correoElectronico: newVendedorData.correoElectronico.trim(),
         contra: newVendedorData.contra,
         activo: true,
-        idBarrio: newVendedorData.idBarrio ? parseInt(newVendedorData.idBarrio) : null,
-        idTipoDoc: newVendedorData.idTipoDoc ? parseInt(newVendedorData.idTipoDoc) : null,
+        idBarrio: parseInt(newVendedorData.idBarrio),
+        idTipoDoc: parseInt(newVendedorData.idTipoDoc),
         idRol: 2 // VENDEDOR
       };
       
-      await crearUsuario(vendedorData);
+      console.log("Enviando datos del vendedor:", vendedorData);
+      console.log("Tipo de datos:", {
+        numDocumento: typeof vendedorData.numDocumento,
+        tele: typeof vendedorData.tele,
+        idBarrio: typeof vendedorData.idBarrio,
+        idTipoDoc: typeof vendedorData.idTipoDoc,
+        idRol: typeof vendedorData.idRol
+      });
+      
+      // Validar que los IDs se convirtieron correctamente a números
+      if (isNaN(vendedorData.idBarrio) || vendedorData.idBarrio <= 0) {
+        throw new Error("El barrio seleccionado no es válido");
+      }
+      
+      if (isNaN(vendedorData.idTipoDoc) || vendedorData.idTipoDoc <= 0) {
+        throw new Error("El tipo de documento seleccionado no es válido");
+      }
+      
+      const response = await crearUsuario(vendedorData);
+      console.log("Respuesta del servidor:", response);
       
       // Recargar vendedores
       const vendedoresActualizados = await obtenerUsuario();
@@ -340,7 +421,8 @@ const Reports = () => {
       alert("Vendedor creado exitosamente");
     } catch (error) {
       console.error("Error al crear vendedor:", error);
-      alert(`Error al crear el vendedor: ${error.message}`);
+      const errorMsg = error.message || "Error desconocido";
+      alert(`Error al crear el vendedor: ${errorMsg}`);
     }
   };
 
@@ -363,7 +445,7 @@ const Reports = () => {
         <h2>Filtros</h2>
         <input
           type="text"
-          placeholder="Buscar por ID, documento o nombre"
+          placeholder="Buscar por ID o nombre del cliente"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
@@ -604,7 +686,7 @@ const Reports = () => {
                 </button>
               </div>
               <div className="report-card">
-                <div className="report-header">
+                <div className="vendedores-report-header">
                   <span>Documento</span>
                   <span>Nombre Completo</span>
                   <span>Correo</span>
@@ -691,9 +773,10 @@ const Reports = () => {
               <div className="form-field">
                 <label>Número de Documento *</label>
                 <input
-                  type="text"
+                  type="number"
                   value={newVendedorData.numDocumento}
                   onChange={(e) => setNewVendedorData({ ...newVendedorData, numDocumento: e.target.value })}
+                  placeholder="Ej: 1234567890"
                   required
                 />
               </div>
@@ -707,7 +790,7 @@ const Reports = () => {
                 >
                   <option value="">Seleccione</option>
                   {tiposDoc.map(tipo => (
-                    <option key={tipo.id_tipoDoc} value={tipo.id_tipoDoc}>
+                    <option key={tipo.idTipoDoc} value={tipo.idTipoDoc}>
                       {tipo.nomDoc}
                     </option>
                   ))}
@@ -765,9 +848,10 @@ const Reports = () => {
               <div className="form-field">
                 <label>Teléfono *</label>
                 <input
-                  type="text"
+                  type="number"
                   value={newVendedorData.tele}
                   onChange={(e) => setNewVendedorData({ ...newVendedorData, tele: e.target.value })}
+                  placeholder="Ej: 3001234567"
                   required
                 />
               </div>
