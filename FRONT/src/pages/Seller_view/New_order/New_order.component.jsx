@@ -40,18 +40,20 @@ export default function NewOrder() {
   const [showObsModal, setShowObsModal] = useState(false);
   const [currentObsIndex, setCurrentObsIndex] = useState(null);
   const [tempObservacion, setTempObservacion] = useState("");
-  
+
   // Estados para buscador de artículos
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  
+
   // Estados para pagos
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [registeredPayments, setRegisteredPayments] = useState([]);
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [isClosingPanel, setIsClosingPanel] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [editPaymentAmount, setEditPaymentAmount] = useState("");
 
   // Cargar artículos desde la base de datos
   useEffect(() => {
@@ -93,11 +95,11 @@ export default function NewOrder() {
 
     // Filtrar artículos que NO estén ya en el pedido
     const articulosEnPedido = orderItems.map(item => item.id);
-    const filtered = catalog.filter(product => 
+    const filtered = catalog.filter(product =>
       !articulosEnPedido.includes(product.id) && // Excluir artículos ya agregados
       (product.name.toLowerCase().includes(value) ||
-      product.desc.toLowerCase().includes(value) ||
-      product.categoria.toLowerCase().includes(value))
+        product.desc.toLowerCase().includes(value) ||
+        product.categoria.toLowerCase().includes(value))
     );
 
     setFilteredProducts(filtered);
@@ -121,17 +123,17 @@ export default function NewOrder() {
     }
     const prod = catalog.find((p) => p.id === Number(selectedProductId));
     if (!prod) return;
-    
+
     // Verificar si el artículo ya está en el pedido
     const existingIndex = orderItems.findIndex((it) => it.id === prod.id);
     if (existingIndex > -1) {
       alert("Este artículo ya está agregado al pedido. Cada vestido es único y solo se puede agregar una vez.");
       return;
     }
-    
+
     // Agregar el artículo con cantidad fija de 1
     setOrderItems((prev) => [...prev, { ...prod, cantidad: 1, subtotal: prod.price, observaciones: "" }]);
-    
+
     // Limpiar la selección y refrescar búsqueda si está activa
     setSelectedProductId("");
     if (searchTerm.trim() !== "") {
@@ -179,8 +181,8 @@ export default function NewOrder() {
     setLoadingPayment(true);
     try {
       // Agregar el pago localmente (se guardará en la BD después al crear la orden)
-      setRegisteredPayments([...registeredPayments, { 
-        amount, 
+      setRegisteredPayments([...registeredPayments, {
+        amount,
         date: new Date().toLocaleDateString(),
         id: Date.now()
       }]);
@@ -198,6 +200,42 @@ export default function NewOrder() {
     if (window.confirm("¿Estás seguro de eliminar este pago?")) {
       setRegisteredPayments(registeredPayments.filter(p => p.id !== paymentId));
     }
+  };
+
+  const handleEditPayment = (payment) => {
+    setEditingPayment(payment.id);
+    setEditPaymentAmount(payment.amount.toString());
+  };
+
+  const handleCancelEditPayment = () => {
+    setEditingPayment(null);
+    setEditPaymentAmount("");
+  };
+
+  const handleSaveEditPayment = (payment) => {
+    if (!editPaymentAmount || editPaymentAmount <= 0) {
+      alert("Por favor ingresa un monto válido");
+      return;
+    }
+
+    const amount = parseInt(editPaymentAmount);
+    const balance = calculateBalance() + payment.amount; // Agregar el monto original al balance
+
+    if (amount > balance) {
+      alert(`El monto del pago ($${amount.toLocaleString()}) supera el saldo disponible ($${balance.toLocaleString()})`);
+      return;
+    }
+
+    // Actualizar el pago
+    setRegisteredPayments(registeredPayments.map(p =>
+      p.id === payment.id
+        ? { ...p, amount, date: new Date().toLocaleDateString() }
+        : p
+    ));
+
+    setEditingPayment(null);
+    setEditPaymentAmount("");
+    alert("Pago actualizado exitosamente");
   };
 
   const handleTogglePaymentPanel = () => {
@@ -294,6 +332,12 @@ export default function NewOrder() {
       return;
     }
 
+    // Validar que haya al menos un pago registrado
+    if (registeredPayments.length === 0) {
+      alert("Debe registrar al menos un pago antes de crear el alquiler");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -322,13 +366,13 @@ export default function NewOrder() {
       if (registeredPayments.length > 0) {
         try {
           const idAlquiler = response.data?.id_alquiler || response.id_alquiler || response.data?.id || response.id;
-          
+
           if (!idAlquiler) {
             console.error("No se pudo obtener el ID del alquiler. Response:", response);
             alert("Advertencia: Se creó el alquiler pero no se pudieron registrar los pagos automáticamente. Por favor, regístralos manualmente en la sección de órdenes.");
             throw new Error("ID de alquiler no disponible");
           }
-          
+
           for (const payment of registeredPayments) {
             const now = new Date();
             const year = now.getFullYear();
@@ -397,10 +441,10 @@ export default function NewOrder() {
     } catch (error) {
       console.error("Error al crear alquiler:", error);
       setLoading(false);
-      
+
       // Parsear el mensaje de error de forma más amigable
       let mensajeError = 'Lo sentimos, hubo un error al crear el alquiler';
-      
+
       if (error.message && error.message.includes('409')) {
         mensajeError = 'Lo sentimos, este artículo ya está alquilado para esa fecha';
       } else if (error.message && error.message.includes('ya está alquilado')) {
@@ -408,7 +452,7 @@ export default function NewOrder() {
       } else if (error.message) {
         mensajeError = error.message;
       }
-      
+
       setPopupMessage(mensajeError);
       setShowPopup(true);
       setTimeout(() => setShowPopup(false), 4000);
@@ -539,7 +583,7 @@ export default function NewOrder() {
                   </div>
                 </span>
                 <span className="col-actions">
-                  <button 
+                  <button
                     className="remove-item-btn"
                     onClick={() => removeProductFromOrder(idx)}
                     title="Quitar producto"
@@ -562,7 +606,7 @@ export default function NewOrder() {
         <div className="payment-panel">
           <div className="payment-header">
             <h2>💳 Pagos del Cliente</h2>
-            <button 
+            <button
               className="payment-toggle-btn"
               onClick={handleTogglePaymentPanel}
               aria-expanded={showPaymentPanel}
@@ -603,7 +647,7 @@ export default function NewOrder() {
                     min="0"
                     disabled={loadingPayment || calculateBalance() <= 0}
                   />
-                  <button 
+                  <button
                     className="payment-add-btn"
                     onClick={handleAddPayment}
                     disabled={loadingPayment || calculateBalance() <= 0 || !paymentAmount}
@@ -619,17 +663,61 @@ export default function NewOrder() {
                   <div className="payments-list">
                     {registeredPayments.map((payment) => (
                       <div key={payment.id} className="payment-item">
-                        <div className="payment-info">
-                          <span className="payment-amount">${payment.amount.toLocaleString()}</span>
-                          <span className="payment-date">{payment.date}</span>
-                        </div>
-                        <button 
-                          className="payment-delete-btn"
-                          onClick={() => handleDeletePayment(payment.id)}
-                          title="Eliminar pago"
-                        >
-                          🗑️
-                        </button>
+                        {editingPayment === payment.id ? (
+                          // Modo edición
+                          <>
+                            <div className="payment-edit-form">
+                              <input
+                                type="number"
+                                className="payment-edit-input"
+                                value={editPaymentAmount}
+                                onChange={(e) => setEditPaymentAmount(e.target.value)}
+                                min="0"
+                                autoFocus
+                              />
+                              <div className="payment-edit-actions">
+                                <button
+                                  className="payment-save-btn"
+                                  onClick={() => handleSaveEditPayment(payment)}
+                                  title="Guardar cambios"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  className="payment-cancel-btn"
+                                  onClick={handleCancelEditPayment}
+                                  title="Cancelar edición"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          // Modo normal
+                          <>
+                            <div className="payment-info">
+                              <span className="payment-amount">${payment.amount.toLocaleString()}</span>
+                              <span className="payment-date">{payment.date}</span>
+                            </div>
+                            <div className="payment-actions">
+                              <button
+                                className="payment-edit-btn"
+                                onClick={() => handleEditPayment(payment)}
+                                title="Editar pago"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                className="payment-delete-btn"
+                                onClick={() => handleDeletePayment(payment.id)}
+                                title="Eliminar pago"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>

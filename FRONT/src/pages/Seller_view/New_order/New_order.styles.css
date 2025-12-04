@@ -349,6 +349,7 @@
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
@@ -680,6 +681,7 @@
     max-height: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     max-height: 1000px;
@@ -693,6 +695,7 @@
     max-height: 1000px;
     transform: translateY(0);
   }
+
   to {
     opacity: 0;
     max-height: 0;
@@ -705,6 +708,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -909,6 +913,11 @@
   gap: 1rem;
 }
 
+.payment-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .payment-amount {
   font-weight: 700;
   color: #10b981;
@@ -918,6 +927,20 @@
 .payment-date {
   color: #9ca3af;
   font-size: 0.85rem;
+}
+
+.payment-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.payment-edit-btn:hover {
+  background: #dbeafe;
 }
 
 .payment-delete-btn {
@@ -932,6 +955,61 @@
 
 .payment-delete-btn:hover {
   background: #fee2e2;
+}
+
+.payment-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.payment-edit-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid #6366f1;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.payment-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.payment-save-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.payment-save-btn:hover {
+  background: #059669;
+  transform: scale(1.05);
+}
+
+.payment-cancel-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.payment-cancel-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
 }
 
 /* Botón para quitar productos */

@@ -142,13 +142,13 @@ const Orders = () => {
   // Filtrar tarjetas según búsqueda y fecha (solo si filterByDate está activo)
   const filteredCards = (() => {
     let cardsToFilter;
-    
+
     if (activeTab === 'entregar') {
       cardsToFilter = ordersToDeliver;
     } else if (activeTab === 'recibir') {
       cardsToFilter = ordersToReceive;
     }
-    
+
     return cardsToFilter.filter(card => {
       // Si no hay búsqueda, solo aplicar filtro de fecha si está activo
       if (searchText === "") {
@@ -435,7 +435,7 @@ const Orders = () => {
             // Limpiar los filtros para mostrar todos los artículos a recibir
             setSearchText("");
             setFilterByDate(false);
-            
+
             alert("Artículo marcado como entregado. Ahora aparecerá en 'Órdenes a Recibir'");
           }, 100);
         } catch (error) {
@@ -522,7 +522,7 @@ const Orders = () => {
           // Limpiar los filtros para mostrar todos los artículos a recibir
           setSearchText("");
           setFilterByDate(false);
-          
+
           alert("Artículo marcado como devuelto. El artículo ya está disponible para alquiler nuevamente.");
         }, 100);
       } catch (error) {
@@ -600,11 +600,11 @@ const Orders = () => {
       console.log("Respuesta del servidor:", response);
 
       alert("Pago registrado exitosamente");
-      
+
       // Recargar la lista de pagos
       const pagosActualizados = await obtenerPagosPorAlquiler(currentPaymentCard.idAlquiler);
       setPaymentList(pagosActualizados);
-      
+
       handleClosePaymentModal();
     } catch (error) {
       console.error("Error al registrar pago:", error);
@@ -703,11 +703,11 @@ const Orders = () => {
       };
 
       await actualizarPago(pago.idPago, pagoData);
-      
+
       // Recargar la lista de pagos
       const pagos = await obtenerPagosPorAlquiler(currentPaymentCard.idAlquiler);
       setPaymentList(pagos);
-      
+
       setEditingPayment(null);
       setEditPaymentAmount('');
       alert("Pago actualizado exitosamente");
@@ -777,7 +777,7 @@ const Orders = () => {
         <p className="orders-subtitle">
           {searchText || filterByDate
             ? `Mostrando ${filteredCards.length} resultado(s)${searchText ? ` para "${searchText}"` : ''}${filterByDate ? ` (fecha: ${startDate.toLocaleDateString()})` : ''}`
-            : activeTab === 'entregar' 
+            : activeTab === 'entregar'
               ? `Órdenes pendientes de entrega (${filteredCards.length} artículos)`
               : `Órdenes pendientes de devolución (${filteredCards.length} artículos)`
           }
@@ -824,16 +824,18 @@ const Orders = () => {
                   <button className="view-btn" onClick={() => handleViewMore(card)} title="Ver detalles">
                     <HiEye />
                   </button>
-                  <button className="payment-btn" onClick={() => handleOpenPaymentModal(card)} title="Añadir pago">
-                    <MdPayment />
-                  </button>
+                  {activeTab === 'entregar' && (
+                    <button className="payment-btn" onClick={() => handleOpenPaymentModal(card)} title="Añadir pago">
+                      <MdPayment />
+                    </button>
+                  )}
                   <button className="view-payments-btn" onClick={() => handleOpenPaymentList(card)} title="Ver pagos">
                     $
                   </button>
                   {activeTab === 'entregar' && (
                     <button className="deliver-btn" onClick={() => handleMarkAsDelivered(card)} title="Marcar como entregado">
                       ✓
-                    </button> 
+                    </button>
                   )}
                   {activeTab === 'recibir' && (
                     <button className="receive-btn" onClick={() => handleMarkAsReceived(card)} title="Marcar como devuelto">
@@ -989,11 +991,15 @@ const Orders = () => {
             <h2>📋 Historial de Pagos</h2>
 
             <div className="payment-summary">
-              <p><strong>Alquiler:</strong> #{currentPaymentCard?.idAlquiler}</p>
-              <p><strong>Artículo:</strong> {currentPaymentCard?.articulo}</p>
-              <p><strong>Cliente:</strong> {currentPaymentCard?.nombreCliente}</p>
+              <div className="summary-header">
+                <p><strong>Alquiler:</strong> <span>#{currentPaymentCard?.idAlquiler}</span></p>
+                <p><strong>Cliente:</strong> <span>{currentPaymentCard?.nombreCliente}</span></p>
+              </div>
+              <div className="summary-article">
+                <p><strong>Artículo:</strong> <span>{currentPaymentCard?.articulo}</span></p>
+              </div>
               <div className="payment-totals">
-                <p><strong>Precio Total del Alquiler:</strong> ${(currentPaymentCard?.totalAlquiler || currentPaymentCard?.precio)?.toLocaleString()}</p>
+                <p><strong>Precio Total del Alquiler:</strong> <span>${(currentPaymentCard?.totalAlquiler || currentPaymentCard?.precio)?.toLocaleString()}</span></p>
                 <p><strong>Total Pagado:</strong> <span className="paid">${calcularTotalPagado().toLocaleString()}</span></p>
                 <p><strong>Saldo Pendiente:</strong> <span className={calcularSaldoPendiente() > 0 ? "pending" : "complete"}>${calcularSaldoPendiente().toLocaleString()}</span></p>
               </div>
@@ -1011,7 +1017,6 @@ const Orders = () => {
                     <tr>
                       <th>Fecha</th>
                       <th>Monto</th>
-                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1029,56 +1034,7 @@ const Orders = () => {
                       return (
                         <tr key={pago.idPago || index}>
                           <td>{fechaFormateada}</td>
-                          <td>
-                            {editingPayment === pago.idPago ? (
-                              <input
-                                type="number"
-                                value={editPaymentAmount}
-                                onChange={(e) => setEditPaymentAmount(e.target.value)}
-                                className="edit-payment-input"
-                                min="0"
-                              />
-                            ) : (
-                              `$${(pago.valAbo || 0).toLocaleString()}`
-                            )}
-                          </td>
-                          <td>
-                            {editingPayment === pago.idPago ? (
-                              <>
-                                <button
-                                  className="save-payment-btn"
-                                  onClick={() => handleSaveEditPayment(pago)}
-                                  title="Guardar cambios"
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  className="cancel-payment-btn"
-                                  onClick={handleCancelEditPayment}
-                                  title="Cancelar edición"
-                                >
-                                  ✕
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  className="edit-payment-btn"
-                                  onClick={() => handleEditPayment(pago)}
-                                  title="Editar pago"
-                                >
-                                  ✏️
-                                </button>
-                                <button
-                                  className="delete-payment-btn"
-                                  onClick={() => handleDeletePayment(pago.idPago)}
-                                  title="Eliminar pago"
-                                >
-                                  🗑️
-                                </button>
-                              </>
-                            )}
-                          </td>
+                          <td>${(pago.valAbo || 0).toLocaleString()}</td>
                         </tr>
                       );
                     })}

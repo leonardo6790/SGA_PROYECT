@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -156,6 +157,47 @@ public class ArticuloController {
         artiDto.setIdArt(id);
         ArticuloDto artiActualizado = artiServi.updateArticulo(artiDto);
         return ResponseEntity.ok(artiActualizado);
+    }
+
+    @PutMapping(value = "ActualizarConFoto/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> actualizarArticuloConFoto(
+            @PathVariable Integer id,
+            @RequestParam("nombre") String nombre,
+            @RequestParam("generoArt") String generoArt,
+            @RequestParam("tallaArt") String tallaArt,
+            @RequestParam("colorArt") String colorArt,
+            @RequestParam("precioArt") Integer precioArt,
+            @RequestParam("idCategoria") Integer idCategoria,
+            @RequestParam(value = "fotoArt", required = false) MultipartFile fotoArt) {
+        try {
+            // Buscar artículo existente
+            ArticuloDto articuloExistente = artiServi.getArticuloById(id);
+            
+            // Actualizar campos
+            articuloExistente.setNombre(nombre);
+            articuloExistente.setGeneroArt(generoArt);
+            articuloExistente.setTallaArt(tallaArt);
+            articuloExistente.setColorArt(colorArt);
+            articuloExistente.setPrecioArt(precioArt);
+            articuloExistente.setIdCategoria(idCategoria);
+            
+            // Si hay nueva foto, guardarla
+            if (fotoArt != null && !fotoArt.isEmpty()) {
+                String urlFoto = guardarImagen(fotoArt);
+                articuloExistente.setFotoArt(urlFoto);
+            }
+            
+            // Actualizar artículo
+            ArticuloDto articuloActualizado = artiServi.updateArticulo(articuloExistente);
+            
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "Artículo actualizado exitosamente",
+                "data", articuloActualizado
+            ));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al actualizar artículo", "detalle", ex.getMessage()));
+        }
     }
 
 

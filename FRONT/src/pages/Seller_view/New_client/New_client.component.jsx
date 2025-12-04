@@ -11,7 +11,7 @@ export default function NewClient() {
   const navigate = useNavigate();
   const location = useLocation();
   const documentoRecibido = location.state?.documento || "";
-  
+
   const [barrios, setBarrios] = useState([]);
   const [tiposDoc, setTiposDoc] = useState([]);
   const [showCreateBarrioModal, setShowCreateBarrioModal] = useState(false);
@@ -19,10 +19,9 @@ export default function NewClient() {
   const [barrioSearchText, setBarrioSearchText] = useState("");
   const [showBarrioDropdown, setShowBarrioDropdown] = useState(false);
   const [newBarrioData, setNewBarrioData] = useState({
-    nombreBarrio: "",
-    descripcion: ""
+    nombreBarrio: ""
   });
-  
+
   const [formData, setFormData] = useState({
     doc: documentoRecibido,
     nomcli1: "",
@@ -46,13 +45,13 @@ export default function NewClient() {
         ]);
         setBarrios(barriosData);
         setTiposDoc(tiposDocData);
-        
+
         // Establecer valores por defecto cuando se cargan los datos
         if (barriosData.length > 0 && !formData.idBarrio) {
           setFormData(prev => ({ ...prev, idBarrio: barriosData[0].idBarrio }));
         }
         if (tiposDocData.length > 0 && !formData.idTipoDoc) {
-          setFormData(prev => ({ ...prev, idTipoDoc: tiposDocData[0].id_tipoDoc }));
+          setFormData(prev => ({ ...prev, idTipoDoc: tiposDocData[0].idTipoDoc }));
         }
       } catch (error) {
         console.error("Error al cargar datos:", error);
@@ -115,14 +114,13 @@ export default function NewClient() {
   const handleCloseCreateBarrioModal = () => {
     setShowCreateBarrioModal(false);
     setNewBarrioData({
-      nombreBarrio: "",
-      descripcion: ""
+      nombreBarrio: ""
     });
   };
 
   const handleCreateBarrio = async (e) => {
     e.preventDefault();
-    
+
     if (!newBarrioData.nombreBarrio.trim()) {
       alert("El nombre del barrio es obligatorio");
       return;
@@ -130,14 +128,14 @@ export default function NewClient() {
 
     try {
       const nuevoBarrio = await crearBarrio(newBarrioData);
-      
+
       // Recargar la lista de barrios
       const barriosActualizados = await obtenerBarrios();
       setBarrios(barriosActualizados);
-      
+
       // Seleccionar automáticamente el nuevo barrio en el formulario
       setFormData(prev => ({ ...prev, idBarrio: nuevoBarrio.idBarrio }));
-      
+
       handleCloseCreateBarrioModal();
       alert("Barrio creado exitosamente");
     } catch (error) {
@@ -180,7 +178,7 @@ export default function NewClient() {
 
   const handleCrearCliente = async (e) => {
     e?.preventDefault();
-    
+
     try {
       // Validar campos requeridos
       if (!formData.doc || !formData.nomcli1 || !formData.apecli1 || !formData.numeroCli || !formData.correoElectronico || !formData.direCli) {
@@ -211,9 +209,9 @@ export default function NewClient() {
       console.log("Creando cliente:", clienteData);
       const response = await crearCliente(clienteData);
       console.log("Cliente creado:", response);
-      
+
       alert("Cliente registrado exitosamente");
-      
+
       // Redirigir a new-order con los datos del cliente creado
       navigate('/home-seller/new-order', { state: { cliente: response } });
     } catch (error) {
@@ -260,13 +258,13 @@ export default function NewClient() {
 
             <label className="nc-field">
               <span className="nc-label">Documento *</span>
-              <input 
-                type="text" 
-                name="doc" 
-                value={formData.doc} 
-                onChange={handleChange} 
-                className="nc-input" 
-                required 
+              <input
+                type="text"
+                name="doc"
+                value={formData.doc}
+                onChange={handleChange}
+                className="nc-input"
+                required
                 readOnly={!!documentoRecibido}
                 style={documentoRecibido ? { backgroundColor: '#f0f0f0', cursor: 'not-allowed' } : {}}
               />
@@ -373,17 +371,6 @@ export default function NewClient() {
                 }
                 className="nc-modal-input"
                 required
-              />
-            </label>
-            <label className="nc-modal-field">
-              <span className="nc-modal-label">Descripción (opcional)</span>
-              <textarea
-                value={newBarrioData.descripcion}
-                onChange={(e) =>
-                  setNewBarrioData({ ...newBarrioData, descripcion: e.target.value })
-                }
-                className="nc-modal-textarea"
-                rows="4"
               />
             </label>
             <div className="nc-modal-buttons">

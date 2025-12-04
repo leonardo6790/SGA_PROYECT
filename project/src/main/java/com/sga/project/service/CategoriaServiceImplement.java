@@ -65,11 +65,14 @@ public class CategoriaServiceImplement implements CategoriaService {
         Categoria categoria = cr.findById(categoriaDto.getIdCate())
         .orElseThrow(() -> new EntityNotFoundException("Categoria no encontrada"));
 
-        categoria.setId_categoria(categoriaDto.getIdCate());
+        // Solo actualizar los campos editables (no el ID)
         categoria.setNomCate(categoriaDto.getNomCate());
+        if (categoriaDto.getActivo() != null) {
+            categoria.setActivo(categoriaDto.getActivo());
+        }
+        
         Categoria catActualizado = cr.save(categoria);
         return cm.toCategoriaDto(catActualizado);
-
     }
     
 
