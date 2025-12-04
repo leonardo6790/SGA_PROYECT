@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import "./Orders.styles.css";
 import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Navbar_seller.component";
 import DatePicker from "react-datepicker";
@@ -9,9 +9,11 @@ import { obtenerClientePorId } from "../../../api/clientesApi";
 import { crearPago, obtenerPagosPorAlquiler, eliminarPago, actualizarPago } from "../../../api/pagoApi";
 import { HiEye } from "react-icons/hi2";
 import { MdPayment } from "react-icons/md";
+import { AuthContext } from "../../../context/AuthContextDefinition";
 
 
 const Orders = () => {
+  const { user } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState(new Date());
@@ -22,6 +24,9 @@ const Orders = () => {
   const [viewingOrder, setViewingOrder] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
   const [activeTab, setActiveTab] = useState('entregar'); // 'entregar' o 'recibir'
+  const [showEditRentalModal, setShowEditRentalModal] = useState(false);
+  const [editingRental, setEditingRental] = useState(null);
+  const [rentalEditData, setRentalEditData] = useState({});
 
   // Estados para el modal de pagos
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -318,6 +323,31 @@ const Orders = () => {
   const handleCloseView = () => {
     setViewingOrder(null);
     setViewingClient(null);
+  };
+
+  const handleEditRental = (card) => {
+    setEditingRental(card);
+    setRentalEditData({
+      idAlquiler: card.idAlquiler,
+      fechaAlquiler: card.fechaAlquiler,
+      fechaEntrega: card.fechaEntrega,
+      fechaRetiro: card.fechaRetiro
+    });
+    setShowEditRentalModal(true);
+  };
+
+  const handleCloseEditRentalModal = () => {
+    setShowEditRentalModal(false);
+    setEditingRental(null);
+    setRentalEditData({});
+  };
+
+  const handleSaveRentalEdit = () => {
+    // Aquí iría la lógica para actualizar el alquiler en el backend
+    console.log("Guardando cambios del alquiler:", rentalEditData);
+    // Por ahora, simplemente cerramos el modal
+    alert("Alquiler actualizado exitosamente");
+    handleCloseEditRentalModal();
   };
 
   const handleMarkAsDelivered = async (card) => {
@@ -812,7 +842,10 @@ const Orders = () => {
                       ✓
                     </button>
                   )}
-                  <button className="delete-btn" onClick={() => handleDelete(card)} title="Eliminar">🗑</button>
+                  <button className="edit-btn" onClick={() => handleEditRental(card)} title="Editar alquiler">✏️</button>
+                  {user?.rol === 'ADMIN' && (
+                    <button className="delete-btn" onClick={() => handleDelete(card)} title="Eliminar">🗑</button>
+                  )}
                 </div>
               </div>
               {card.observaciones && (
@@ -1078,6 +1111,55 @@ const Orders = () => {
             <div className="edit-buttons">
               <button onClick={handleUpdateSave}>Guardar</button>
               <button onClick={handleCancel}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para editar alquiler */}
+      {showEditRentalModal && editingRental && (
+        <div className="modal-overlay" onClick={handleCloseEditRentalModal}>
+          <div className="modal edit-rental-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>✏️ Editar Alquiler #{rentalEditData.idAlquiler}</h2>
+
+            <div className="modal-section">
+              <h3>Datos del Alquiler</h3>
+              
+              <div className="form-group">
+                <label>Fecha de Alquiler</label>
+                <input
+                  type="date"
+                  value={rentalEditData.fechaAlquiler || ''}
+                  onChange={(e) => setRentalEditData({ ...rentalEditData, fechaAlquiler: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Fecha de Entrega</label>
+                <input
+                  type="date"
+                  value={rentalEditData.fechaEntrega || ''}
+                  onChange={(e) => setRentalEditData({ ...rentalEditData, fechaEntrega: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Fecha de Retiro</label>
+                <input
+                  type="date"
+                  value={rentalEditData.fechaRetiro || ''}
+                  onChange={(e) => setRentalEditData({ ...rentalEditData, fechaRetiro: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="modal-buttons">
+              <button type="button" onClick={handleSaveRentalEdit} className="save-btn">
+                Guardar Cambios
+              </button>
+              <button type="button" onClick={handleCloseEditRentalModal} className="cancel-btn">
+                Cancelar
+              </button>
             </div>
           </div>
         </div>

@@ -152,7 +152,7 @@
 
 /* Barrio container with button */
 .nc-field-with-button {
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
 .nc-barrio-container {
@@ -161,8 +161,13 @@
   align-items: stretch;
 }
 
-.nc-barrio-container select {
+.nc-barrio-search-wrapper {
+  position: relative;
   flex: 1;
+}
+
+.nc-barrio-container .nc-input {
+  width: 100%;
 }
 
 .nc-create-barrio-btn {
@@ -265,6 +270,45 @@
   margin-top: 0.5rem;
 }
 
+.nc-barrio-search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.nc-barrio-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.nc-barrio-option {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #333;
+}
+
+.nc-barrio-option:hover {
+  background-color: #f3f4f6;
+  color: #6366f1;
+}
+
+.nc-barrio-option.nc-no-results {
+  cursor: not-allowed;
+  color: #999;
+  text-align: center;
+  font-style: italic;
+}
+
 @media (max-width: 600px) {
   .nc-modal {
     width: 95%;
@@ -285,5 +329,113 @@
   
   .nc-modal-buttons .nc-button {
     width: 100%;
+  }
+}
+
+/* Delete barrio button */
+.nc-delete-barrio-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.nc-delete-barrio-btn:hover {
+  background: linear-gradient(90deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+}
+
+.nc-delete-barrio-btn:active {
+  transform: translateY(0);
+}
+
+/* Delete barrio list in modal */
+.nc-delete-barrio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+.nc-delete-barrio-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.nc-delete-barrio-item:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.nc-delete-barrio-item span {
+  flex: 1;
+  color: #111827;
+  font-weight: 500;
+}
+
+.nc-delete-barrio-item-btn {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.nc-delete-barrio-item-btn:hover {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.nc-delete-barrio-item-btn:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 640px) {
+  .nc-delete-barrio-btn {
+    bottom: 1rem;
+    right: 1rem;
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+  
+  .nc-delete-barrio-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .nc-delete-barrio-item-btn {
+    align-self: flex-end;
   }
 }

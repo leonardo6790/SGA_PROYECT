@@ -316,6 +316,27 @@
   transform: scale(1.05);
 }
 
+.edit-btn {
+  padding: 6px 8px;
+  border: none;
+  background-color: #3498db;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn:hover {
+  background-color: #2980b9;
+  transform: scale(1.05);
+}
+
 .edit-overlay {
   position: fixed;
   top: 0;

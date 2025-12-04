@@ -23,8 +23,15 @@ export const crearUsuario = async (data) => {
         headers: getAuthHeaders(),
         body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("No se pudo crear el usuario");
-    return await res.json();
+    
+    const responseData = await res.json();
+    
+    if (!res.ok) {
+        console.error("Error del servidor:", responseData);
+        throw new Error(responseData.error || "No se pudo crear el usuario");
+    }
+    
+    return responseData;
 };
 
 export const editarUsuario = async (id, data) => {

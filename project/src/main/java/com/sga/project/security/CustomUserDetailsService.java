@@ -28,8 +28,17 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByCorreoElec(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
+        // Validar que el usuario tenga un rol asignado
+        if (usuario.getRol() == null) {
+            throw new UsernameNotFoundException("El usuario " + email + " no tiene un rol asignado. Contacte al administrador.");
+        }
+
         // Forzar la carga del rol para evitar LazyInitializationException
         String nombreRol = usuario.getRol().getNomRol();
+        
+        if (nombreRol == null || nombreRol.isEmpty()) {
+            throw new UsernameNotFoundException("El rol del usuario " + email + " es inválido.");
+        }
         
         return User.builder()
                 .username(usuario.getCorreoElec())
