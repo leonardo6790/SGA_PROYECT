@@ -6,8 +6,11 @@ import org.springframework.stereotype.Service;
 import com.sga.project.dto.ArticuloDto;
 import com.sga.project.dto.ArticuloUpdateDto;
 import com.sga.project.mapper.ArticuloMapper;
+import com.sga.project.models.Alquiler;
+import com.sga.project.models.AlquilerArticulos;
 import com.sga.project.models.Articulo;
 import com.sga.project.models.Categoria;
+import com.sga.project.repositoryes.AlquilerArticuloRepository;
 import com.sga.project.repositoryes.ArticuloRepositoryes;
 import com.sga.project.repositoryes.CategoriaRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,12 +23,14 @@ public class ArticuloServiceImplement implements ArticuloService{
     private final ArticuloMapper artiMap;
     private final ArticuloRepositoryes artiRepo;
     private final CategoriaRepositoryes cateRepo;
+    private final AlquilerArticuloRepository alquiArtiRepo;
 
 
-    public ArticuloServiceImplement (ArticuloMapper artiMap, ArticuloRepositoryes artiRepo, CategoriaRepositoryes cateRepo) {
+    public ArticuloServiceImplement (ArticuloMapper artiMap, ArticuloRepositoryes artiRepo, CategoriaRepositoryes cateRepo, AlquilerArticuloRepository alquiArtiRepo) {
     this.artiMap = artiMap;
     this.artiRepo = artiRepo;
     this.cateRepo = cateRepo;
+    this.alquiArtiRepo = alquiArtiRepo;
 
 }
 
@@ -45,9 +50,9 @@ public ArticuloDto saveArticulo (ArticuloDto articuloDto) {
 @Override
 @Transactional
 public List<ArticuloDto> getListArticulos () {
-    // Solo retornar artículos disponibles (activo = true)
+    // Retornar TODOS los artículos (sin filtrar por activo)
+    // La disponibilidad se valida por fechas de alquiler, no por el campo activo
     return artiRepo.findAll().stream()
-        .filter(articulo -> articulo.getActivo() != null && articulo.getActivo())
         .map(artiMap::toArticuloDto)
         .toList();
 }
@@ -133,5 +138,40 @@ public ArticuloDto toggleActivoArticulo(Integer idArt, Boolean activo) {
     articulo.setActivo(activo);
     Articulo articuloActualizado = artiRepo.save(articulo);
     return artiMap.toArticuloDto(articuloActualizado);
+}
+
+@Override
+@Transactional
+public boolean verificarDisponibilidadPorFechas(Integer idArt, String fechaInicio, String fechaFin) {
+    // Obtener todos los alquileres del artículo
+    List<AlquilerArticulos> alquileres = alquiArtiRepo.findByArticuloId(idArt);
+    
+    // Convertir strings a LocalDate
+    java.time.LocalDate fecha2Inicio = java.time.LocalDate.parse(fechaInicio);
+    java.time.LocalDate fecha2Fin = java.time.LocalDate.parse(fechaFin);
+    
+    // Verificar si hay algún conflicto con las fechas
+    for (AlquilerArticulos aa : alquileres) {
+        // Solo verificar alquileres que no han sido devueltos
+        if (!aa.getEstado()) {
+            Alquiler alquiler = aa.getAlquiler();
+            // Verificar solapamiento de fechas
+            if (hayConflictoDeFechas(alquiler.getFechaEnt(), alquiler.getFechaRet(), fecha2Inicio, fecha2Fin)) {
+                return false; // No disponible
+            }
+        }
+    }
+    
+    return true; // Disponible
+}
+
+/**
+ * Verifica si dos rangos de fechas se solapan
+ */
+private boolean hayConflictoDeFechas(java.time.LocalDate fecha1Inicio, java.time.LocalDate fecha1Fin, java.time.LocalDate fecha2Inicio, java.time.LocalDate fecha2Fin) {
+    if (fecha1Inicio == null || fecha1Fin == null || fecha2Inicio == null || fecha2Fin == null) {
+        return false;
+    }
+    return !(fecha2Fin.isBefore(fecha1Inicio) || fecha2Inicio.isAfter(fecha1Fin));
 }
 }

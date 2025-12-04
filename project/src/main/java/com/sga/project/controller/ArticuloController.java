@@ -183,4 +183,18 @@ public class ArticuloController {
         ArticuloDto articuloActualizado = artiServi.toggleActivoArticulo(id, false);
         return ResponseEntity.ok(articuloActualizado);
     }
+
+    @GetMapping("verificarDisponibilidad/{id}")
+    public ResponseEntity<?> verificarDisponibilidad(
+            @PathVariable Integer id,
+            @RequestParam String fechaInicio,
+            @RequestParam String fechaFin) {
+        try {
+            boolean disponible = artiServi.verificarDisponibilidadPorFechas(id, fechaInicio, fechaFin);
+            return ResponseEntity.ok(Map.of("disponible", disponible));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al verificar disponibilidad", "detalle", ex.getMessage()));
+        }
+    }
 }

@@ -67,9 +67,26 @@ public class AlquilerServiceImplement implements AlquilerService {
                         .orElseThrow(
                                 () -> new EntityNotFoundException("Artículo no encontrado: " + artDto.getArticuloId()));
 
-                // Verificar si el artículo está disponible
-                if (!articulo.getActivo()) {
-                    throw new IllegalStateException("El artículo " + articulo.getNomArt() + " no está disponible para alquilar");
+                // Validar que el artículo no esté ya alquilado para las mismas fechas
+                List<AlquilerArticulos> alquileresExistentes = alquiArtiRepo.findByArticuloId(articulo.getId());
+                for (AlquilerArticulos aa : alquileresExistentes) {
+                    Alquiler alquilerExistente = aa.getAlquiler();
+                    // Solo validar si no ha sido devuelto (estado = false)
+                    if (!aa.getEstado()) {
+                        // Verificar si hay conflicto de fechas
+                        if (hayConflictoDeFechas(
+                            alquilerExistente.getFechaEnt(), 
+                            alquilerExistente.getFechaRet(),
+                            alquiGuardado.getFechaEnt(), 
+                            alquiGuardado.getFechaRet()
+                        )) {
+                            throw new IllegalStateException(
+                                "El artículo " + articulo.getNomArt() + 
+                                " ya está alquilado para el período " + 
+                                alquilerExistente.getFechaEnt() + " a " + alquilerExistente.getFechaRet()
+                            );
+                        }
+                    }
                 }
 
                 AlquilerArticulosId id = new AlquilerArticulosId(alquiGuardado.getId(), articulo.getId());
@@ -84,9 +101,8 @@ public class AlquilerServiceImplement implements AlquilerService {
 
                 alquiArtiRepo.save(aa);
 
-                // Marcar el artículo como no disponible
-                articulo.setActivo(false);
-                articuloRepo.save(articulo);
+                // YA NO se marca el artículo como no disponible
+                // El artículo siempre permanece activo
             }
         }
 
@@ -217,16 +233,28 @@ public class AlquilerServiceImplement implements AlquilerService {
         // Obtener todos los artículos del alquiler
         List<AlquilerArticulos> articulos = alquiArtiRepo.findByAlquilerId(idAlquiler);
         
-        // Marcar todos como devueltos y hacer artículos disponibles de nuevo
+        // Marcar todos como devueltos
         for (AlquilerArticulos aa : articulos) {
             aa.setEstado(true); // true = devuelto
             alquiArtiRepo.save(aa);
             
-            // Marcar el artículo como disponible nuevamente
-            Articulo articulo = aa.getArticulo();
-            articulo.setActivo(true);
-            articuloRepo.save(articulo);
+            // YA NO se marca el artículo como disponible
+            // El artículo siempre permanece activo
         }
+    }
+
+    /**
+     * Verifica si dos rangos de fechas se solapan
+     * @return true si hay conflicto de fechas
+     */
+    private boolean hayConflictoDeFechas(java.time.LocalDate fecha1Inicio, java.time.LocalDate fecha1Fin, java.time.LocalDate fecha2Inicio, java.time.LocalDate fecha2Fin) {
+        // Si alguna fecha es null, no hay conflicto
+        if (fecha1Inicio == null || fecha1Fin == null || fecha2Inicio == null || fecha2Fin == null) {
+            return false;
+        }
+        
+        // Hay conflicto si hay solapamiento de fechas
+        return !(fecha2Fin.isBefore(fecha1Inicio) || fecha2Inicio.isAfter(fecha1Fin));
     }
 
 }

@@ -65,6 +65,27 @@ export const obtenerTodosLosPagos = async () => {
     }
 };
 
+export const actualizarPago = async (idPago, pagoData) => {
+    try {
+        const response = await fetch(`${BASE_URL}/actualizar/${idPago}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(pagoData),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error al actualizar pago:", errorText);
+            throw new Error(`Error al actualizar pago: ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error en actualizarPago:", error);
+        throw error;
+    }
+};
+
 export const eliminarPago = async (idPago) => {
     try {
         const response = await fetch(`${BASE_URL}/Eliminar/${idPago}`, {

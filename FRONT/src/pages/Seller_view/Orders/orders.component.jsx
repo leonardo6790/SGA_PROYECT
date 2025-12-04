@@ -6,7 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
 import { eliminarArticuloDeAlquiler, marcarArticuloComoEntregado, marcarArticuloComoDevuelto } from "../../../api/alquilerArticulosApi";
 import { obtenerClientePorId } from "../../../api/clientesApi";
-import { crearPago, obtenerPagosPorAlquiler, eliminarPago } from "../../../api/pagoApi";
+import { crearPago, obtenerPagosPorAlquiler, eliminarPago, actualizarPago } from "../../../api/pagoApi";
 import { HiEye } from "react-icons/hi2";
 import { MdPayment } from "react-icons/md";
 
@@ -31,6 +31,8 @@ const Orders = () => {
   const [paymentList, setPaymentList] = useState([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [currentSaldoPendiente, setCurrentSaldoPendiente] = useState(0);
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [editPaymentAmount, setEditPaymentAmount] = useState('');
 
   // Convertir alquileres a lista de artículos (una tarjeta por artículo)
   const [articleCards, setArticleCards] = useState([]);
@@ -637,6 +639,55 @@ const Orders = () => {
     }
   };
 
+  const handleEditPayment = (pago) => {
+    setEditingPayment(pago.idPago);
+    setEditPaymentAmount(pago.valAbo.toString());
+  };
+
+  const handleCancelEditPayment = () => {
+    setEditingPayment(null);
+    setEditPaymentAmount('');
+  };
+
+  const handleSaveEditPayment = async (pago) => {
+    if (!editPaymentAmount || editPaymentAmount <= 0) {
+      alert("Por favor ingresa un monto válido");
+      return;
+    }
+
+    try {
+      const montoPago = parseInt(editPaymentAmount);
+      const totalPagado = calcularTotalPagado() - pago.valAbo; // Total pagado sin este pago
+      const totalAlquiler = currentPaymentCard.totalAlquiler || currentPaymentCard.precio;
+      const saldoDisponible = totalAlquiler - totalPagado;
+
+      if (montoPago > saldoDisponible) {
+        alert(`El monto del pago ($${montoPago.toLocaleString()}) supera el saldo disponible ($${saldoDisponible.toLocaleString()})`);
+        return;
+      }
+
+      const pagoData = {
+        idAlquiler: currentPaymentCard.idAlquiler,
+        valAbo: montoPago,
+        fechaUltimoAbono: pago.fechaUltimoAbono
+      };
+
+      await actualizarPago(pago.idPago, pagoData);
+      
+      // Recargar la lista de pagos
+      const pagos = await obtenerPagosPorAlquiler(currentPaymentCard.idAlquiler);
+      setPaymentList(pagos);
+      
+      setEditingPayment(null);
+      setEditPaymentAmount('');
+      alert("Pago actualizado exitosamente");
+    } catch (error) {
+      console.error("Error al actualizar pago:", error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.detalle || error.message;
+      alert(`Error al actualizar el pago: ${errorMsg}`);
+    }
+  };
+
   return (
     <div className="orders-wrapper">
       <NavbarSeller />
@@ -945,15 +996,55 @@ const Orders = () => {
                       return (
                         <tr key={pago.idPago || index}>
                           <td>{fechaFormateada}</td>
-                          <td>${(pago.valAbo || 0).toLocaleString()}</td>
                           <td>
-                            <button
-                              className="delete-payment-btn"
-                              onClick={() => handleDeletePayment(pago.idPago)}
-                              title="Eliminar pago"
-                            >
-                              🗑️
-                            </button>
+                            {editingPayment === pago.idPago ? (
+                              <input
+                                type="number"
+                                value={editPaymentAmount}
+                                onChange={(e) => setEditPaymentAmount(e.target.value)}
+                                className="edit-payment-input"
+                                min="0"
+                              />
+                            ) : (
+                              `$${(pago.valAbo || 0).toLocaleString()}`
+                            )}
+                          </td>
+                          <td>
+                            {editingPayment === pago.idPago ? (
+                              <>
+                                <button
+                                  className="save-payment-btn"
+                                  onClick={() => handleSaveEditPayment(pago)}
+                                  title="Guardar cambios"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  className="cancel-payment-btn"
+                                  onClick={handleCancelEditPayment}
+                                  title="Cancelar edición"
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  className="edit-payment-btn"
+                                  onClick={() => handleEditPayment(pago)}
+                                  title="Editar pago"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  className="delete-payment-btn"
+                                  onClick={() => handleDeletePayment(pago.idPago)}
+                                  title="Eliminar pago"
+                                >
+                                  🗑️
+                                </button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       );
