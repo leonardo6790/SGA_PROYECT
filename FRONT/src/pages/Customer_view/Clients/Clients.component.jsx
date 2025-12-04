@@ -41,6 +41,7 @@ const Clients = () => {
           obtenerTiposDoc()
         ]);
         console.log("Clientes recibidos:", clientesData);
+        console.log("Tipos de documento recibidos:", tiposDocData);
         setClients(clientesData);
         setFilteredClients(clientesData);
         setBarrios(barriosData);
@@ -49,7 +50,7 @@ const Clients = () => {
         console.error("Error al cargar datos:", error);
       }
     };
-    
+
     cargarDatos();
   }, []);
 
@@ -58,7 +59,7 @@ const Clients = () => {
     if (searchTerm.trim() === "") {
       setFilteredClients(clients);
     } else {
-      const filtered = clients.filter((client) => 
+      const filtered = clients.filter((client) =>
         String(client.doc).startsWith(searchTerm.trim())
       );
       setFilteredClients(filtered);
@@ -105,20 +106,20 @@ const Clients = () => {
 
       console.log("Actualizando cliente:", editingId);
       console.log("Datos a enviar:", dataToSend);
-      
+
       const resultado = await actualizarCliente(editingId, dataToSend);
       console.log("Resultado de actualización:", resultado);
 
       const data = await obtenerClientes();
       setClients(data);
       setFilteredClients(data); // Actualizar también los filtrados
-      
+
       // Actualizar también el cliente que se está visualizando en el modal
       const clienteActualizado = data.find(c => c.doc === editingId);
       if (clienteActualizado) {
         setViewingClient(clienteActualizado);
       }
-      
+
       setEditingId(null);
       setEditedData({
         nomcli1: "",
@@ -132,7 +133,7 @@ const Clients = () => {
         idTipoDoc: null,
         activo: true,
       });
-      
+
       alert("Cliente actualizado exitosamente");
     } catch (error) {
       console.error("Error completo al editar el cliente:", error);
@@ -185,16 +186,16 @@ const Clients = () => {
       <div className="clients-wrapper">
         <div className="clients-header">
           <h1 className="clients-title">Lista de Clientes</h1>
-          <input 
-            className="search-input" 
-            placeholder="Buscar por documento" 
+          <input
+            className="search-input"
+            placeholder="Buscar por documento"
             value={searchTerm}
             onChange={handleSearchChange}
             type="text"
           />
         </div>
         <div className="container-clients-subtitle">
-        <p className="clients-subtitle">Todos los clientes registrados</p>
+          <p className="clients-subtitle">Todos los clientes registrados</p>
         </div>
 
         <div className="clients-list">
@@ -394,7 +395,7 @@ const Clients = () => {
               <div className="detail-row">
                 <span className="detail-label">Barrio:</span>
                 <span className="detail-value">
-                  {viewingClient.idBarrio 
+                  {viewingClient.idBarrio
                     ? barrios.find(b => b.idBarrio === viewingClient.idBarrio)?.nombreBarrio || "N/A"
                     : "N/A"}
                 </span>
@@ -402,7 +403,7 @@ const Clients = () => {
               <div className="detail-row">
                 <span className="detail-label">Tipo de Documento:</span>
                 <span className="detail-value">
-                  {viewingClient.idTipoDoc 
+                  {viewingClient.idTipoDoc
                     ? tiposDoc.find(t => t.idTipoDoc === viewingClient.idTipoDoc)?.nomDoc || "N/A"
                     : "N/A"}
                 </span>
