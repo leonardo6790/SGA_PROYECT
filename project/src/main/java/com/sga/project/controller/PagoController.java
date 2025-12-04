@@ -27,6 +27,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/pagos")
+@SuppressWarnings("null")
 public class PagoController {
     private final PagoRepositoryes pagoRepo;
     private final PagoMapper pagoMap;
@@ -95,6 +96,7 @@ public class PagoController {
         pagoRepo.delete(pago);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @PutMapping("/actualizar/{idPago}")
     public ResponseEntity<?> actualizarPago(@PathVariable Integer idPago, @Valid @RequestBody PagoDto pagoDto) {
         try {

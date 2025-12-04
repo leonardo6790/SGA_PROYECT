@@ -1,7 +1,5 @@
 package com.sga.project.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,4 +12,5 @@ public class PagoDto {
     private Integer fechaUltimoAbono;
     private Integer valAbo;
     private Integer idAlquiler;
+    private AlquilerDto alquiler; // Objeto completo del alquiler
 }

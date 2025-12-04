@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,12 +39,14 @@ public class BarrioController {
         return ResponseEntity.ok(barrio);
     }
     
+    @PreAuthorize("hasAnyRole('ADMIN', 'VENDEDOR')")
     @PostMapping("/crear")
     public ResponseEntity<BarrioDto> crearBarrio(@Valid @RequestBody BarrioDto barrioDto) {
         BarrioDto nuevoBarrio = barrioService.saveBarrio(barrioDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevoBarrio);
     }
     
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("actualizar/{id}")
     public ResponseEntity<BarrioDto> actualizarBarrio(
             @PathVariable Integer id,
@@ -53,6 +56,7 @@ public class BarrioController {
         return ResponseEntity.ok(barrioActualizado);
     }
     
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/borrar/{id}")
     public ResponseEntity<Void> eliminarBarrio(@PathVariable Integer id) {
         barrioService.deleteBarrio(id);

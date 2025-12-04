@@ -20,6 +20,7 @@ import com.sga.project.repositoryes.PagoRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 
 @Component
+@SuppressWarnings("null")
 class AlquilermapperImplement implements AlquilerMapper {
 
     private final ClientesRepository clienteRepo;
@@ -148,7 +149,15 @@ class AlquilermapperImplement implements AlquilerMapper {
         // Cargar los pagos del alquiler
         List<Pago> pagos = pagoRepo.findByAlquilerId(alquiler.getId());
         List<PagoDto> pagosDto = pagos.stream()
-                .map(p -> new PagoDto(p.getId_pago(), p.getFechaUltimoAbono(), p.getValorAbono(), p.getAlquiler().getId()))
+                .map(p -> {
+                    PagoDto pagoDto = new PagoDto();
+                    pagoDto.setIdPago(p.getId_pago());
+                    pagoDto.setFechaUltimoAbono(p.getFechaUltimoAbono());
+                    pagoDto.setValAbo(p.getValorAbono());
+                    pagoDto.setIdAlquiler(p.getAlquiler().getId());
+                    // No incluir el objeto alquiler completo aquí para evitar recursión infinita
+                    return pagoDto;
+                })
                 .toList();
 
         // Calcular total pagado y saldo pendiente

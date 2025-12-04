@@ -8,12 +8,16 @@ import com.sga.project.repositoryes.AlquilerRepositoryes;
 
 import jakarta.persistence.EntityNotFoundException;
 
-@Component class PagoMapperImplement implements PagoMapper {
+@Component 
+@SuppressWarnings("null")
+class PagoMapperImplement implements PagoMapper {
 
     private final AlquilerRepositoryes alquiRepo;
+    private final AlquilerMapper alquilerMapper;
 
-    public PagoMapperImplement (AlquilerRepositoryes alquiRepo) {
+    public PagoMapperImplement (AlquilerRepositoryes alquiRepo, AlquilerMapper alquilerMapper) {
         this.alquiRepo = alquiRepo;
+        this.alquilerMapper = alquilerMapper;
     }
 
     @Override
@@ -27,9 +31,12 @@ import jakarta.persistence.EntityNotFoundException;
     pago.setFechaUltimoAbono(pagoDto.getFechaUltimoAbono());
     pago.setValorAbono(pagoDto.getValAbo());
 
-    Alquiler alqui = alquiRepo.findById(pagoDto.getIdAlquiler())
-    .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
-    pago.setAlquiler(alqui);
+    if (pagoDto.getIdAlquiler() != null) {
+        Integer idAlquiler = pagoDto.getIdAlquiler();
+        Alquiler alqui = alquiRepo.findById(idAlquiler)
+        .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));
+        pago.setAlquiler(alqui);
+    }
 
     return pago;
     }
@@ -40,12 +47,18 @@ import jakarta.persistence.EntityNotFoundException;
         return null;
         
     }
-    return new PagoDto(
-        pago.getId_pago(),
-        pago.getFechaUltimoAbono(),
-        pago.getValorAbono(),
-        pago.getAlquiler() != null ? pago.getAlquiler().getId() : null
-    );
+    PagoDto pagoDto = new PagoDto();
+    pagoDto.setIdPago(pago.getId_pago());
+    pagoDto.setFechaUltimoAbono(pago.getFechaUltimoAbono());
+    pagoDto.setValAbo(pago.getValorAbono());
+    pagoDto.setIdAlquiler(pago.getAlquiler() != null ? pago.getAlquiler().getId() : null);
+    
+    // Incluir el objeto completo del alquiler
+    if (pago.getAlquiler() != null) {
+        pagoDto.setAlquiler(alquilerMapper.toAlquilerDto(pago.getAlquiler()));
+    }
+    
+    return pagoDto;
 }
 
 }

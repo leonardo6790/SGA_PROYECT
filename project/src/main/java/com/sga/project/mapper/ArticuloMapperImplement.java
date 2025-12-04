@@ -7,7 +7,9 @@ import com.sga.project.models.Categoria;
 import com.sga.project.repositoryes.CategoriaRepositoryes;
 import jakarta.persistence.EntityNotFoundException;
 
-@Component class ArticuloMapperImplement implements ArticuloMapper{
+@Component 
+@SuppressWarnings("null")
+class ArticuloMapperImplement implements ArticuloMapper{
 
     private final CategoriaRepositoryes cateRepo;
 
