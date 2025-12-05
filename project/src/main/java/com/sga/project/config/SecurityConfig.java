@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/setup/**").permitAll() // Endpoint de configuración
                         .requestMatchers("/uploads/**").permitAll() // Permitir acceso a imágenes sin autenticación
                         
                         // Endpoints solo para ADMIN

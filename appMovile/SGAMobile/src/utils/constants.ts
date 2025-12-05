@@ -11,24 +11,27 @@ export const STORAGE_KEYS = {
   USER: '@sga_user',
 };
 
-// Colores del tema
+// Colores del tema (Igual a la web)
 export const COLORS = {
-  primary: '#007AFF',
-  secondary: '#5856D6',
+  primary: '#9b59b6', // Morado principal de la web
+  secondary: '#8e44ad', // Morado más oscuro
   success: '#34C759',
-  danger: '#FF3B30',
+  danger: '#e74c3c', // Rojo de admin
   warning: '#FF9500',
   info: '#5AC8FA',
   light: '#F2F2F7',
-  dark: '#1C1C1E',
+  dark: '#1e1e1e', // Contenedor oscuro de la web
   white: '#FFFFFF',
   black: '#000000',
   gray: '#8E8E93',
-  background: '#F9F9F9',
-  card: '#FFFFFF',
-  border: '#E5E5EA',
-  text: '#000000',
-  textSecondary: '#8E8E93',
+  background: '#0d0d0d', // Fondo oscuro de la web
+  backgroundGradientStart: '#0d0d0d',
+  backgroundGradientEnd: '#1a1a1a',
+  card: '#1e1e1e', // Igual a contenedor de la web
+  border: '#2c2c2c',
+  text: '#ffffff',
+  textSecondary: '#cccccc', // Texto secundario de la web
+  textTertiary: '#8E8E93',
 };
 
 // Tamaños de fuente

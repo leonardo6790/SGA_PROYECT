@@ -9,3 +9,5 @@ export { NewRentScreen } from './NewRentScreen';
 export { NewClientScreen } from './NewClientScreen';
 export { NewOrderScreen } from './NewOrderScreen';
 export { AddArticleScreen } from './AddArticleScreen';
+export { CatalogScreen } from './CatalogScreen';
+export { MyOrdersScreen } from './MyOrdersScreen';

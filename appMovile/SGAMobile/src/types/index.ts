@@ -6,6 +6,15 @@ export interface User {
   email: string;
   rol: string;
   activo: boolean;
+  numDoc?: number;
+  nom1?: string;
+  nom2?: string;
+  ape1?: string;
+  ape2?: string;
+  direccion?: string;
+  numTel?: number;
+  tipoDoc?: string;
+  barrio?: string;
 }
 
 export interface AuthState {

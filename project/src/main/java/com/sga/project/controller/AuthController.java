@@ -57,21 +57,33 @@ public class AuthController {
             // Generar el token JWT
             String token = jwtUtil.generateToken(loginRequest.getCorreoElec(), rol);
 
-            // Crear la respuesta
+            // Crear la respuesta con todos los datos del usuario
             LoginResponse response = new LoginResponse(
                     token,
                     usuario.getCorreoElec(),
                     rol,
-                    "Login exitoso");
+                    "Login exitoso",
+                    usuario.getNumDoc(),
+                    usuario.getNom1(),
+                    usuario.getNom2(),
+                    usuario.getApe1(),
+                    usuario.getApe2(),
+                    usuario.getDireccion(),
+                    usuario.getNumTel(),
+                    usuario.getActivo(),
+                    usuario.getTipoDoc() != null ? usuario.getTipoDoc().getNomDoc() : null,
+                    usuario.getBarrio() != null ? usuario.getBarrio().getNomBar() : null);
 
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new LoginResponse(null, null, null, "Credenciales inválidas"));
+                    .body(new LoginResponse(null, null, null, "Credenciales inválidas", 
+                            null, null, null, null, null, null, null, null, null, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new LoginResponse(null, null, null, "Error en el servidor: " + e.getMessage()));
+                    .body(new LoginResponse(null, null, null, "Error en el servidor: " + e.getMessage(),
+                            null, null, null, null, null, null, null, null, null, null));
         }
     }
 }

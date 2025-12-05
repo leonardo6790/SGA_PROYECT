@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sga.project.dto.AlquilerArticulosDto;
 import com.sga.project.service.AlquilerArticuloService;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -73,18 +74,37 @@ public class AlquilerArticuloController {
             @RequestBody Map<String, Boolean> body) {
         
         try {
+            System.out.println("=== ACTUALIZAR ESTADO DE ARTÍCULO ===");
+            System.out.println("Artículo ID: " + idArt);
+            System.out.println("Alquiler ID: " + idAlq);
+            System.out.println("Body recibido: " + body);
+            
             Boolean estado = body.get("estado");
             Boolean entregado = body.get("entregado");
             
+            System.out.println("Estado: " + estado);
+            System.out.println("Entregado: " + entregado);
+            
             AlquilerArticulosDto actualizado = alquiArtiServi.actualizarEstado(idArt, idAlq, estado, entregado);
+            
+            System.out.println("Actualización exitosa");
             return ResponseEntity.ok(actualizado);
         } catch (IllegalStateException e) {
+            System.err.println("Error de validación: " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", e.getMessage());
             return ResponseEntity.status(400).body(errorResponse);
+        } catch (EntityNotFoundException e) {
+            System.err.println("Artículo no encontrado: " + e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Artículo no encontrado en el alquiler");
+            return ResponseEntity.status(404).body(errorResponse);
         } catch (Exception e) {
+            System.err.println("Error inesperado: " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Error al actualizar estado: " + e.getMessage());
+            errorResponse.put("detalle", e.getClass().getSimpleName());
             return ResponseEntity.status(500).body(errorResponse);
         }
     }

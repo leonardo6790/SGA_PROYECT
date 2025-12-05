@@ -1,12 +1,6 @@
-const API_URL = "http://localhost:8080/api/alquiler";
+import API_BASE_URL, { getAuthHeaders } from '../config/api.config.js';
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("sga_token");
-  return {
-    "Content-Type": "application/json",
-    Authorization: token ? `Bearer ${token}` : "",
-  };
-};
+const API_URL = `${API_BASE_URL}/alquiler`;
 
 export const obtenerAlquileres = async () => {
   try {

@@ -1,0 +1,51 @@
+-- Script para crear usuario CLIENTE de prueba
+-- Ejecutar este script en la base de datos
+
+-- 1. Primero, verificar que existe el rol CLIENTE
+INSERT INTO rol (nom_rol, activo) VALUES ('CLIENTE', true) 
+ON DUPLICATE KEY UPDATE nom_rol = 'CLIENTE';
+
+-- 2. Crear usuario cliente con contraseña: cliente123
+-- La contraseña debe estar encriptada con BCrypt
+-- Para generar la contraseña encriptada, puedes usar: https://bcrypt-generator.com/
+-- O ejecutar en Java: new BCryptPasswordEncoder().encode("cliente123")
+
+INSERT INTO usuario (
+    num_doc, 
+    nom1, 
+    nom2, 
+    ape1, 
+    ape2, 
+    direccion, 
+    num_tel, 
+    correo_elec, 
+    contraseña, 
+    activo,
+    id_barrio, 
+    id_tipo_doc, 
+    id_rol
+)
+VALUES (
+    1000000003,
+    'Cliente',
+    'Ejemplo',
+    'Prueba',
+    'Test',
+    'Carrera 10 #20-30',
+    3201234567,
+    'cliente@ejemplo.com',
+    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',  -- cliente123
+    true,
+    1,  -- ID del barrio (ajustar según tu base de datos)
+    1,  -- ID del tipo de documento (ajustar según tu base de datos)
+    (SELECT id_rol FROM rol WHERE nom_rol = 'CLIENTE' LIMIT 1)
+)
+ON DUPLICATE KEY UPDATE 
+    correo_elec = 'cliente@ejemplo.com',
+    contraseña = '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+
+-- Verificar que el usuario fue creado
+SELECT u.num_doc, u.nom1, u.ape1, u.correo_elec, r.nom_rol, u.activo
+FROM usuario u
+INNER JOIN rol r ON u.id_rol = r.id_rol
+WHERE u.correo_elec = 'cliente@ejemplo.com';

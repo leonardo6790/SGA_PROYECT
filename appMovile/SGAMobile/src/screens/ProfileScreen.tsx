@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,31 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS } from '../utils/constants';
 
 export const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const [debugInfo, setDebugInfo] = useState<string>('');
+
+  useEffect(() => {
+    loadDebugInfo();
+  }, []);
+
+  const loadDebugInfo = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem('@sga_user');
+      setDebugInfo(userStr || 'No hay datos en AsyncStorage');
+      console.log('👤 Datos del usuario en AsyncStorage:', userStr);
+      console.log('👤 Datos del usuario en contexto:', user);
+    } catch (error) {
+      console.error('Error al cargar debug info:', error);
+    }
+  };
+
+  // Debug: Ver qué datos tiene el usuario
+  console.log('👤 Datos del usuario en perfil:', user);
 
   const handleLogout = () => {
     Alert.alert(
@@ -25,6 +45,29 @@ export const ProfileScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             await logout();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleClearCacheAndLogout = () => {
+    Alert.alert(
+      'Limpiar Caché',
+      'Esto cerrará tu sesión y limpiará todos los datos almacenados. Deberás iniciar sesión nuevamente para cargar los datos actualizados.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Limpiar y Salir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              console.log('✅ Caché limpiado');
+              await logout();
+            } catch (error) {
+              console.error('Error al limpiar caché:', error);
+            }
           },
         },
       ]
@@ -76,8 +119,37 @@ export const ProfileScreen: React.FC = () => {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Información Personal</Text>
+          
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>{user?.tipoDoc || 'Documento'}</Text>
+            <Text style={styles.infoValue}>{user?.numDoc || 'No disponible'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Teléfono</Text>
+            <Text style={styles.infoValue}>{user?.numTel || 'No disponible'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Dirección</Text>
+            <Text style={styles.infoValue}>{user?.direccion || 'No disponible'}</Text>
+          </View>
+
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Barrio</Text>
+            <Text style={styles.infoValue}>{user?.barrio || 'No disponible'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Configuración</Text>
           
+          <TouchableOpacity style={styles.menuItem} onPress={loadDebugInfo}>
+            <Text style={styles.menuItemText}>🔄 Recargar Datos</Text>
+            <Text style={styles.menuItemArrow}>›</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.menuItem}>
             <Text style={styles.menuItemText}>📱 Notificaciones</Text>
             <Text style={styles.menuItemArrow}>›</Text>
@@ -93,6 +165,10 @@ export const ProfileScreen: React.FC = () => {
             <Text style={styles.menuItemArrow}>›</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.clearButton} onPress={handleClearCacheAndLogout}>
+          <Text style={styles.clearButtonText}>🗑️ Limpiar Caché y Cerrar Sesión</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>🚪 Cerrar Sesión</Text>
@@ -223,6 +299,18 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   logoutButtonText: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
+    color: COLORS.white,
+  },
+  clearButton: {
+    backgroundColor: COLORS.warning,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  clearButtonText: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
     color: COLORS.white,

@@ -18,16 +18,25 @@ export const authService = {
       const response = await api.post('/auth/login', loginData);
       console.log('✅ Respuesta del servidor:', response.data);
       
-      // El backend devuelve: { token, email, rol, mensaje }
-      const { token, email, rol } = response.data;
+      // El backend devuelve datos completos del usuario
+      const { token, email, rol, numDoc, nom1, nom2, ape1, ape2, direccion, numTel, activo, tipoDoc, barrio } = response.data;
 
       // Crear objeto de usuario compatible con la interfaz User
       const user: User = {
-        id: 0, // El backend no devuelve ID en el login
-        username: email.split('@')[0], // Extraer username del email
+        id: numDoc || 0,
+        username: `${nom1 || ''} ${ape1 || ''}`.trim() || email.split('@')[0],
         email: email,
         rol: rol,
-        activo: true,
+        activo: activo !== undefined ? activo : true,
+        numDoc: numDoc,
+        nom1: nom1,
+        nom2: nom2,
+        ape1: ape1,
+        ape2: ape2,
+        direccion: direccion,
+        numTel: numTel,
+        tipoDoc: tipoDoc,
+        barrio: barrio,
       };
 
       // Guardar token y usuario en AsyncStorage

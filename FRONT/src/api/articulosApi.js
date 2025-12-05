@@ -1,12 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/articulos";
+import API_BASE_URL, { getAuthHeaders, getAuthHeadersForFormData } from '../config/api.config.js';
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("sga_token");
-    return {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-    };
-};
+const BASE_URL = `${API_BASE_URL}/articulos`;
 
 export const obtenerArticulo = async () => {
     try {
@@ -21,7 +15,7 @@ export const obtenerArticulo = async () => {
         console.log("Respuesta recibida:", res.status, res.statusText);
 
         if (!res.ok) {
-            const errorText = await res.text(); ya
+            const errorText = await res.text();
             console.error('Error response:', res.status, errorText);
             throw new Error(`Error al obtener articulos: ${res.status} - ${errorText}`);
         }
@@ -71,8 +65,7 @@ export const actualizarArticulo = async (id, data) => {
 
 export const actualizarArticuloConFoto = async (id, formData) => {
     try {
-        const token = localStorage.getItem("sga_token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const headers = getAuthHeadersForFormData();
 
         const res = await fetch(`${BASE_URL}/ActualizarConFoto/${id}`, {
             method: "PUT",

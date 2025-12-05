@@ -1,9 +1,10 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+import API_BASE_URL, { getAuthHeaders } from '../config/api.config.js';
 
+const BASE_URL = `${API_BASE_URL}/auth`;
 const jsonHeaders = { "Content-Type": "application/json" };
 
 export const login = async (correoElec, contraseña) => {
-    const res = await fetch(`${BASE_URL}/auth/login`, {
+    const res = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: jsonHeaders,
         body: JSON.stringify({ correoElec, contraseña }),
@@ -17,10 +18,5 @@ export const login = async (correoElec, contraseña) => {
     return await res.json();
 };
 
-export const getAuthHeaders = () => {
-    const token = localStorage.getItem("sga_token");
-    return {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-    };
-};
+// Re-exportar getAuthHeaders para compatibilidad con código existente
+export { getAuthHeaders };

@@ -1,12 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/pagos";
+import API_BASE_URL, { getAuthHeaders } from '../config/api.config.js';
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("sga_token");
-    return {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-    };
-};
+const BASE_URL = `${API_BASE_URL}/pagos`;
 
 export const crearPago = async (pagoData) => {
     try {

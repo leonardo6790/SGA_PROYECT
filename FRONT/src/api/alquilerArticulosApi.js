@@ -1,12 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/AlquilerArticulos";
+import API_BASE_URL, { getAuthHeaders } from '../config/api.config.js';
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("sga_token");
-    return {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-    };
-};
+const BASE_URL = `${API_BASE_URL}/AlquilerArticulos`;
 
 export const obtenerAlquiler = async () => {
     const res = await fetch(`${BASE_URL}`, { 
@@ -47,6 +41,7 @@ export const marcarArticuloComoEntregado = async (idArticulo, idAlquiler) => {
             estado: false
         };
         console.log("Body enviado:", JSON.stringify(bodyData));
+        console.log("URL:", `${BASE_URL}/Actualizar/${idArticulo}/${idAlquiler}`);
         
         const response = await fetch(`${BASE_URL}/Actualizar/${idArticulo}/${idAlquiler}`, {
             method: "PUT",
@@ -55,22 +50,25 @@ export const marcarArticuloComoEntregado = async (idArticulo, idAlquiler) => {
         });
 
         console.log("Response status:", response.status);
-        const responseText = await response.text();
-        console.log("Response body:", responseText);
-
+        
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Error response:", errorText);
+            let errorMessage = "Error al marcar como entregado";
+            
             try {
-                const errorData = JSON.parse(responseText);
-                const errorMessage = errorData.error || errorData.message || errorData.detalle || response.statusText;
-                console.error("Error al marcar como entregado:", errorMessage);
-                throw new Error(errorMessage);
+                const errorData = JSON.parse(errorText);
+                errorMessage = errorData.error || errorData.message || errorData.detalle || errorText;
             } catch (e) {
-                throw new Error(responseText || response.statusText);
+                errorMessage = errorText || response.statusText;
             }
+            
+            throw new Error(errorMessage);
         }
 
-        console.log("Artículo marcado como entregado exitosamente");
-        return JSON.parse(responseText);
+        const data = await response.json();
+        console.log("Artículo marcado como entregado exitosamente:", data);
+        return data;
     } catch (error) {
         console.error("Error en marcarArticuloComoEntregado:", error);
         throw error;

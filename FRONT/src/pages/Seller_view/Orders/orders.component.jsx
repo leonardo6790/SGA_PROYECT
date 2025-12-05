@@ -351,11 +351,20 @@ const Orders = () => {
   };
 
   const handleMarkAsDelivered = async (card) => {
+    console.log("=== Iniciando handleMarkAsDelivered ===");
+    console.log("Card recibida:", card);
+    
     // Primero verificar que el alquiler esté pagado en su totalidad
     try {
+      console.log("Verificando pagos para alquiler:", card.idAlquiler);
       const pagos = await obtenerPagosPorAlquiler(card.idAlquiler);
+      console.log("Pagos obtenidos:", pagos);
+      
       const totalPagado = pagos.reduce((sum, pago) => sum + (pago.valAbo || 0), 0);
       const totalAlquiler = card.totalAlquiler || card.precio;
+
+      console.log("Total pagado:", totalPagado);
+      console.log("Total alquiler:", totalAlquiler);
 
       if (totalPagado < totalAlquiler) {
         const saldoPendiente = totalAlquiler - totalPagado;
@@ -365,84 +374,65 @@ const Orders = () => {
 
       // Si está pagado, proceder con la entrega
       if (window.confirm(`¿Confirmar que el artículo "${card.articulo}" ha sido entregado al cliente?`)) {
+        console.log("Usuario confirmó la entrega");
         try {
+          console.log("Llamando a marcarArticuloComoEntregado con:", {
+            articuloId: card.articuloId,
+            idAlquiler: card.idAlquiler
+          });
+          
           await marcarArticuloComoEntregado(card.articuloId, card.idAlquiler);
-
-          // Actualizar el estado local
-          setArticleCards(articleCards.map(c =>
-            c.id === card.id ? { ...c, entregado: true } : c
-          ));
+          console.log("Artículo marcado como entregado exitosamente en el backend");
 
           // Recargar los datos del backend para asegurar consistencia
-          try {
-            const token = localStorage.getItem("sga_token");
-            if (token) {
-              const data = await obtenerAlquileres();
-              if (data && data.length > 0) {
-                const cards = [];
-                data.forEach(alquiler => {
-                  if (alquiler.articulos && alquiler.articulos.length > 0) {
-                    alquiler.articulos.forEach(articulo => {
-                      cards.push({
-                        id: `${alquiler.id_alquiler}-${articulo.articuloId}`,
-                        idAlquiler: alquiler.id_alquiler,
-                        articuloId: articulo.articuloId,
-                        clienteDoc: alquiler.clienteDoc,
-                        nombreCliente: articulo.nomCliente || 'Cliente no disponible',
-                        telefono: articulo.telCliente,
-                        fechaAlquiler: alquiler.fechaAlquiler,
-                        fechaEntrega: alquiler.fechaEntrega,
-                        fechaRetiro: alquiler.fechaRetiro,
-                        articulo: articulo.nomArticulo || 'Artículo sin nombre',
-                        talla: articulo.tallaArticulo,
-                        precio: articulo.precio,
-                        totalAlquiler: alquiler.totalAlquiler,
-                        estado: articulo.estado === true,
-                        entregado: articulo.entregado === true,
-                        observaciones: articulo.observaciones
-                      });
-                    });
-                  } else {
-                    cards.push({
-                      id: `${alquiler.id_alquiler}-empty`,
-                      idAlquiler: alquiler.id_alquiler,
-                      clienteDoc: alquiler.clienteDoc,
-                      nombreCliente: 'Cliente no disponible',
-                      telefono: null,
-                      fechaAlquiler: alquiler.fechaAlquiler,
-                      fechaEntrega: alquiler.fechaEntrega,
-                      fechaRetiro: alquiler.fechaRetiro,
-                      articulo: 'Sin artículos',
-                      talla: '-',
-                      precio: 0,
-                      totalAlquiler: alquiler.totalAlquiler,
-                      estado: false,
-                      observaciones: ''
-                    });
-                  }
+          console.log("Recargando datos del backend...");
+          const data = await obtenerAlquileres();
+          console.log("Datos recargados:", data);
+          
+          if (data && data.length > 0) {
+            const cards = [];
+            data.forEach(alquiler => {
+              if (alquiler.articulos && alquiler.articulos.length > 0) {
+                alquiler.articulos.forEach(articulo => {
+                  cards.push({
+                    id: `${alquiler.id_alquiler}-${articulo.articuloId}`,
+                    idAlquiler: alquiler.id_alquiler,
+                    articuloId: articulo.articuloId,
+                    clienteDoc: alquiler.clienteDoc,
+                    nombreCliente: articulo.nomCliente || 'Cliente no disponible',
+                    telefono: articulo.telCliente,
+                    fechaAlquiler: alquiler.fechaAlquiler,
+                    fechaEntrega: alquiler.fechaEntrega,
+                    fechaRetiro: alquiler.fechaRetiro,
+                    articulo: articulo.nomArticulo || 'Artículo sin nombre',
+                    talla: articulo.tallaArticulo,
+                    precio: articulo.precio,
+                    totalAlquiler: alquiler.totalAlquiler,
+                    estado: articulo.estado === true,
+                    entregado: articulo.entregado === true,
+                    observaciones: articulo.observaciones
+                  });
                 });
-                setArticleCards(cards);
               }
-            }
-          } catch (reloadError) {
-            console.error('Error al recargar alquileres:', reloadError);
+            });
+            setArticleCards(cards);
+            console.log("Cards actualizadas:", cards.length);
           }
 
-          // Dar un pequeño tiempo para que React actualice el estado
-          setTimeout(() => {
-            // Cambiar automáticamente a la pestaña de "recibir" para ver el artículo entregado
-            setActiveTab('recibir');
-            // Limpiar los filtros para mostrar todos los artículos a recibir
-            setSearchText("");
-            setFilterByDate(false);
+          // Cambiar automáticamente a la pestaña de "recibir"
+          console.log("Cambiando a pestaña 'recibir'");
+          setActiveTab('recibir');
+          setSearchText("");
+          setFilterByDate(false);
 
-            alert("Artículo marcado como entregado. Ahora aparecerá en 'Órdenes a Recibir'");
-          }, 100);
+          alert(`✓ Artículo "${card.articulo}" marcado como entregado.\n\nAhora aparece en la sección "Órdenes a Recibir" esperando su devolución.`);
         } catch (error) {
           console.error("Error al marcar como entregado:", error);
           const errorMsg = error.message || "Error al marcar como entregado";
-          alert(errorMsg);
+          alert(`Error: ${errorMsg}\n\nPor favor, verifica tu conexión e intenta nuevamente.`);
         }
+      } else {
+        console.log("Usuario canceló la entrega");
       }
     } catch (error) {
       console.error("Error al verificar pagos antes de entregar:", error);
@@ -794,8 +784,8 @@ const Orders = () => {
         )}
 
         <div className="orders-list">
-          {filteredCards.map((card) => (
-            <div key={card.id} className="order-card">
+          {filteredCards.map((card, index) => (
+            <div key={`${card.id}-${index}`} className="order-card">
               <div className="order-header">
                 <span className="col-id">ID</span>
                 <span className="col-cliente">Cliente</span>

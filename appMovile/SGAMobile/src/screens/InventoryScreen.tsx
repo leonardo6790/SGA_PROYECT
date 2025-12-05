@@ -23,7 +23,7 @@ import {
   Articulo,
   ArticuloCreate,
 } from '../api/articulosApi';
-import { obtenerCategorias, Categoria } from '../api/categoriasApi';
+import { obtenerCategorias, crearCategoria, Categoria, CategoriaCreate } from '../api/categoriasApi';
 
 interface InventoryScreenProps {
   navigation?: any;
@@ -41,6 +41,7 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedArticulo, setSelectedArticulo] = useState<Articulo | null>(null);
   
   // Form states
@@ -52,6 +53,10 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
     precioArt: 0,
     activo: true,
     idCategoria: 0,
+  });
+  const [categoryForm, setCategoryForm] = useState<CategoriaCreate>({
+    nomCate: '',
+    descCate: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -167,6 +172,27 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
     setSelectedArticulo(null);
   };
 
+  const handleCreateCategory = async () => {
+    if (!categoryForm.nomCate) {
+      Alert.alert('Error', 'Por favor ingresa el nombre de la categoría');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await crearCategoria(categoryForm);
+      Alert.alert('Éxito', 'Categoría creada correctamente');
+      setShowCategoryModal(false);
+      setCategoryForm({ nomCate: '', descCate: '' });
+      await cargarDatos();
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo crear la categoría');
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const renderArticuloCard = ({ item }: { item: Articulo }) => (
     <TouchableOpacity
       style={styles.articleCard}
@@ -244,6 +270,12 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
               </Text>
             </TouchableOpacity>
           ))}
+          <TouchableOpacity
+            style={styles.addCategoryButton}
+            onPress={() => setShowCategoryModal(true)}
+          >
+            <Text style={styles.addCategoryText}>+ Nueva</Text>
+          </TouchableOpacity>
         </ScrollView>
 
         {/* Articles List */}
@@ -490,6 +522,50 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
           </View>
         </View>
       </Modal>
+
+      {/* Category Modal */}
+      <Modal visible={showCategoryModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>Nueva Categoría</Text>
+              
+              <Input
+                label="Nombre de la Categoría *"
+                value={categoryForm.nomCate}
+                onChangeText={(text) => setCategoryForm({ ...categoryForm, nomCate: text })}
+                placeholder="Ej: Vestidos de Noche"
+              />
+
+              <Input
+                label="Descripción"
+                value={categoryForm.descCate}
+                onChangeText={(text) => setCategoryForm({ ...categoryForm, descCate: text })}
+                placeholder="Ej: Vestidos elegantes para eventos formales"
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.modalButtons}>
+                <Button 
+                  title="Cancelar" 
+                  variant="outline" 
+                  onPress={() => {
+                    setShowCategoryModal(false);
+                    setCategoryForm({ nomCate: '', descCate: '' });
+                  }} 
+                />
+                <View style={{ width: spacing.md }} />
+                <Button 
+                  title="Crear Categoría" 
+                  onPress={handleCreateCategory} 
+                  loading={saving} 
+                />
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -559,6 +635,22 @@ const styles = StyleSheet.create({
   },
   categoryTextActive: {
     color: colors.textWhite,
+  },
+  addCategoryButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+    backgroundColor: colors.success,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addCategoryText: {
+    fontSize: fontSizes.sm,
+    color: colors.textWhite,
+    fontWeight: '600',
   },
   listContent: {
     paddingBottom: 80,

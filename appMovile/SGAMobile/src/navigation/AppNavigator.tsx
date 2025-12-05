@@ -14,6 +14,8 @@ import {
   NewClientScreen,
   NewOrderScreen,
   AddArticleScreen,
+  CatalogScreen,
+  MyOrdersScreen,
 } from '../screens';
 import { COLORS } from '../utils/constants';
 import { ActivityIndicator, View, Text } from 'react-native';
@@ -101,9 +103,31 @@ const CustomerTabNavigator = () => {
         name="Home"
         component={HomeScreen}
         options={{
+          tabBarLabel: 'Inicio',
+          tabBarIcon: ({ size }) => (
+            <Text style={{ fontSize: size }}>🏠</Text>
+          ),
+          headerTitle: 'SGA - Sistema de Gestión de Alquileres',
+        }}
+      />
+      <Tab.Screen
+        name="Catalog"
+        component={CatalogScreen}
+        options={{
           tabBarLabel: 'Catálogo',
           tabBarIcon: ({ size }) => (
             <Text style={{ fontSize: size }}>🏪</Text>
+          ),
+          headerTitle: 'Catálogo de Productos',
+        }}
+      />
+      <Tab.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
+        options={{
+          tabBarLabel: 'Mis Pedidos',
+          tabBarIcon: ({ size }) => (
+            <Text style={{ fontSize: size }}>📦</Text>
           ),
           headerShown: false,
         }}
@@ -126,7 +150,7 @@ const CustomerTabNavigator = () => {
 // Stack principal con modales
 const MainStack = () => {
   const { user } = useAuth();
-  const isAdminOrSeller = user?.rol === 'ADMIN' || user?.rol === 'vendedor';
+  const isAdminOrSeller = user?.rol === 'ADMIN' || user?.rol === 'VENDEDOR';
 
   return (
     <Stack.Navigator>

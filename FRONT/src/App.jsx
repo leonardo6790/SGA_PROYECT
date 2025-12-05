@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import HomePage from "./pages/Customer_view/Home_page/Home.page";
 import SignIn from "./pages/Customer_view/Sign-in/Sign-in.page";
+import LoginSeller from "./pages/Seller_view/Login_Seller/Login_Seller";
 import DashboardLayout from "./layouts/DashboardLayout";
 import HomeSeller from "./pages/Seller_view/Home_Seller/Home_Seller.component";
 import NewRent from "./pages/Seller_view/New_rent/New_rent.component";
@@ -33,6 +34,7 @@ function AppContent() {
         <Route path="/faq" element={<Faq />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/login-seller" element={<LoginSeller />} />
 
         <Route
           path="/home-seller"
