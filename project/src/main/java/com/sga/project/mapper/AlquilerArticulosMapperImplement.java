@@ -16,6 +16,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 
 @Component
+@SuppressWarnings("null")
 public class AlquilerArticulosMapperImplement implements AlquilerArticuloMapper{
 
     private final AlquilerRepositoryes alquilerRepo;

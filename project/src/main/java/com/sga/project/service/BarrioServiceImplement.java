@@ -65,6 +65,12 @@ public class BarrioServiceImplement implements BarrioService {
             .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
 
         barrio.setNomBar(barrioDto.getNombreBarrio());
+        
+        // Actualizar el estado activo si se proporciona
+        if (barrioDto.getActivo() != null) {
+            barrio.setActivo(barrioDto.getActivo());
+        }
+        
         Barrio barrioActualizado = barrioRepository.save(barrio);
         return barrioMapper.toBarrioDto(barrioActualizado);
     }
