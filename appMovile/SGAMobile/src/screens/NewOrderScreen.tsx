@@ -330,7 +330,7 @@ export const NewOrderScreen: React.FC<{ navigation: any; route: any }> = ({ navi
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#f5ead6', // Beige
   },
   loadingContainer: {
     flex: 1,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: SPACING.md,
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   scrollContent: {
     padding: SPACING.lg,
@@ -347,24 +347,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#2c2c2c', // Dark
     marginBottom: SPACING.lg,
   },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#fff',
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: '#c99d6a', // Brown left border
   },
   cardTitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#2c2c2c',
     marginBottom: SPACING.md,
   },
   infoText: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.text,
+    color: '#2c2c2c',
     marginBottom: SPACING.xs,
   },
   infoLabel: {
@@ -373,36 +375,35 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#2c2c2c',
     marginTop: SPACING.md,
     marginBottom: SPACING.xs,
   },
   helpText: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: '#666',
     marginTop: SPACING.xs,
     fontStyle: 'italic',
   },
   dateDisplay: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
-    backgroundColor: COLORS.light,
-    padding: SPACING.md,
+    color: '#666',
+    backgroundColor: '#e5d4c1', // Light tan\n    padding: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
   },
   input: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#d4a574', // Tan border
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     fontSize: FONT_SIZES.md,
-    color: COLORS.text,
+    color: '#2c2c2c',
   },
   searchInput: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#d4a574', // Tan border
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     fontSize: FONT_SIZES.md,
@@ -410,8 +411,8 @@ const styles = StyleSheet.create({
   },
   searchResults: {
     maxHeight: 200,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderWidth: 2,
+    borderColor: '#d4a574', // Tan border
     borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
   },
@@ -421,7 +422,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#e5d4c1',
   },
   searchItemInfo: {
     flex: 1,
@@ -429,27 +430,29 @@ const styles = StyleSheet.create({
   searchItemName: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#2c2c2c',
   },
   searchItemDesc: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   searchItemPrice: {
     fontSize: FONT_SIZES.md,
     fontWeight: '700',
-    color: COLORS.success,
+    color: '#c99d6a', // Brown price
   },
   noResults: {
     padding: SPACING.lg,
     textAlign: 'center',
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   selectedItem: {
-    backgroundColor: COLORS.background,
+    backgroundColor: '#f9f6f1', // Very light beige
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
+    borderLeftWidth: 3,
+    borderLeftColor: '#c99d6a', // Brown accent
   },
   selectedItemHeader: {
     flexDirection: 'row',
@@ -463,11 +466,11 @@ const styles = StyleSheet.create({
   selectedItemName: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#2c2c2c',
   },
   selectedItemDesc: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   deleteButton: {
     fontSize: FONT_SIZES.lg,
@@ -475,13 +478,13 @@ const styles = StyleSheet.create({
   selectedItemPrice: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
-    color: COLORS.success,
+    color: '#c99d6a', // Brown price
     marginBottom: SPACING.sm,
   },
   obsInput: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#d4a574', // Tan border
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.sm,
     fontSize: FONT_SIZES.sm,
@@ -489,7 +492,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   totalCard: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#c99d6a', // Brown
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
@@ -500,15 +503,15 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '600',
-    color: COLORS.white,
+    color: '#fff',
   },
   totalAmount: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: '700',
-    color: COLORS.white,
+    color: '#fff',
   },
   createButton: {
-    backgroundColor: COLORS.success,
+    backgroundColor: '#28a745', // Green
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
     alignItems: 'center',
@@ -520,6 +523,6 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
-    color: COLORS.white,
+    color: '#fff',
   },
 });

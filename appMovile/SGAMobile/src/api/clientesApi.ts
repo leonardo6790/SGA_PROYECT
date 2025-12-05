@@ -60,3 +60,25 @@ export const crearCliente = async (cliente: ClienteCreate): Promise<Cliente> => 
     throw new Error('Error al crear cliente');
   }
 };
+
+// Actualizar cliente existente
+export const actualizarCliente = async (id: number, cliente: ClienteCreate): Promise<Cliente> => {
+  try {
+    const response = await api.put(`/cli/actualizar/${id}`, cliente);
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar cliente:', error);
+    throw new Error('Error al actualizar cliente');
+  }
+};
+
+// Eliminar cliente
+export const eliminarCliente = async (id: number): Promise<boolean> => {
+  try {
+    await api.delete(`/cli/borrar/${id}`);
+    return true;
+  } catch (error) {
+    console.error('Error al eliminar cliente:', error);
+    throw new Error('Error al eliminar cliente');
+  }
+};

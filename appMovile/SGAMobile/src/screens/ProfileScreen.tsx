@@ -183,23 +183,25 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#f5ead6', // Beige principal
   },
   content: {
     padding: SPACING.md,
   },
   header: {
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: '#fff',
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.xl,
     marginBottom: SPACING.md,
+    borderWidth: 2,
+    borderColor: '#d4a574', // Tan border
   },
   avatarContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#c99d6a', // Brown primary
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
@@ -207,21 +209,21 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: FONT_SIZES.xxxl * 1.5,
     fontWeight: '700',
-    color: COLORS.white,
+    color: '#fff',
   },
   name: {
     fontSize: FONT_SIZES.xl,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#2c2c2c', // Dark text
     marginBottom: SPACING.xs,
   },
   email: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: '#666',
     marginBottom: SPACING.sm,
   },
   roleBadge: {
-    backgroundColor: COLORS.primary + '20',
+    backgroundColor: '#d4a574', // Tan background
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
@@ -229,18 +231,20 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
-    color: COLORS.primary,
+    color: '#fff',
   },
   section: {
-    backgroundColor: COLORS.white,
+    backgroundColor: '#fff',
     borderRadius: BORDER_RADIUS.lg,
     padding: SPACING.md,
     marginBottom: SPACING.md,
+    borderLeftWidth: 4,
+    borderLeftColor: '#c99d6a',
   },
   sectionTitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#2c2c2c',
     marginBottom: SPACING.md,
   },
   infoItem: {
@@ -249,16 +253,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#d4a574',
   },
   infoLabel: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   infoValue: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#2c2c2c',
   },
   statusBadge: {
     paddingHorizontal: SPACING.sm,
@@ -266,14 +270,15 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.sm,
   },
   activeStatus: {
-    backgroundColor: COLORS.success + '20',
+    backgroundColor: '#d4edda',
   },
   inactiveStatus: {
-    backgroundColor: COLORS.danger + '20',
+    backgroundColor: '#f8d7da',
   },
   statusText: {
     fontSize: FONT_SIZES.sm,
     fontWeight: '600',
+    color: '#2c2c2c',
   },
   menuItem: {
     flexDirection: 'row',
@@ -281,18 +286,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#e5d4c1',
   },
   menuItemText: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.text,
+    color: '#2c2c2c',
   },
   menuItemArrow: {
     fontSize: FONT_SIZES.xl,
-    color: COLORS.gray,
+    color: '#c99d6a',
   },
   logoutButton: {
-    backgroundColor: COLORS.danger,
+    backgroundColor: '#d32f2f',
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
@@ -301,10 +306,10 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
-    color: COLORS.white,
+    color: '#fff',
   },
   clearButton: {
-    backgroundColor: COLORS.warning,
+    backgroundColor: '#f57c00',
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
@@ -313,12 +318,12 @@ const styles = StyleSheet.create({
   clearButtonText: {
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
-    color: COLORS.white,
+    color: '#fff',
   },
   version: {
     textAlign: 'center',
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: '#999',
     marginTop: SPACING.md,
   },
 });

@@ -1,8 +1,11 @@
 import { api } from './axiosConfig';
 
 export interface TipoDoc {
-  id_tipoDoc: number;
-  nomDoc: string;
+  idTipoDoc?: number; // Java devuelve en camelCase
+  id_tipoDoc?: number; // para compatibilidad
+  nomDoc?: string;
+  nomTipoDoc?: string; // alias for compatibility
+  activo?: boolean;
 }
 
 // Obtener todos los tipos de documento

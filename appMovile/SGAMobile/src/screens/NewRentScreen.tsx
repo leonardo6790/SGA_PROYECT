@@ -127,18 +127,18 @@ export const NewRentScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#f5ead6', // Beige
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: '#f5ead6',
   },
   loadingText: {
     marginTop: SPACING.md,
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: '#666',
   },
   content: {
     flex: 1,
@@ -151,32 +151,32 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZES.xxxl,
     fontWeight: '700',
-    color: COLORS.text,
+    color: '#2c2c2c', // Dark
     marginBottom: SPACING.md,
   },
   subtitle: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#2c2c2c',
     marginBottom: SPACING.xs,
   },
   label: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: '#666',
     marginBottom: SPACING.lg,
   },
   input: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#d4a574', // Tan border
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
     fontSize: FONT_SIZES.lg,
-    color: COLORS.text,
+    color: '#2c2c2c',
     marginBottom: SPACING.xl,
   },
   button: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#c99d6a', // Brown
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
     alignItems: 'center',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: FONT_SIZES.lg,
     fontWeight: '700',
-    color: COLORS.white,
+    color: '#fff',
   },
   statusSection: {
     alignItems: 'center',
@@ -197,15 +197,15 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: '#666',
     textAlign: 'center',
   },
   statusTextSuccess: {
-    color: COLORS.success,
+    color: '#4caf50', // Green
     fontWeight: '600',
   },
   statusTextError: {
-    color: COLORS.danger,
+    color: '#d32f2f', // Red
     fontWeight: '600',
   },
 });

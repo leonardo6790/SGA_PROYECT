@@ -4,7 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
 import { 
-  LoginScreen, 
+  PublicHomeScreen,
+  PublicCatalogScreen,
+  PrivateLoginScreen,
   HomeScreen, 
   ProfileScreen,
   InventoryScreen,
@@ -16,13 +18,71 @@ import {
   AddArticleScreen,
   CatalogScreen,
   MyOrdersScreen,
+  AdminReportsScreen,
 } from '../screens';
 import { COLORS } from '../utils/constants';
-import { ActivityIndicator, View, Text } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity } from 'react-native';
+import { PublicHeader } from '../components/PublicHeader';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// ===== NAVEGACIÓN PÚBLICA (sin login) =====
+const PublicStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: '#9b59b6',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <Stack.Screen 
+        name="PublicHome"
+        component={PublicHomeScreen}
+        options={({ navigation }) => ({
+          title: 'SGA',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PrivateLogin')}
+              style={{ marginRight: 15 }}
+            >
+              <Text style={{ fontSize: 18, color: '#fff', fontWeight: 'bold' }}>👤 Login</Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <Stack.Screen 
+        name="PublicCatalog"
+        component={PublicCatalogScreen}
+        options={({ navigation }) => ({
+          title: 'Catálogo',
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PrivateLogin')}
+              style={{ marginRight: 15 }}
+            >
+              <Text style={{ fontSize: 18, color: '#fff', fontWeight: 'bold' }}>👤 Login</Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <Stack.Screen 
+        name="PrivateLogin"
+        component={PrivateLoginScreen}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+// ===== NAVEGACIÓN DE VENDEDOR/ADMIN (con login) =====
 // Tabs para ADMIN/Vendedor
 const SellerTabNavigator = () => {
   return (
@@ -71,63 +131,12 @@ const SellerTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="Reports"
+        component={AdminReportsScreen}
         options={{
-          tabBarLabel: 'Perfil',
+          tabBarLabel: 'Reportes',
           tabBarIcon: ({ size }) => (
-            <Text style={{ fontSize: size }}>👤</Text>
-          ),
-          headerTitle: 'Mi Perfil',
-        }}
-      />
-    </Tab.Navigator>
-  );
-};
-
-// Tabs para Cliente (vista simplificada)
-const CustomerTabNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.gray,
-        tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.border,
-          borderTopWidth: 1,
-        },
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Inicio',
-          tabBarIcon: ({ size }) => (
-            <Text style={{ fontSize: size }}>🏠</Text>
-          ),
-          headerTitle: 'SGA - Sistema de Gestión de Alquileres',
-        }}
-      />
-      <Tab.Screen
-        name="Catalog"
-        component={CatalogScreen}
-        options={{
-          tabBarLabel: 'Catálogo',
-          tabBarIcon: ({ size }) => (
-            <Text style={{ fontSize: size }}>🏪</Text>
-          ),
-          headerTitle: 'Catálogo de Productos',
-        }}
-      />
-      <Tab.Screen
-        name="MyOrders"
-        component={MyOrdersScreen}
-        options={{
-          tabBarLabel: 'Mis Pedidos',
-          tabBarIcon: ({ size }) => (
-            <Text style={{ fontSize: size }}>📦</Text>
+            <Text style={{ fontSize: size }}>📊</Text>
           ),
           headerShown: false,
         }}
@@ -156,7 +165,7 @@ const MainStack = () => {
     <Stack.Navigator>
       <Stack.Screen 
         name="MainTabs" 
-        component={isAdminOrSeller ? SellerTabNavigator : CustomerTabNavigator}
+        component={isAdminOrSeller ? SellerTabNavigator : ProfileScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -208,9 +217,17 @@ export const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
-          <Stack.Screen name="Main" component={MainStack} />
+          <Stack.Screen 
+            name="Main" 
+            component={MainStack}
+            options={{ animationEnabled: false }}
+          />
         ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen 
+            name="Public" 
+            component={PublicStack}
+            options={{ animationEnabled: false }}
+          />
         )}
       </Stack.Navigator>
     </NavigationContainer>
