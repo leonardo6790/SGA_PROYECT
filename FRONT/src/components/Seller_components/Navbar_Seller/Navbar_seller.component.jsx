@@ -49,7 +49,7 @@ const NavbarSeller = () => {
               <p className="user-email">{user?.email || "-"}</p>
             </div>
             <hr />
-            <Link to="#" className="dropdown-link">Ver perfil</Link>
+            <Link to="/home-seller/profile" className="dropdown-link">Ver perfil</Link>
             <button
               className="dropdown-link"
               onClick={(e) => {

@@ -463,7 +463,7 @@
   
   .vendedores-report-header,
   .report-body-vendedores {
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(8, 1fr);
     font-size: 12px;
   }
 }
@@ -552,7 +552,7 @@
 /* Header simétrico para vendedores */
 .vendedores-report-header {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 12px;
   font-weight: bold;
   padding: 18px 20px;
@@ -573,11 +573,50 @@
 
 .report-body-vendedores {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 12px;
   align-items: center;
   padding: 18px 20px;
   border-bottom: 1px solid #eee;
+}
+
+/* Estilos para acciones de vendedor */
+.vendedor-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
 }
 
 /* Modal de crear vendedor */

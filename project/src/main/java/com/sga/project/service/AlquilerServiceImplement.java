@@ -119,6 +119,19 @@ public class AlquilerServiceImplement implements AlquilerService {
             }
         }
         
+        // Verificar si el alquiler tiene artículos, si no tiene, eliminarlo automáticamente
+        List<AlquilerArticulos> articulosGuardados = alquiArtiRepo.findByAlquilerId(alquiGuardado.getId());
+        if (articulosGuardados == null || articulosGuardados.isEmpty()) {
+            // Eliminar pagos si existen
+            List<Pago> pagos = pagoRepo.findByAlquilerId(alquiGuardado.getId());
+            if (pagos != null && !pagos.isEmpty()) {
+                pagoRepo.deleteAll(pagos);
+            }
+            // Eliminar el alquiler
+            alquiRepo.delete(alquiGuardado);
+            throw new IllegalStateException("No se puede crear un alquiler sin artículos. El alquiler ha sido eliminado.");
+        }
+        
         // Recargar el alquiler para retornarlo
         Alquiler alquilerCompleto = alquiRepo.findById(alquiGuardado.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Alquiler no encontrado"));

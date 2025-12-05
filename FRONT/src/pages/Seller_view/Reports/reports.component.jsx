@@ -5,10 +5,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
 import { obtenerTodosLosPagos } from "../../../api/pagoApi";
-import { obtenerUsuario, crearUsuario } from "../../../api/usuariosApi";
+import { obtenerUsuario, crearUsuario, editarUsuario, eliminarUsuario } from "../../../api/usuariosApi";
 import { obtenerBarrios } from "../../../api/barriosApi";
 import { obtenerTiposDoc } from "../../../api/tipoDocApi";
-import { HiEye, HiPlus } from "react-icons/hi2";
+import { HiEye, HiPlus, HiPencil, HiTrash } from "react-icons/hi2";
 
 const Reports = () => {
   const [alquileres, setAlquileres] = useState([]);
@@ -22,6 +22,8 @@ const Reports = () => {
   const [viewingDetail, setViewingDetail] = useState(null);
   const [vendedores, setVendedores] = useState([]);
   const [showCreateVendedorModal, setShowCreateVendedorModal] = useState(false);
+  const [showEditVendedorModal, setShowEditVendedorModal] = useState(false);
+  const [editingVendedor, setEditingVendedor] = useState(null);
   const [barrios, setBarrios] = useState([]);
   const [tiposDoc, setTiposDoc] = useState([]);
   const [newVendedorData, setNewVendedorData] = useState({
@@ -37,6 +39,21 @@ const Reports = () => {
     idBarrio: null,
     idTipoDoc: null,
     idRol: 2 // 2 = VENDEDOR
+  });
+  const [editVendedorData, setEditVendedorData] = useState({
+    numDocumento: "",
+    nombre1: "",
+    nombre2: "",
+    apellido1: "",
+    apellido2: "",
+    dire: "",
+    tele: "",
+    correoElectronico: "",
+    contra: "",
+    idBarrio: null,
+    idTipoDoc: null,
+    activo: true,
+    idRol: 2
   });
 
   useEffect(() => {
@@ -426,6 +443,122 @@ const Reports = () => {
     }
   };
 
+  const handleOpenEditVendedorModal = (vendedor) => {
+    // Buscar el vendedor completo en la lista original
+    const vendedorCompleto = vendedores.find(v => v.numDocumento === vendedor.numDocumento);
+    
+    if (vendedorCompleto) {
+      setEditingVendedor(vendedorCompleto);
+      setEditVendedorData({
+        numDocumento: vendedorCompleto.numDocumento,
+        nombre1: vendedorCompleto.nombre1 || "",
+        nombre2: vendedorCompleto.nombre2 || "",
+        apellido1: vendedorCompleto.apellido1 || "",
+        apellido2: vendedorCompleto.apellido2 || "",
+        dire: vendedorCompleto.dire || "",
+        tele: vendedorCompleto.tele || "",
+        correoElectronico: vendedorCompleto.correoElectronico || "",
+        contra: "", // No mostrar la contraseña anterior
+        idBarrio: vendedorCompleto.idBarrio || null,
+        idTipoDoc: vendedorCompleto.idTipoDoc || null,
+        activo: vendedorCompleto.activo,
+        idRol: 2
+      });
+      setShowEditVendedorModal(true);
+    }
+  };
+
+  const handleCloseEditVendedorModal = () => {
+    setShowEditVendedorModal(false);
+    setEditingVendedor(null);
+    setEditVendedorData({
+      numDocumento: "",
+      nombre1: "",
+      nombre2: "",
+      apellido1: "",
+      apellido2: "",
+      dire: "",
+      tele: "",
+      correoElectronico: "",
+      contra: "",
+      idBarrio: null,
+      idTipoDoc: null,
+      activo: true,
+      idRol: 2
+    });
+  };
+
+  const handleEditVendedor = async (e) => {
+    e.preventDefault();
+    
+    if (!editVendedorData.nombre1 || !editVendedorData.apellido1 || 
+        !editVendedorData.correoElectronico || !editVendedorData.tele) {
+      alert("Por favor complete los campos obligatorios");
+      return;
+    }
+
+    try {
+      const vendedorData = {
+        numDocumento: parseInt(editVendedorData.numDocumento),
+        nombre1: editVendedorData.nombre1.trim(),
+        nombre2: editVendedorData.nombre2.trim() || null,
+        apellido1: editVendedorData.apellido1.trim(),
+        apellido2: editVendedorData.apellido2.trim() || null,
+        dire: editVendedorData.dire.trim() || null,
+        tele: parseInt(editVendedorData.tele),
+        correoElectronico: editVendedorData.correoElectronico.trim(),
+        activo: editVendedorData.activo,
+        idBarrio: editVendedorData.idBarrio ? parseInt(editVendedorData.idBarrio) : null,
+        idTipoDoc: editVendedorData.idTipoDoc ? parseInt(editVendedorData.idTipoDoc) : null,
+        idRol: 2
+      };
+      
+      // Solo incluir contraseña si se proporcionó una nueva
+      if (editVendedorData.contra && editVendedorData.contra.trim()) {
+        vendedorData.contra = editVendedorData.contra;
+      }
+      
+      await editarUsuario(editVendedorData.numDocumento, vendedorData);
+      
+      // Recargar vendedores
+      const vendedoresActualizados = await obtenerUsuario();
+      setVendedores(vendedoresActualizados);
+      
+      // Actualizar reporte si estamos en el tab de vendedores
+      if (activeTab === 'vendedores') {
+        await procesarReportes(alquileres);
+      }
+      
+      handleCloseEditVendedorModal();
+      alert("Vendedor actualizado exitosamente");
+    } catch (error) {
+      console.error("Error al editar vendedor:", error);
+      alert(`Error al editar el vendedor: ${error.message}`);
+    }
+  };
+
+  const handleDeleteVendedor = async (numDocumento) => {
+    if (window.confirm(`¿Está seguro de que desea eliminar este vendedor (Doc: ${numDocumento})?`)) {
+      try {
+        await eliminarUsuario(numDocumento);
+        
+        // Recargar vendedores
+        const vendedoresActualizados = await obtenerUsuario();
+        setVendedores(vendedoresActualizados);
+        
+        // Actualizar reporte si estamos en el tab de vendedores
+        if (activeTab === 'vendedores') {
+          await procesarReportes(alquileres);
+        }
+        
+        alert("Vendedor eliminado exitosamente");
+      } catch (error) {
+        console.error("Error al eliminar vendedor:", error);
+        alert(`Error al eliminar el vendedor: ${error.message}`);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="reports-wrapper">
@@ -694,6 +827,7 @@ const Reports = () => {
                   <span>Dirección</span>
                   <span>Barrio</span>
                   <span>Estado</span>
+                  <span>Acciones</span>
                 </div>
               </div>
               {filteredData.length > 0 ? (
@@ -708,6 +842,23 @@ const Reports = () => {
                       <span className="report-field">{vendedor.barrio}</span>
                       <span className={`report-field status-badge ${vendedor.activo ? 'completed' : 'pending'}`}>
                         {vendedor.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                      
+                      <span className="report-field vendedor-actions">
+                        <button 
+                          className="action-btn edit-btn" 
+                          onClick={() => handleOpenEditVendedorModal(vendedor)}
+                          title="Editar"
+                        >
+                          <HiPencil />
+                        </button>
+                        <button 
+                          className="action-btn delete-btn" 
+                          onClick={() => handleDeleteVendedor(vendedor.numDocumento)}
+                          title="Eliminar"
+                        >
+                          <HiTrash />
+                        </button>
                       </span>
                     </div>
                   </div>
@@ -894,6 +1045,153 @@ const Reports = () => {
             <div className="modal-buttons">
               <button type="submit" className="submit-btn">Crear Vendedor</button>
               <button type="button" className="cancel-btn" onClick={handleCloseCreateVendedorModal}>
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Modal de editar vendedor */}
+      {showEditVendedorModal && (
+        <div className="modal-overlay" onClick={handleCloseEditVendedorModal}>
+          <form className="modal-content vendedor-modal" onSubmit={handleEditVendedor} onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modal-close" onClick={handleCloseEditVendedorModal}>×</button>
+            <h2>Editar Vendedor</h2>
+            
+            <div className="vendedor-form-grid">
+              <div className="form-field">
+                <label>Número de Documento</label>
+                <input
+                  type="text"
+                  value={editVendedorData.numDocumento}
+                  disabled
+                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Tipo de Documento</label>
+                <select
+                  value={editVendedorData.idTipoDoc || ""}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, idTipoDoc: e.target.value })}
+                >
+                  <option value="">Seleccione</option>
+                  {tiposDoc.map(tipo => (
+                    <option key={tipo.id_tipoDoc} value={tipo.id_tipoDoc}>
+                      {tipo.nomDoc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Primer Nombre *</label>
+                <input
+                  type="text"
+                  value={editVendedorData.nombre1}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, nombre1: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Segundo Nombre</label>
+                <input
+                  type="text"
+                  value={editVendedorData.nombre2}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, nombre2: e.target.value })}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Primer Apellido *</label>
+                <input
+                  type="text"
+                  value={editVendedorData.apellido1}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, apellido1: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Segundo Apellido</label>
+                <input
+                  type="text"
+                  value={editVendedorData.apellido2}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, apellido2: e.target.value })}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Correo Electrónico *</label>
+                <input
+                  type="email"
+                  value={editVendedorData.correoElectronico}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, correoElectronico: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Teléfono *</label>
+                <input
+                  type="number"
+                  value={editVendedorData.tele}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, tele: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Nueva Contraseña (dejar vacío para mantener la actual)</label>
+                <input
+                  type="password"
+                  value={editVendedorData.contra}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, contra: e.target.value })}
+                  placeholder="Nueva contraseña (opcional)"
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Dirección</label>
+                <input
+                  type="text"
+                  value={editVendedorData.dire}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, dire: e.target.value })}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Barrio</label>
+                <select
+                  value={editVendedorData.idBarrio || ""}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, idBarrio: e.target.value })}
+                >
+                  <option value="">Seleccione</option>
+                  {barrios.map(barrio => (
+                    <option key={barrio.idBarrio} value={barrio.idBarrio}>
+                      {barrio.nombreBarrio}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label>Estado</label>
+                <select
+                  value={editVendedorData.activo ? "true" : "false"}
+                  onChange={(e) => setEditVendedorData({ ...editVendedorData, activo: e.target.value === "true" })}
+                >
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="modal-buttons">
+              <button type="submit" className="submit-btn">Actualizar Vendedor</button>
+              <button type="button" className="cancel-btn" onClick={handleCloseEditVendedorModal}>
                 Cancelar
               </button>
             </div>
