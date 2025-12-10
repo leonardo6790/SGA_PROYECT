@@ -299,6 +299,36 @@
   border-bottom: 1px solid #eee;
 }
 
+.report-header-pagos {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1fr 0.8fr 1fr;
+  gap: 12px;
+  font-weight: bold;
+  padding: 18px 20px;
+  border-bottom: 2px solid #e0e0e0;
+  background-color: #f8f9fa;
+  align-items: center;
+}
+
+.report-header-pagos span {
+  text-align: center;
+  font-size: 13px;
+  color: #555;
+  word-wrap: break-word;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-body-pagos {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr 1fr 0.8fr 1fr 1fr 0.8fr 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
+}
+
 .report-field {
   padding: 8px 5px;
   text-align: center;
@@ -659,6 +689,94 @@
 
 .cancel-btn:hover {
   background: #e5e7eb;
+}
+
+/* Modal de pagos */
+.modal-pagos {
+  max-width: 700px;
+  width: 95%;
+}
+
+.pagos-table {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.pagos-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pagos-table thead {
+  background-color: #f8f9fa;
+}
+
+.pagos-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.pagos-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  font-size: 14px;
+}
+
+.pagos-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.pagos-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Clases de colores para textos */
+.text-success {
+  color: #10b981 !important;
+  font-weight: 600;
+}
+
+.text-warning {
+  color: #f59e0b !important;
+  font-weight: 600;
+}
+
+.text-danger {
+  color: #ef4444 !important;
+  font-weight: 600;
+}
+
+/* Estilos para botón Ver Pagos */
+.view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  background-color: #5dade2;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-btn:hover {
+  background-color: #3498db;
+  transform: scale(1.05);
 }
 
 @media (max-width: 768px) {

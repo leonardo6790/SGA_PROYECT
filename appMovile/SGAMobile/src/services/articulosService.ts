@@ -1,12 +1,12 @@
 import api from '../api/axiosConfig';
 import { Articulo, ArticuloBackend, Categoria } from '../types';
-import { API_BASE_URL } from '../utils/constants';
+import { SERVER_BASE_URL } from '../utils/constants';
 
 // Mapper para convertir ArticuloBackend a Articulo
 const mapArticuloBackendToArticulo = (backendArticulo: ArticuloBackend): Articulo => {
   // Construir URL completa de la foto si existe
   const fotoUrl = backendArticulo.fotoArt 
-    ? `${API_BASE_URL}${backendArticulo.fotoArt}`
+    ? `${SERVER_BASE_URL}${backendArticulo.fotoArt}`
     : undefined;
 
   return {

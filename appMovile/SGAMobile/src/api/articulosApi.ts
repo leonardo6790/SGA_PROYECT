@@ -1,4 +1,5 @@
 import { api } from './axiosConfig';
+import { SERVER_BASE_URL } from '../utils/constants';
 
 export interface Articulo {
   idArt: number;
@@ -28,7 +29,12 @@ export interface ArticuloCreate {
 export const obtenerArticulos = async (): Promise<Articulo[]> => {
   try {
     const response = await api.get('/articulos');
-    return response.data;
+    // Transformar URLs de fotos
+    const articulos = response.data.map((art: Articulo) => ({
+      ...art,
+      fotoArt: art.fotoArt ? `${SERVER_BASE_URL}${art.fotoArt}` : ''
+    }));
+    return articulos;
   } catch (error) {
     console.error('Error al obtener artículos:', error);
     throw error;
@@ -39,7 +45,12 @@ export const obtenerArticulos = async (): Promise<Articulo[]> => {
 export const obtenerArticuloPorId = async (id: number): Promise<Articulo> => {
   try {
     const response = await api.get(`/articulos/ConsultarById/${id}`);
-    return response.data;
+    const articulo = response.data;
+    // Transformar URL de foto
+    if (articulo.fotoArt) {
+      articulo.fotoArt = `${SERVER_BASE_URL}${articulo.fotoArt}`;
+    }
+    return articulo;
   } catch (error) {
     console.error('Error al obtener artículo:', error);
     throw error;

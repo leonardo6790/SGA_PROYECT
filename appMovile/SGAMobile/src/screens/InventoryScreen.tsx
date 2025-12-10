@@ -224,7 +224,7 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color="#8B6F47" />
         <Text style={styles.loadingText}>Cargando inventario...</Text>
       </View>
     );
@@ -232,10 +232,10 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={gradients.purple} style={styles.header}>
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>📦 Inventario</Text>
         <Text style={styles.headerSubtitle}>{articulos.length} artículos</Text>
-      </LinearGradient>
+      </View>
 
       <View style={styles.content}>
         {/* Search and Filters */}
@@ -306,9 +306,9 @@ export default function InventoryScreen({ navigation }: InventoryScreenProps) {
             }
           }}
         >
-          <LinearGradient colors={gradients.primary} style={styles.fabGradient}>
+          <View style={styles.fabGradient}>
             <Text style={styles.fabText}>+</Text>
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -592,16 +592,17 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxl + 20,
     borderBottomLeftRadius: borderRadius.xl,
     borderBottomRightRadius: borderRadius.xl,
+    backgroundColor: '#f5ead6', // Beige
   },
   headerTitle: {
     fontSize: fontSizes.xxxl,
     fontWeight: 'bold',
-    color: colors.textWhite,
+    color: colors.textPrimary,
   },
   headerSubtitle: {
     fontSize: fontSizes.md,
-    color: colors.textWhite,
-    opacity: 0.9,
+    color: colors.textSecondary,
+    opacity: 0.8,
     marginTop: spacing.xs,
   },
   content: {
@@ -625,8 +626,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   categoryChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#8B6F47',
+    borderColor: '#8B6F47',
   },
   categoryText: {
     fontSize: fontSizes.sm,
@@ -692,7 +693,7 @@ const styles = StyleSheet.create({
   articlePrice: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.primary,
+    color: '#8B6F47',
   },
   statusBadge: {
     paddingHorizontal: spacing.sm,
@@ -735,6 +736,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#8B6F47',
   },
   fabText: {
     fontSize: 32,
@@ -782,8 +784,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   categoryOptionActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#8B6F47',
+    borderColor: '#8B6F47',
   },
   categoryOptionText: {
     fontSize: fontSizes.sm,
@@ -830,6 +832,6 @@ const styles = StyleSheet.create({
   detailPrice: {
     fontSize: fontSizes.xl,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: '#8B6F47',
   },
 });

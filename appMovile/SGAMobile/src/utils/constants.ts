@@ -5,6 +5,11 @@
 export const API_BASE_URL = 'http://10.0.2.2:8080/api'; // Para emulador de Android
 // export const API_BASE_URL = 'http://localhost:8080/api'; // Para desarrollo web
 
+// URL base del servidor (sin /api) para archivos estáticos como imágenes
+// export const SERVER_BASE_URL = 'http://192.168.40.148:8080'; // Para dispositivo físico y Expo Go
+export const SERVER_BASE_URL = 'http://10.0.2.2:8080'; // Para emulador de Android
+// export const SERVER_BASE_URL = 'http://localhost:8080'; // Para desarrollo web
+
 // AsyncStorage Keys
 export const STORAGE_KEYS = {
   TOKEN: '@sga_token',

@@ -4,7 +4,7 @@ import NavbarSeller from "../../../components/Seller_components/Navbar_Seller/Na
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { obtenerAlquileres } from "../../../api/alquilerApi";
-import { obtenerTodosLosPagos } from "../../../api/pagoApi";
+import { obtenerTodosLosPagos, obtenerPagosPorAlquiler } from "../../../api/pagoApi";
 import { obtenerUsuario, crearUsuario } from "../../../api/usuariosApi";
 import { obtenerBarrios } from "../../../api/barriosApi";
 import { obtenerTiposDoc } from "../../../api/tipoDocApi";
@@ -21,6 +21,11 @@ const Reports = () => {
   const [reportData, setReportData] = useState([]);
   const [viewingDetail, setViewingDetail] = useState(null);
   const [vendedores, setVendedores] = useState([]);
+  const [showPagosModal, setShowPagosModal] = useState(false);
+  const [pagosPorAlquiler, setPagosPorAlquiler] = useState([]);
+  const [alquilerSeleccionado, setAlquilerSeleccionado] = useState(null);
+  const [pagosAlquilerDetalle, setPagosAlquilerDetalle] = useState([]);
+  const [loadingPagosDetalle, setLoadingPagosDetalle] = useState(false);
   const [showCreateVendedorModal, setShowCreateVendedorModal] = useState(false);
   const [barrios, setBarrios] = useState([]);
   const [tiposDoc, setTiposDoc] = useState([]);
@@ -99,21 +104,42 @@ const Reports = () => {
       }));
       setReportData(reporteAlquileres);
     } else if (activeTab === 'pagos') {
-      // Crear reporte de pagos - Obtener TODOS los pagos de una sola vez
+      // Crear reporte de pagos - AGRUPAR por ID de alquiler
       try {
         const todosPagos = await obtenerTodosLosPagos();
-        const reportePagos = todosPagos.map(pago => ({
-          idPago: pago.idPago,
-          idAlquiler: pago.alquiler?.id_alquiler || pago.idAlquiler,
-          clienteDoc: pago.alquiler?.clienteDoc || 'N/A',
-          nombreCliente: pago.alquiler?.articulos && pago.alquiler.articulos.length > 0 
-            ? pago.alquiler.articulos[0].nomCliente 
-            : 'N/A',
-          montoPago: pago.valAbo || pago.valorAbono || pago.montoPago,
-          fechaPago: pago.fechaUltimoAbono || pago.fechaPago,
-          metodoPago: pago.metodoPago || 'Efectivo',
-          totalAlquiler: pago.alquiler?.totalAlquiler || 0
-        }));
+        
+        // Agrupar pagos por idAlquiler
+        const pagosAgrupados = todosPagos.reduce((acc, pago) => {
+          const idAlquiler = pago.alquiler?.id_alquiler || pago.idAlquiler;
+          
+          if (!acc[idAlquiler]) {
+            acc[idAlquiler] = {
+              idAlquiler: idAlquiler,
+              clienteDoc: pago.alquiler?.clienteDoc || 'N/A',
+              nombreCliente: pago.alquiler?.articulos && pago.alquiler.articulos.length > 0 
+                ? pago.alquiler.articulos[0].nomCliente 
+                : 'N/A',
+              totalAlquiler: pago.alquiler?.totalAlquiler || 0,
+              cantidadPagos: 0,
+              totalPagado: 0,
+              pagos: []
+            };
+          }
+          
+          acc[idAlquiler].cantidadPagos++;
+          acc[idAlquiler].totalPagado += (pago.valAbo || pago.valorAbono || 0);
+          acc[idAlquiler].pagos.push({
+            idPago: pago.idPago,
+            montoPago: pago.valAbo || pago.valorAbono || 0,
+            fechaPago: pago.fechaUltimoAbono || pago.fechaPago,
+            metodoPago: pago.metodoPago || 'Efectivo'
+          });
+          
+          return acc;
+        }, {});
+        
+        // Convertir objeto a array
+        const reportePagos = Object.values(pagosAgrupados);
         setReportData(reportePagos);
       } catch (error) {
         console.error("Error al cargar pagos:", error);
@@ -271,7 +297,7 @@ const Reports = () => {
         pendientes
       };
     } else if (activeTab === 'pagos') {
-      const total = filteredData.reduce((sum, item) => sum + (item.montoPago || 0), 0);
+      const total = filteredData.reduce((sum, item) => sum + (item.totalPagado || 0), 0);
       
       return {
         total: filteredData.length,
@@ -290,12 +316,38 @@ const Reports = () => {
 
   const stats = calcularEstadisticas();
 
-  const handleViewDetail = (item) => {
+  const handleViewDetail = async (item) => {
     setViewingDetail(item);
+    setLoadingPagosDetalle(true);
+    setPagosAlquilerDetalle([]);
+    
+    // Cargar los pagos del alquiler
+    try {
+      const pagos = await obtenerPagosPorAlquiler(item.id);
+      setPagosAlquilerDetalle(pagos || []);
+    } catch (error) {
+      console.error("Error al cargar pagos del alquiler:", error);
+      setPagosAlquilerDetalle([]);
+    } finally {
+      setLoadingPagosDetalle(false);
+    }
   };
 
   const closeDetailModal = () => {
     setViewingDetail(null);
+    setPagosAlquilerDetalle([]);
+  };
+
+  const handleViewPagos = (alquiler) => {
+    setAlquilerSeleccionado(alquiler);
+    setPagosPorAlquiler(alquiler.pagos || []);
+    setShowPagosModal(true);
+  };
+
+  const closePagosModal = () => {
+    setShowPagosModal(false);
+    setAlquilerSeleccionado(null);
+    setPagosPorAlquiler([]);
   };
 
   const handleOpenCreateVendedorModal = () => {
@@ -606,29 +658,35 @@ const Reports = () => {
           ) : activeTab === 'pagos' ? (
             <>
               <div className="report-card">
-                <div className="report-header">
-                  <span>ID Pago</span>
+                <div className="report-header-pagos">
                   <span>ID Alquiler</span>
                   <span>Cliente</span>
                   <span>Documento</span>
-                  <span>Monto</span>
-                  <span>Fecha Pago</span>
-                  <span>Método</span>
+                  <span>Cant. Pagos</span>
+                  <span>Total Pagado</span>
                   <span>Total Alquiler</span>
+                  <span>Saldo</span>
+                  <span>Acciones</span>
                 </div>
               </div>
               {filteredData.length > 0 ? (
-                filteredData.map((pago) => (
-                  <div key={pago.idPago} className="report-card">
-                    <div className="report-body-payments">
-                      <span className="report-field">{pago.idPago}</span>
-                      <span className="report-field">{pago.idAlquiler}</span>
-                      <span className="report-field">{pago.nombreCliente}</span>
-                      <span className="report-field">{pago.clienteDoc}</span>
-                      <span className="report-field">${pago.montoPago?.toLocaleString()}</span>
-                      <span className="report-field">{pago.fechaPago}</span>
-                      <span className="report-field">{pago.metodoPago}</span>
-                      <span className="report-field">${pago.totalAlquiler?.toLocaleString()}</span>
+                filteredData.map((alquiler) => (
+                  <div key={alquiler.idAlquiler} className="report-card">
+                    <div className="report-body-pagos">
+                      <span className="report-field">{alquiler.idAlquiler}</span>
+                      <span className="report-field">{alquiler.nombreCliente}</span>
+                      <span className="report-field">{alquiler.clienteDoc}</span>
+                      <span className="report-field">{alquiler.cantidadPagos}</span>
+                      <span className="report-field">${alquiler.totalPagado?.toLocaleString()}</span>
+                      <span className="report-field">${alquiler.totalAlquiler?.toLocaleString()}</span>
+                      <span className={`report-field ${alquiler.totalPagado >= alquiler.totalAlquiler ? 'text-success' : 'text-warning'}`}>
+                        ${(alquiler.totalAlquiler - alquiler.totalPagado)?.toLocaleString()}
+                      </span>
+                      <span className="report-field">
+                        <button className="view-btn" onClick={() => handleViewPagos(alquiler)}>
+                          <HiEye /> Ver Pagos
+                        </button>
+                      </span>
                     </div>
                   </div>
                 ))
@@ -756,6 +814,99 @@ const Reports = () => {
                 ) : (
                   <p>No hay artículos</p>
                 )}
+              </div>
+            </div>
+
+            <div className="detail-section">
+              <h3>Pagos Realizados</h3>
+              {loadingPagosDetalle ? (
+                <p>Cargando pagos...</p>
+              ) : pagosAlquilerDetalle && pagosAlquilerDetalle.length > 0 ? (
+                <>
+                  <table className="pagos-table">
+                    <thead>
+                      <tr>
+                        <th>ID Pago</th>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Método</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pagosAlquilerDetalle.map((pago) => (
+                        <tr key={pago.idPago}>
+                          <td>#{pago.idPago}</td>
+                          <td>{pago.fechaUltimoAbono ? new Date(pago.fechaUltimoAbono).toLocaleDateString('es-CO') : 'N/A'}</td>
+                          <td>${(pago.valAbo || pago.valorAbono || 0).toLocaleString()}</td>
+                          <td>{pago.metodoPago || 'N/A'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ddd' }}>
+                    <p><strong>Total Pagado:</strong> ${pagosAlquilerDetalle.reduce((sum, p) => sum + (p.valAbo || p.valorAbono || 0), 0).toLocaleString()}</p>
+                    <p><strong>Saldo Pendiente:</strong> 
+                      <span className={viewingDetail.totalAlquiler - pagosAlquilerDetalle.reduce((sum, p) => sum + (p.valAbo || p.valorAbono || 0), 0) > 0 ? 'text-warning' : 'text-success'}>
+                        ${(viewingDetail.totalAlquiler - pagosAlquilerDetalle.reduce((sum, p) => sum + (p.valAbo || p.valorAbono || 0), 0)).toLocaleString()}
+                      </span>
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p>No hay pagos registrados para este alquiler</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de pagos por alquiler */}
+      {showPagosModal && alquilerSeleccionado && (
+        <div className="modal-overlay" onClick={closePagosModal}>
+          <div className="modal-content modal-pagos" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closePagosModal}>×</button>
+            <h2>Pagos del Alquiler #{alquilerSeleccionado.idAlquiler}</h2>
+            
+            <div className="detail-section">
+              <h3>Información del Cliente</h3>
+              <p><strong>Nombre:</strong> {alquilerSeleccionado.nombreCliente}</p>
+              <p><strong>Documento:</strong> {alquilerSeleccionado.clienteDoc}</p>
+            </div>
+
+            <div className="detail-section">
+              <h3>Resumen de Pagos</h3>
+              <p><strong>Total Alquiler:</strong> ${alquilerSeleccionado.totalAlquiler?.toLocaleString()}</p>
+              <p><strong>Total Pagado:</strong> ${alquilerSeleccionado.totalPagado?.toLocaleString()}</p>
+              <p><strong>Saldo Pendiente:</strong> 
+                <span className={alquilerSeleccionado.totalPagado >= alquilerSeleccionado.totalAlquiler ? 'text-success' : 'text-warning'}>
+                  ${(alquilerSeleccionado.totalAlquiler - alquilerSeleccionado.totalPagado)?.toLocaleString()}
+                </span>
+              </p>
+            </div>
+
+            <div className="detail-section">
+              <h3>Detalle de Pagos ({pagosPorAlquiler.length})</h3>
+              <div className="pagos-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID Pago</th>
+                      <th>Fecha</th>
+                      <th>Monto</th>
+                      <th>Método</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagosPorAlquiler.map((pago) => (
+                      <tr key={pago.idPago}>
+                        <td>{pago.idPago}</td>
+                        <td>{pago.fechaPago}</td>
+                        <td>${pago.montoPago?.toLocaleString()}</td>
+                        <td>{pago.metodoPago}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

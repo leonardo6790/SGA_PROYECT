@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { obtenerCategorias } from '../api/categoriasApi';
-import { COLORS, SPACING, FONT_SIZES, BORDER_RADIUS, API_BASE_URL } from '../utils/constants';
+import { colors, spacing, fontSizes, borderRadius, shadows } from '../theme/colors';
+import { SERVER_BASE_URL } from '../utils/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const AddArticleScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -198,16 +199,21 @@ export const AddArticleScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   if (loadingCategorias) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color="#8B6F47" />
         <Text style={styles.loadingText}>Cargando...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🎯 Agregar Artículo</Text>
+        <Text style={styles.headerSubtitle}>Completa la información del nuevo artículo</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Agregar Artículo</Text>
 
         {/* Foto */}
         <View style={styles.card}>
@@ -318,150 +324,167 @@ export const AddArticleScreen: React.FC<{ navigation: any }> = ({ navigation }) 
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={COLORS.white} />
+              <ActivityIndicator color={colors.textWhite} />
             ) : (
               <Text style={styles.submitButtonText}>Crear Artículo</Text>
             )}
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.backgroundGray,
+  },
+  header: {
+    padding: spacing.xl,
+    paddingTop: spacing.xxl + 20,
+    backgroundColor: '#f5ead6', // Beige
+    borderBottomLeftRadius: borderRadius.xl,
+    borderBottomRightRadius: borderRadius.xl,
+  },
+  headerTitle: {
+    fontSize: fontSizes.xxxl,
+    fontWeight: 'bold',
+    color: colors.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: fontSizes.md,
+    color: colors.textSecondary,
+    opacity: 0.8,
+    marginTop: spacing.xs,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.backgroundGray,
   },
   loadingText: {
-    marginTop: SPACING.md,
-    color: COLORS.textSecondary,
+    marginTop: spacing.md,
+    color: colors.textSecondary,
+    fontSize: fontSizes.md,
   },
   scrollContent: {
-    padding: SPACING.lg,
-  },
-  title: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: SPACING.lg,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   card: {
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    ...shadows.medium,
   },
   cardTitle: {
-    fontSize: FONT_SIZES.lg,
+    fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: SPACING.md,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
   },
   preview: {
     width: '100%',
     height: 200,
-    borderRadius: BORDER_RADIUS.md,
-    marginBottom: SPACING.md,
-    backgroundColor: COLORS.light,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.md,
+    backgroundColor: colors.gray100,
   },
   photoButtons: {
     flexDirection: 'row',
-    gap: SPACING.md,
+    gap: spacing.md,
   },
   photoButton: {
     flex: 1,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
+    ...shadows.small,
   },
   photoButtonPrimary: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#8B6F47',
   },
   photoButtonSecondary: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#A0826D',
   },
   photoButtonText: {
-    color: COLORS.white,
+    color: colors.textWhite,
     fontWeight: '600',
-    fontSize: FONT_SIZES.md,
+    fontSize: fontSizes.md,
   },
   label: {
-    fontSize: FONT_SIZES.sm,
+    fontSize: fontSizes.sm,
     fontWeight: '600',
-    color: COLORS.text,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.xs,
+    color: colors.textPrimary,
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
   },
   input: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.gray50,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    fontSize: FONT_SIZES.md,
-    color: COLORS.text,
+    borderColor: colors.gray200,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    fontSize: fontSizes.md,
+    color: colors.textPrimary,
   },
   pickerContainer: {
-    marginTop: SPACING.xs,
+    marginTop: spacing.xs,
   },
   categoryButton: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    marginRight: SPACING.sm,
-    backgroundColor: COLORS.light,
-    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+    backgroundColor: colors.gray100,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.gray200,
   },
   categoryButtonActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: '#8B6F47',
+    borderColor: '#8B6F47',
   },
   categoryButtonText: {
-    color: COLORS.text,
-    fontSize: FONT_SIZES.sm,
+    color: colors.textSecondary,
+    fontSize: fontSizes.sm,
     fontWeight: '500',
   },
   categoryButtonTextActive: {
-    color: COLORS.white,
+    color: colors.textWhite,
     fontWeight: '600',
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: SPACING.md,
-    marginTop: SPACING.md,
+    gap: spacing.md,
+    marginTop: spacing.md,
   },
   button: {
     flex: 1,
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
+    padding: spacing.md,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
+    ...shadows.small,
   },
   cancelButton: {
-    backgroundColor: COLORS.light,
+    backgroundColor: colors.gray200,
   },
   cancelButtonText: {
-    color: COLORS.text,
+    color: colors.textPrimary,
     fontWeight: '600',
-    fontSize: FONT_SIZES.md,
+    fontSize: fontSizes.md,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#8B6F47',
   },
   submitButtonDisabled: {
-    backgroundColor: COLORS.textSecondary,
+    backgroundColor: colors.gray400,
   },
   submitButtonText: {
-    color: COLORS.white,
+    color: colors.textWhite,
     fontWeight: '600',
-    fontSize: FONT_SIZES.md,
+    fontSize: fontSizes.md,
   },
 });

@@ -59,7 +59,7 @@ useEffect(() => {
       style={{ backgroundImage: `url(${HomeSellerImage})` }}
     >
       <div className="overlay"></div>
-      <div className="form-section">
+      <div className="form-section-new-rent">
         <h1 className="form-title">Bienvenido</h1>
         <h2 className="form-secondary-title">Por favor, Ingresa el documento</h2>
         <p className="form-secondary-subtitle">Cédula de Ciudadanía</p>
