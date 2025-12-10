@@ -37,3 +37,12 @@ export const editarUsuario = async (id, data) => {
     if (!res.ok) throw new Error("No se pudo editar el usuario");
     return await res.json();
 };
+
+export const eliminarUsuario = async (id) => {
+    const res = await fetch(`${BASE_URL}/eliminar/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("No se pudo eliminar el usuario");
+    return await res.json();
+};

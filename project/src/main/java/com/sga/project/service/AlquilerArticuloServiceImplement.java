@@ -67,8 +67,17 @@ public class AlquilerArticuloServiceImplement implements AlquilerArticuloService
             throw new EntityNotFoundException("Asignación no encontrada");
         }
         alquiArtiRepo.deleteById(id);
-        // Recalcular el total del alquiler después de eliminar
-        alquiServi.calcularTotalAlquiler(alquilerId);
+        
+        // Verificar si el alquiler todavía tiene artículos
+        List<AlquilerArticulos> articulosRestantes = alquiArtiRepo.findByAlquilerId(alquilerId);
+        
+        if (articulosRestantes == null || articulosRestantes.isEmpty()) {
+            // Si no quedan artículos, eliminar el alquiler automáticamente
+            alquiServi.deleteAlquiler(alquilerId);
+        } else {
+            // Si quedan artículos, recalcular el total del alquiler
+            alquiServi.calcularTotalAlquiler(alquilerId);
+        }
     }
 
     @Override
