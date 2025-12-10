@@ -54,8 +54,8 @@ public class AuthController {
                     .orElse("ROLE_VENDEDOR")
                     .replace("ROLE_", "");
 
-            // Generar el token JWT
-            String token = jwtUtil.generateToken(loginRequest.getCorreoElec(), rol);
+            // Generar el token JWT con numDocumento
+            String token = jwtUtil.generateToken(loginRequest.getCorreoElec(), rol, usuario.getNumDoc());
 
             // Crear la respuesta con todos los datos del usuario
             LoginResponse response = new LoginResponse(

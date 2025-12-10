@@ -38,7 +38,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/setup/**").permitAll() // Endpoint de configuración
                         .requestMatchers("/uploads/**").permitAll() // Permitir acceso a imágenes sin autenticación
                         
-                        // Endpoints solo para ADMIN
+                        // Endpoints público de USUARIOS
+                        .requestMatchers(HttpMethod.GET, "/api/usu/ConsultarById/**").hasAnyRole("ADMIN", "VENDEDOR", "CLIENTE")
+                        .requestMatchers(HttpMethod.PUT, "/api/usu/actualizar/**").hasAnyRole("ADMIN", "VENDEDOR", "CLIENTE")
+                        // Resto de operaciones en usuarios solo para ADMIN
                         .requestMatchers("/api/usu/**").hasRole("ADMIN")
                         
                         // ARTÍCULOS: Vendedor puede ver, crear y editar, pero NO eliminar

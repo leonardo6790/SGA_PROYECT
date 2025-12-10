@@ -77,30 +77,63 @@ public void deleteUsuario (Integer numDoc) {
 public UsuarioDto updateUsuario (UsuarioDto usuarioDto) {
     Usuario usu = usuRepo.findById(usuarioDto.getNumDocumento())
     .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
-    usu.setApe1(usuarioDto.getApellido1());
-    usu.setApe2(usuarioDto.getApellido2());
-    usu.setContraseña(usuarioDto.getContra());
-    usu.setCorreoElec(usuarioDto.getCorreoElectronico());
-    usu.setDireccion(usuarioDto.getDire());
-    usu.setNom1(usuarioDto.getNombre1());
-    usu.setNom2(usuarioDto.getNombre2());
-    usu.setNumTel(usuarioDto.getTele());
+    
+    // Actualizar campos básicos
+    if (usuarioDto.getNombre1() != null) {
+        usu.setNom1(usuarioDto.getNombre1());
+    }
+    if (usuarioDto.getNombre2() != null) {
+        usu.setNom2(usuarioDto.getNombre2());
+    }
+    if (usuarioDto.getApellido1() != null) {
+        usu.setApe1(usuarioDto.getApellido1());
+    }
+    if (usuarioDto.getApellido2() != null) {
+        usu.setApe2(usuarioDto.getApellido2());
+    }
+    if (usuarioDto.getTele() != null) {
+        usu.setNumTel(usuarioDto.getTele());
+    }
+    if (usuarioDto.getDire() != null) {
+        usu.setDireccion(usuarioDto.getDire());
+    }
+    if (usuarioDto.getCorreoElectronico() != null) {
+        usu.setCorreoElec(usuarioDto.getCorreoElectronico());
+    }
+    
+    // Actualizar contraseña solo si se proporciona
+    if (usuarioDto.getContra() != null && !usuarioDto.getContra().isEmpty()) {
+        // Si la contraseña está encriptada (contiene $2a$ de bcrypt), no re-encriptar
+        if (!usuarioDto.getContra().startsWith("$2a$")) {
+            usu.setContraseña(passwordEncoder.encode(usuarioDto.getContra()));
+        } else {
+            usu.setContraseña(usuarioDto.getContra());
+        }
+    }
     
     if (usuarioDto.getActivo() != null) {
         usu.setActivo(usuarioDto.getActivo());
     }
 
-    Rol rol = rolRepo.findById(usuarioDto.getIdRol())
-        .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado"));
-    usu.setRol(rol);
+    // Actualizar barrio si se proporciona
+    if (usuarioDto.getIdBarrio() != null) {
+        Barrio barrio = barRepo.findById(usuarioDto.getIdBarrio())
+            .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
+        usu.setBarrio(barrio);
+    }
 
-    Barrio barrio = barRepo.findById(usuarioDto.getIdBarrio())
-        .orElseThrow(() -> new EntityNotFoundException("Barrio no encontrado"));
-    usu.setBarrio(barrio);
-
-    TipoDoc tipDoc = tipDocRepo.findById(usuarioDto.getIdTipoDoc())
-        .orElseThrow(() -> new EntityNotFoundException("Tipo de documento no encontrado"));
+    // Solo actualizar rol y tipoDoc si se proporcionan (son opcionales en actualización)
+    if (usuarioDto.getIdRol() != null) {
+        Rol rol = rolRepo.findById(usuarioDto.getIdRol())
+            .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado"));
+        usu.setRol(rol);
+    }
+    
+    if (usuarioDto.getIdTipoDoc() != null) {
+        TipoDoc tipDoc = tipDocRepo.findById(usuarioDto.getIdTipoDoc())
+            .orElseThrow(() -> new EntityNotFoundException("Tipo de documento no encontrado"));
         usu.setTipoDoc(tipDoc);
+    }
 
     Usuario usuActualizado = usuRepo.save(usu);
     return usuMap.toUsuarioDto(usuActualizado);

@@ -21,6 +21,7 @@ const Orders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [editData, setEditData] = useState({});
   const [filterByDate, setFilterByDate] = useState(false);
+  const [searchMode, setSearchMode] = useState(null); // 'day' o 'week'
   const [viewingOrder, setViewingOrder] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
   const [activeTab, setActiveTab] = useState('entregar'); // 'entregar' o 'recibir'
@@ -122,6 +123,28 @@ const Orders = () => {
     cargarAlquileres();
   }, []);
 
+  // ===== FUNCIONES HELPER PARA FECHAS =====
+  const getWeekRange = (date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lunes como primer día
+    const monday = new Date(d.setDate(diff));
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+
+    return {
+      start: dateToString(monday),
+      end: dateToString(sunday),
+    };
+  };
+
+  const dateToString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Separar las órdenes en dos categorías
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -153,10 +176,22 @@ const Orders = () => {
       // Si no hay búsqueda, solo aplicar filtro de fecha si está activo
       if (searchText === "") {
         if (filterByDate && startDate) {
-          // Convertir ambas fechas a formato YYYY-MM-DD para comparación correcta sin problemas de zona horaria
-          const cardDateStr = card.fechaEntrega; // Ya debería estar en formato YYYY-MM-DD
-          const selectedDateStr = startDate.toISOString().split('T')[0]; // Convertir a YYYY-MM-DD
-          return cardDateStr === selectedDateStr;
+          // Usar fechaRetiro para "recibir", fechaEntrega para "entregar"
+          const cardDateStr = activeTab === 'recibir' ? card.fechaRetiro : card.fechaEntrega;
+          
+          if (searchMode === 'day') {
+            // Filtrar por día exacto
+            const selectedDateStr = startDate.toISOString().split('T')[0];
+            return cardDateStr === selectedDateStr;
+          } else if (searchMode === 'week') {
+            // Filtrar por semana (lunes a domingo)
+            const weekRange = getWeekRange(startDate);
+            return cardDateStr >= weekRange.start && cardDateStr <= weekRange.end;
+          } else {
+            // Sin modo especificado, usar día exacto por compatibilidad
+            const selectedDateStr = startDate.toISOString().split('T')[0];
+            return cardDateStr === selectedDateStr;
+          }
         }
         return true;
       }
@@ -195,10 +230,22 @@ const Orders = () => {
       // Filtro por fecha (solo si está activado el filtro)
       let matchesDate = true;
       if (filterByDate && startDate) {
-        // Convertir ambas fechas a formato YYYY-MM-DD para comparación correcta
-        const cardDateStr = card.fechaEntrega;
-        const selectedDateStr = startDate.toISOString().split('T')[0];
-        matchesDate = cardDateStr === selectedDateStr;
+        // Usar fechaRetiro para "recibir", fechaEntrega para "entregar"
+        const cardDateStr = activeTab === 'recibir' ? card.fechaRetiro : card.fechaEntrega;
+        
+        if (searchMode === 'day') {
+          // Filtrar por día exacto
+          const selectedDateStr = startDate.toISOString().split('T')[0];
+          matchesDate = cardDateStr === selectedDateStr;
+        } else if (searchMode === 'week') {
+          // Filtrar por semana (lunes a domingo)
+          const weekRange = getWeekRange(startDate);
+          matchesDate = cardDateStr >= weekRange.start && cardDateStr <= weekRange.end;
+        } else {
+          // Sin modo especificado, usar día exacto por compatibilidad
+          const selectedDateStr = startDate.toISOString().split('T')[0];
+          matchesDate = cardDateStr === selectedDateStr;
+        }
       }
 
       return matchesSearch && matchesDate;
@@ -297,6 +344,20 @@ const Orders = () => {
     setEditingOrder(null);
   };
 
+  // Funciones de búsqueda por fecha
+  const handleSearchByDay = () => {
+    setSearchMode('day');
+    setFilterByDate(true);
+    console.log("Buscando por día:", startDate);
+  };
+
+  const handleSearchByWeek = () => {
+    setSearchMode('week');
+    setFilterByDate(true);
+    const weekRange = getWeekRange(startDate);
+    console.log("Buscando por semana:", weekRange.start, "a", weekRange.end);
+  };
+
   const handleSearch = () => {
     // Activar filtro por fecha cuando se presiona el botón Buscar
     setFilterByDate(true);
@@ -306,6 +367,7 @@ const Orders = () => {
   const handleClearFilters = () => {
     setSearchText("");
     setFilterByDate(false);
+    setSearchMode(null);
     console.log("Filtros limpiados");
   };
 
@@ -740,8 +802,39 @@ const Orders = () => {
             )}
           />
         </div>
-        <button onClick={handleSearch}>Buscar por fecha</button>
-        <button onClick={handleClearFilters} style={{ marginTop: '10px', backgroundColor: '#95a5a6' }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+          <button 
+            onClick={handleSearchByDay}
+            style={{
+              flex: 1,
+              backgroundColor: searchMode === 'day' ? '#7d3c98' : '#9b59b6',
+              color: '#fff',
+              border: 'none',
+              padding: '8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: searchMode === 'day' ? '700' : '600'
+            }}
+          >
+            📅 Buscar por día
+          </button>
+          <button 
+            onClick={handleSearchByWeek}
+            style={{
+              flex: 1,
+              backgroundColor: searchMode === 'week' ? '#7d3c98' : '#9b59b6',
+              color: '#fff',
+              border: 'none',
+              padding: '8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: searchMode === 'week' ? '700' : '600'
+            }}
+          >
+            📆 Buscar por semana
+          </button>
+        </div>
+        <button onClick={handleClearFilters} style={{ marginTop: '10px', backgroundColor: '#9b59b6', width: '100%', color: '#fff', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}>
           Limpiar filtros
         </button>
       </aside>
@@ -766,7 +859,7 @@ const Orders = () => {
 
         <p className="orders-subtitle">
           {searchText || filterByDate
-            ? `Mostrando ${filteredCards.length} resultado(s)${searchText ? ` para "${searchText}"` : ''}${filterByDate ? ` (fecha: ${startDate.toLocaleDateString()})` : ''}`
+            ? `Mostrando ${filteredCards.length} resultado(s)${searchText ? ` para "${searchText}"` : ''}${filterByDate && searchMode === 'day' ? ` (${activeTab === 'recibir' ? 'fecha devolución' : 'fecha entrega'}: ${startDate.toLocaleDateString()})` : ''}${filterByDate && searchMode === 'week' ? ` (semana: ${getWeekRange(startDate).start} a ${getWeekRange(startDate).end})` : ''}`
             : activeTab === 'entregar'
               ? `Órdenes pendientes de entrega (${filteredCards.length} artículos)`
               : `Órdenes pendientes de devolución (${filteredCards.length} artículos)`

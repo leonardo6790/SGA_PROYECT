@@ -60,6 +60,12 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [currentSaldoPendiente, setCurrentSaldoPendiente] = useState(0);
 
+  // Estados para filtrado por fecha
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [searchMode, setSearchMode] = useState<'day' | 'week' | null>(null);
+  const [filterActive, setFilterActive] = useState(false);
+
   // Recargar cuando la pantalla recibe foco
   useFocusEffect(
     React.useCallback(() => {
@@ -247,9 +253,104 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
     );
   };
 
+  // ===== FUNCIONES DE FILTRADO POR FECHA =====
+  const getWeekRange = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Ajustar para que la semana comience el lunes
+    const monday = new Date(d.setDate(diff));
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+
+    return {
+      start: dateToString(monday),
+      end: dateToString(sunday),
+    };
+  };
+
+  const dateToString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleSearchByDay = () => {
+    setSearchMode('day');
+    setFilterActive(true);
+    setShowCalendar(false);
+  };
+
+  const handleSearchByWeek = () => {
+    setSearchMode('week');
+    setFilterActive(true);
+    setShowCalendar(false);
+  };
+
+  const handleClearDateFilter = () => {
+    setFilterActive(false);
+    setSearchMode(null);
+    setSelectedDate(new Date());
+    setShowCalendar(false);
+  };
+
+  // Renderizar días del calendario
+  const renderCalendarDays = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const days = [];
+    const adjustedStart = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1; // Ajustar para que lunes sea el primer día
+
+    // Añadir espacios en blanco para días del mes anterior
+    for (let i = 0; i < adjustedStart; i++) {
+      days.push(
+        <View key={`empty-${i}`} style={styles.calendarDayEmpty} />
+      );
+    }
+
+    // Añadir días del mes
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(year, month, day);
+      const dateStr = dateToString(currentDate);
+      const isSelected = dateStr === dateToString(selectedDate);
+
+      days.push(
+        <TouchableOpacity
+          key={day}
+          style={[
+            styles.calendarDay,
+            isSelected && styles.calendarDaySelected
+          ]}
+          onPress={() => {
+            setSelectedDate(currentDate);
+            if (searchMode === 'day') {
+              handleSearchByDay();
+            } else if (searchMode === 'week') {
+              handleSearchByWeek();
+            }
+          }}
+        >
+          <Text style={[
+            styles.calendarDayText,
+            isSelected && styles.calendarDayTextSelected
+          ]}>
+            {day}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return days;
+  };
+
   // Expandir alquileres a cards individuales por artículo
   const getArticleCards = () => {
-    const cards: any[] = [];
+    let cards: any[] = [];
     alquileres.forEach(alquiler => {
       alquiler.articulos.forEach(articulo => {
         const shouldShow = activeTab === 'entregar' 
@@ -276,6 +377,26 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
         }
       });
     });
+
+    // Aplicar filtro por fecha si está activo
+    if (filterActive && searchMode) {
+      const selectedDateStr = dateToString(selectedDate);
+
+      cards = cards.filter(card => {
+        const cardDateStr = card.fechaEntrega;
+
+        if (searchMode === 'day') {
+          // Filtrar por día exacto
+          return cardDateStr === selectedDateStr;
+        } else if (searchMode === 'week') {
+          // Filtrar por semana (lunes a domingo)
+          const weekRange = getWeekRange(selectedDate);
+          return cardDateStr >= weekRange.start && cardDateStr <= weekRange.end;
+        }
+        return true;
+      });
+    }
+
     return cards;
   };
 
@@ -440,6 +561,107 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
             📥 Por Recibir
           </Text>
         </TouchableOpacity>
+      </View>
+
+      {/* SECCIÓN DE FILTRADO POR FECHA */}
+      <View style={styles.filterSection}>
+        <Text style={styles.filterTitle}>Filtrar por fecha</Text>
+        
+        {showCalendar && (
+          <View style={styles.calendarContainer}>
+            <View style={styles.calendarHeader}>
+              <TouchableOpacity
+                onPress={() => {
+                  const prevMonth = new Date(selectedDate);
+                  prevMonth.setMonth(prevMonth.getMonth() - 1);
+                  setSelectedDate(prevMonth);
+                }}
+              >
+                <Text style={styles.calendarNavButton}>{'<'}</Text>
+              </TouchableOpacity>
+              
+              <Text style={styles.calendarMonthYear}>
+                {selectedDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' })}
+              </Text>
+              
+              <TouchableOpacity
+                onPress={() => {
+                  const nextMonth = new Date(selectedDate);
+                  nextMonth.setMonth(nextMonth.getMonth() + 1);
+                  setSelectedDate(nextMonth);
+                }}
+              >
+                <Text style={styles.calendarNavButton}>{'>'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.calendarDaysHeader}>
+              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((day, idx) => (
+                <Text key={idx} style={styles.calendarDayHeader}>{day}</Text>
+              ))}
+            </View>
+
+            <View style={styles.calendarGrid}>
+              {renderCalendarDays()}
+            </View>
+          </View>
+        )}
+
+        <View style={styles.filterButtonsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              searchMode === 'day' && styles.filterButtonActive
+            ]}
+            onPress={() => {
+              setShowCalendar(!showCalendar);
+            }}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              searchMode === 'day' && styles.filterButtonTextActive
+            ]}>
+              📅 Buscar por día
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              searchMode === 'week' && styles.filterButtonActive
+            ]}
+            onPress={() => {
+              setShowCalendar(!showCalendar);
+            }}
+          >
+            <Text style={[
+              styles.filterButtonText,
+              searchMode === 'week' && styles.filterButtonTextActive
+            ]}>
+              📆 Buscar por semana
+            </Text>
+          </TouchableOpacity>
+
+          {filterActive && (
+            <TouchableOpacity
+              style={styles.clearFilterButton}
+              onPress={handleClearDateFilter}
+            >
+              <Text style={styles.clearFilterButtonText}>✕ Limpiar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {filterActive && (
+          <View style={styles.filterStatusContainer}>
+            <Text style={styles.filterStatusText}>
+              {searchMode === 'day' 
+                ? `Buscando: ${selectedDate.toLocaleDateString('es-CO')}`
+                : `Buscando semana: ${getWeekRange(selectedDate).start} a ${getWeekRange(selectedDate).end}`
+              }
+            </Text>
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -939,5 +1161,145 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#3498db', // Blue
+  },
+  // ===== ESTILOS PARA FILTRADO POR FECHA =====
+  filterSection: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 2,
+    borderBottomColor: '#e5d4c1',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+  },
+  filterTitle: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '600',
+    color: '#2c2c2c',
+    marginBottom: SPACING.md,
+  },
+  calendarContainer: {
+    backgroundColor: '#f9f6f1',
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#d4a574',
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  calendarNavButton: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '700',
+    color: '#c99d6a',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+  },
+  calendarMonthYear: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
+    color: '#2c2c2c',
+  },
+  calendarDaysHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: SPACING.sm,
+  },
+  calendarDayHeader: {
+    width: '14%',
+    textAlign: 'center',
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: '#666',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+  },
+  calendarDay: {
+    width: '14%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.sm,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5d4c1',
+  },
+  calendarDayEmpty: {
+    width: '14%',
+    aspectRatio: 1,
+  },
+  calendarDaySelected: {
+    backgroundColor: '#c99d6a',
+    borderColor: '#c99d6a',
+  },
+  calendarDayText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: '#2c2c2c',
+  },
+  calendarDayTextSelected: {
+    color: '#fff',
+  },
+  filterButtonsContainer: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 2,
+    borderColor: '#d4a574',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: '#c99d6a',
+    borderColor: '#c99d6a',
+  },
+  filterButtonText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: '#666',
+    textAlign: 'center',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+  },
+  clearFilterButton: {
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: '#e74c3c',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearFilterButtonText: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  filterStatusContainer: {
+    backgroundColor: '#d4edda',
+    borderLeftWidth: 4,
+    borderLeftColor: '#28a745',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
+  },
+  filterStatusText: {
+    fontSize: FONT_SIZES.sm,
+    color: '#155724',
+    fontWeight: '500',
   },
 });

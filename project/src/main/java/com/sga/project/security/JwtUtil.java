@@ -25,19 +25,31 @@ public class JwtUtil {
     }
 
     // Generar token JWT
-    public String generateToken(String email, String rol) {
+    public String generateToken(String email, String rol, Integer numDocumento) {
         return Jwts.builder()
-                .subject(email)
+                .subject(String.valueOf(numDocumento))
+                .claim("email", email)
                 .claim("rol", rol)
+                .claim("numDocumento", numDocumento)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
     }
+    
+    // Versión para compatibilidad (usa solo email y rol)
+    public String generateToken(String email, String rol) {
+        return generateToken(email, rol, null);
+    }
 
     // Extraer email del token
     public String extractEmail(String token) {
-        return extractClaims(token).getSubject();
+        return extractClaims(token).get("email", String.class);
+    }
+    
+    // Extraer numDocumento del token
+    public Integer extractNumDocumento(String token) {
+        return extractClaims(token).get("numDocumento", Integer.class);
     }
 
     // Extraer rol del token

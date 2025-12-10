@@ -73,10 +73,17 @@ public class UsuarioController {
     }
     
     @PutMapping("actualizar/{id}")
-    public ResponseEntity<UsuarioDto> actualizar(@PathVariable Integer id, @Valid @RequestBody UsuarioDto usuarioDto) {
-        usuarioDto.setNumDocumento(id);
-        UsuarioDto actualizar = us.updateUsuario(usuarioDto);
-        return ResponseEntity.ok(actualizar);
+    public ResponseEntity<?> actualizar(@PathVariable Integer id, @Valid @RequestBody UsuarioDto usuarioDto) {
+        try {
+            usuarioDto.setNumDocumento(id);
+            UsuarioDto actualizar = us.updateUsuario(usuarioDto);
+            return ResponseEntity.ok(actualizar);
+        } catch (Exception e) {
+            System.err.println("❌ Error al actualizar usuario: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al actualizar usuario: " + e.getMessage()));
+        }
     }
 
     @PutMapping("activar/{id}")
