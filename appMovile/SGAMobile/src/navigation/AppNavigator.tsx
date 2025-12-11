@@ -203,7 +203,12 @@ const MainStack = () => {
 };
 
 export const AppNavigator = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, token } = useAuth();
+
+  console.log('🚀 AppNavigator - isLoading:', isLoading);
+  console.log('🚀 AppNavigator - isAuthenticated:', isAuthenticated);
+  console.log('🚀 AppNavigator - user:', user);
+  console.log('🚀 AppNavigator - token:', token ? 'sí existe' : 'no existe');
 
   if (isLoading) {
     return (

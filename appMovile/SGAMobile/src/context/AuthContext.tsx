@@ -24,14 +24,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const checkAuth = async () => {
     try {
+      console.log('🔍 Verificando autenticación...');
       const auth = await authService.checkAuth();
+      console.log('🔍 Resultado de checkAuth:', auth);
       if (auth) {
+        console.log('✅ Usuario encontrado en AsyncStorage:', auth.user);
         setUser(auth.user);
         setToken(auth.token);
+      } else {
+        console.log('❌ No hay usuario en AsyncStorage');
+        setUser(null);
+        setToken(null);
       }
     } catch (error) {
-      console.error('Error al verificar autenticación:', error);
+      console.error('❌ Error al verificar autenticación:', error);
+      setUser(null);
+      setToken(null);
     } finally {
+      console.log('✅ Autenticación verificada, isLoading = false');
       setIsLoading(false);
     }
   };

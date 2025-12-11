@@ -14,12 +14,22 @@ export const authService = {
       };
       
       console.log('🔐 Intentando login con:', loginData);
+      console.log('📝 Tipo de username:', typeof credentials.username);
+      console.log('📝 Tipo de password:', typeof credentials.password);
+      console.log('📝 Longitud username:', credentials.username?.length);
+      console.log('📝 Longitud password:', credentials.password?.length);
       
       const response = await api.post('/auth/login', loginData);
-      console.log('✅ Respuesta del servidor:', response.data);
+      console.log('✅ Respuesta del servidor completa:', response.data);
+      console.log('📝 Tipo de token:', typeof response.data.token);
       
       // El backend devuelve datos completos del usuario
       const { token, email, rol, numDoc, nom1, nom2, ape1, ape2, direccion, numTel, activo, tipoDoc, barrio } = response.data;
+
+      // Validar que el token sea válido (no 'null' string)
+      if (token === 'null' || token === null || !token) {
+        throw new Error('Token inválido del servidor: ' + token);
+      }
 
       // Crear objeto de usuario compatible con la interfaz User
       const user: User = {
@@ -49,6 +59,7 @@ export const authService = {
     } catch (error: any) {
       console.error('❌ Error completo:', error);
       console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error message:', error.message);
       const errorMsg = error.response?.data?.mensaje || error.response?.data?.message || error.message || 'Error al iniciar sesión';
       throw new Error(errorMsg);
     }

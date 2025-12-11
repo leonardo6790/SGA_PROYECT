@@ -327,12 +327,11 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
             isSelected && styles.calendarDaySelected
           ]}
           onPress={() => {
+            console.log('📅 Día presionado:', day, 'Modo:', searchMode);
             setSelectedDate(currentDate);
-            if (searchMode === 'day') {
-              handleSearchByDay();
-            } else if (searchMode === 'week') {
-              handleSearchByWeek();
-            }
+            setFilterActive(true);
+            setShowCalendar(false);
+            console.log('📅 Filtro activado para:', dateToString(currentDate));
           }}
         >
           <Text style={[
@@ -383,7 +382,10 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
       const selectedDateStr = dateToString(selectedDate);
 
       cards = cards.filter(card => {
-        const cardDateStr = card.fechaEntrega;
+        // Seleccionar la fecha correcta según el tab activo
+        const cardDateStr = activeTab === 'entregar' 
+          ? card.fechaEntrega      // "Por Entregar" → filtrar por fecha de entrega
+          : card.fechaRetiro;      // "Por Recibir" → filtrar por fecha de devolución
 
         if (searchMode === 'day') {
           // Filtrar por día exacto
@@ -546,7 +548,10 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
       <View style={styles.tabs}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'entregar' && styles.tabActive]}
-          onPress={() => setActiveTab('entregar')}
+          onPress={() => {
+            setActiveTab('entregar');
+            handleClearDateFilter();
+          }}
         >
           <Text style={[styles.tabText, activeTab === 'entregar' && styles.tabTextActive]}>
             📤 Por Entregar
@@ -555,7 +560,10 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
         
         <TouchableOpacity
           style={[styles.tab, activeTab === 'recibir' && styles.tabActive]}
-          onPress={() => setActiveTab('recibir')}
+          onPress={() => {
+            setActiveTab('recibir');
+            handleClearDateFilter();
+          }}
         >
           <Text style={[styles.tabText, activeTab === 'recibir' && styles.tabTextActive]}>
             📥 Por Recibir
@@ -614,6 +622,9 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
               searchMode === 'day' && styles.filterButtonActive
             ]}
             onPress={() => {
+              if (searchMode !== 'day') {
+                setSearchMode('day');
+              }
               setShowCalendar(!showCalendar);
             }}
           >
@@ -631,6 +642,9 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
               searchMode === 'week' && styles.filterButtonActive
             ]}
             onPress={() => {
+              if (searchMode !== 'week') {
+                setSearchMode('week');
+              }
               setShowCalendar(!showCalendar);
             }}
           >
@@ -656,8 +670,8 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
           <View style={styles.filterStatusContainer}>
             <Text style={styles.filterStatusText}>
               {searchMode === 'day' 
-                ? `Buscando: ${selectedDate.toLocaleDateString('es-CO')}`
-                : `Buscando semana: ${getWeekRange(selectedDate).start} a ${getWeekRange(selectedDate).end}`
+                ? `Buscando ${activeTab === 'entregar' ? 'entrega' : 'devolución'}: ${selectedDate.toLocaleDateString('es-CO')}`
+                : `Buscando semana ${activeTab === 'entregar' ? 'de entrega' : 'de devolución'}: ${getWeekRange(selectedDate).start} a ${getWeekRange(selectedDate).end}`
               }
             </Text>
           </View>
