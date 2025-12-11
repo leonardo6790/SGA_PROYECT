@@ -866,6 +866,108 @@ export const OrdersScreen: React.FC<{ navigation: any; route: any }> = ({ naviga
           </View>
         </View>
       </Modal>
+
+      {/* MODAL DE EDITAR */}
+      <Modal visible={showEditModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Editar Alquiler</Text>
+            {selectedCard && (
+              <ScrollView>
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalLabel}>Fecha de Alquiler:</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={selectedCard.fechaAlquiler}
+                    onChangeText={(text) => {
+                      if (selectedCard) {
+                        setSelectedCard({ ...selectedCard, fechaAlquiler: text });
+                      }
+                    }}
+                    placeholder="YYYY-MM-DD"
+                  />
+
+                  <Text style={styles.modalLabel}>Fecha de Entrega:</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={selectedCard.fechaEntrega}
+                    onChangeText={(text) => {
+                      if (selectedCard) {
+                        setSelectedCard({ ...selectedCard, fechaEntrega: text });
+                      }
+                    }}
+                    placeholder="YYYY-MM-DD"
+                  />
+
+                  <Text style={styles.modalLabel}>Fecha de Retiro:</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={selectedCard.fechaRetiro}
+                    onChangeText={(text) => {
+                      if (selectedCard) {
+                        setSelectedCard({ ...selectedCard, fechaRetiro: text });
+                      }
+                    }}
+                    placeholder="YYYY-MM-DD"
+                  />
+
+                  <Text style={styles.modalLabel}>Observaciones:</Text>
+                  <TextInput
+                    style={[styles.modalInput, { height: 100, textAlignVertical: 'top' }]}
+                    placeholder="Ingrese observaciones..."
+                    multiline
+                    numberOfLines={4}
+                    value={selectedCard.observaciones}
+                    onChangeText={(text) => {
+                      if (selectedCard) {
+                        setSelectedCard({ ...selectedCard, observaciones: text });
+                      }
+                    }}
+                  />
+                </View>
+              </ScrollView>
+            )}
+            <View style={styles.modalButtonsRow}>
+              <TouchableOpacity 
+                style={[styles.modalButton, { backgroundColor: '#95a5a6' }]} 
+                onPress={() => setShowEditModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalButton} 
+                onPress={async () => {
+                  if (!selectedCard) return;
+                  try {
+                    // Importar la función
+                    const { actualizarAlquiler } = await import('../api/alquilerApi');
+                    
+                    await actualizarAlquiler(selectedCard.alquilerId, {
+                      fechaAlquiler: selectedCard.fechaAlquiler,
+                      fechaEntrega: selectedCard.fechaEntrega,
+                      fechaRetiro: selectedCard.fechaRetiro,
+                      articulos: [{
+                        articuloId: selectedCard.articuloId,
+                        precio: selectedCard.precio,
+                        estado: selectedCard.devuelto,
+                        observaciones: selectedCard.observaciones
+                      }]
+                    } as any);
+                    
+                    Alert.alert('Éxito', 'Alquiler actualizado correctamente');
+                    setShowEditModal(false);
+                    loadAlquileres();
+                  } catch (error: any) {
+                    Alert.alert('Error', error.message || 'No se pudo actualizar el alquiler');
+                  }
+                }}
+              >
+                <Text style={styles.modalButtonText}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

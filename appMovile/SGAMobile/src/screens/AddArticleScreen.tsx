@@ -15,7 +15,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { obtenerCategorias } from '../api/categoriasApi';
 import { colors, spacing, fontSizes, borderRadius, shadows } from '../theme/colors';
-import { SERVER_BASE_URL } from '../utils/constants';
+import { SERVER_BASE_URL, API_BASE_URL, STORAGE_KEYS } from '../utils/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const AddArticleScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -146,7 +146,7 @@ export const AddArticleScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       } as any);
 
       // Obtener token
-      const token = await AsyncStorage.getItem('sga_token');
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
 
       if (!token) {
         Alert.alert('Error', 'No hay sesión activa. Por favor inicia sesión nuevamente.');

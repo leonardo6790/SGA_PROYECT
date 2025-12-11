@@ -85,6 +85,9 @@ const PublicStack = () => {
 // ===== NAVEGACIÓN DE VENDEDOR/ADMIN (con login) =====
 // Tabs para ADMIN/Vendedor
 const SellerTabNavigator = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'ADMIN';
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -130,17 +133,20 @@ const SellerTabNavigator = () => {
           headerShown: false,
         }}
       />
-      <Tab.Screen
-        name="Reports"
-        component={AdminReportsScreen}
-        options={{
-          tabBarLabel: 'Reportes',
-          tabBarIcon: ({ size }) => (
-            <Text style={{ fontSize: size }}>📊</Text>
-          ),
-          headerShown: false,
-        }}
-      />
+      {/* Solo mostrar Reportes para ADMIN */}
+      {isAdmin && (
+        <Tab.Screen
+          name="Reports"
+          component={AdminReportsScreen}
+          options={{
+            tabBarLabel: 'Reportes',
+            tabBarIcon: ({ size }) => (
+              <Text style={{ fontSize: size }}>📊</Text>
+            ),
+            headerShown: false,
+          }}
+        />
+      )}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}

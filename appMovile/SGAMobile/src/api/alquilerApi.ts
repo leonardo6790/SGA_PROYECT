@@ -67,3 +67,15 @@ export const obtenerAlquileres = async (): Promise<Alquiler[]> => {
     throw new Error('Error al obtener alquileres');
   }
 };
+
+// Actualizar alquiler
+export const actualizarAlquiler = async (id: number, alquiler: Partial<AlquilerCreate>): Promise<Alquiler> => {
+  try {
+    const response = await api.put(`/alquiler/Actualizar/${id}`, alquiler);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error al actualizar alquiler:', error);
+    const errorMsg = error.response?.data?.detalle || error.response?.data?.error || 'Error al actualizar alquiler';
+    throw new Error(errorMsg);
+  }
+};

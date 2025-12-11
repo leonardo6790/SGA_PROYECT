@@ -25,11 +25,24 @@ export interface Pago {
 // Obtener todos los pagos
 export const obtenerTodosLosPagos = async (): Promise<Pago[]> => {
   try {
-    const response = await api.get('/pagos');
-    return response.data;
+    const response = await api.get('/pagos/ConsultarPagos');
+    // Mapear los datos del backend al formato esperado
+    const pagos = response.data.map((pago: any) => ({
+      idPago: pago.idPago,
+      valAbo: pago.valAbo || 0,
+      fechaUltimoAbono: pago.fechaUltimoAbono,
+      montoAbonado: pago.valAbo || 0,
+      fechaPago: pago.fechaUltimoAbono,
+      formaPago: pago.formaPago || 'Efectivo',
+      idAlquiler: pago.idAlquiler,
+      alquiler: pago.alquiler,
+      id_pago: pago.idPago,
+      montoAbono: pago.valAbo || 0,
+    }));
+    return pagos;
   } catch (error) {
     console.error('Error al obtener pagos:', error);
-    throw new Error('Error al obtener pagos');
+    throw error;
   }
 };
 

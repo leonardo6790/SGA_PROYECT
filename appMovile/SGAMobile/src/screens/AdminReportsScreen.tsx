@@ -181,15 +181,26 @@ export const AdminReportsScreen: React.FC<{ navigation: any; route: any }> = ({ 
   const procesarPagos = (pagosData: Pago[]) => {
     try {
       const reportePagos: ReportItem[] = (pagosData || []).map(pago => {
-        const monto = pago.montoAbonado || pago.montoAbono || 0;
-        const id = pago.id_pago || pago.idPago;
+        const monto = pago.valAbo || pago.montoAbonado || pago.montoAbono || 0;
+        const id = pago.idPago || pago.id_pago;
         const alq = pago.alquiler;
+        
+        // Convertir timestamp a fecha legible
+        let fechaFormateada = 'N/A';
+        if (pago.fechaUltimoAbono) {
+          try {
+            const fecha = new Date(pago.fechaUltimoAbono);
+            fechaFormateada = fecha.toLocaleDateString('es-CO');
+          } catch (e) {
+            fechaFormateada = String(pago.fechaUltimoAbono);
+          }
+        }
         
         return {
           id: id,
           clienteDoc: String(alq?.clienteDoc || 'N/A'),
-          nombreCliente: alq?.articulos?.[0]?.nomCliente || 'N/A',
-          fecha: pago.fechaPago || '',
+          nombreCliente: alq?.articulos?.[0]?.nomCliente || 'Cliente',
+          fecha: fechaFormateada,
           monto: monto,
           detalles: pago,
         };

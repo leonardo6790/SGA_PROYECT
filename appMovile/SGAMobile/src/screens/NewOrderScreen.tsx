@@ -151,10 +151,10 @@ export const NewOrderScreen: React.FC<{ navigation: any; route: any }> = ({ navi
         {
           text: 'OK',
           onPress: () => {
-            // Navegar a Orders y forzar recarga
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'SellerTabs', params: { screen: 'Orders', params: { refresh: true } } }],
+            // Navegar de vuelta a Orders
+            navigation.navigate('MainTabs', { 
+              screen: 'Orders',
+              params: { refresh: true }
             });
           },
         },
