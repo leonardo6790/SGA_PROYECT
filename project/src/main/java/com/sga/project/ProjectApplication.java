@@ -83,7 +83,7 @@ public class ProjectApplication {
 			// 2. Crear barrios si no existen
 			if (barrioRepo.count() == 0) {
 				System.out.println("Creando barrios...");
-				String[] barrios = {"Centro", "Norte", "Sur", "Oriente", "Occidente"};
+				String[] barrios = {"Bosa el recreo", "La victoria", "Castilla"};
 				for (String nombreBarrio : barrios) {
 					Barrio barrio = new Barrio();
 					barrio.setNomBar(nombreBarrio);
@@ -204,19 +204,23 @@ public class ProjectApplication {
 			if (catCount == 0) {
 				System.out.println("\n=== Creando categorías ===");
 				Categoria catDama = new Categoria();
-				catDama.setNomCate("Para dama");
+				catDama.setNomCate("Vestidos");
 				catDama = categoriaRepo.save(catDama);
 
 				Categoria catCaballero = new Categoria();
-				catCaballero.setNomCate("Para caballero");
+				catCaballero.setNomCate("Trajes");
 				catCaballero = categoriaRepo.save(catCaballero);
 
 				Categoria catNino = new Categoria();
-				catNino.setNomCate("Para niño");
+				catNino.setNomCate("Smoking");
 				catNino = categoriaRepo.save(catNino);
 
 				System.out.println("✅ Categorías creadas");
 
+				// ⚠️ ARTÍCULOS DE MUESTRA DESACTIVADOS
+				// Si deseas crear artículos de muestra, descomenta el código a continuación
+				
+				/* 
 				// 6. Crear artículos de muestra
 				System.out.println("\n=== Creando artículos de muestra ===");
 
@@ -255,6 +259,7 @@ public class ProjectApplication {
 					"https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?w=400", catNino);
 
 				System.out.println("✅ 14 artículos creados (6 para dama, 4 para caballero, 4 para niño)");
+				*/
 			} else {
 				System.out.println("✅ Las categorías ya existen (" + catCount + " categorías)");
 				long artCount = articuloRepo.count();
