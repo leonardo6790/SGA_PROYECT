@@ -44,6 +44,9 @@ const Inventory = () => {
     nomCate: ""
   });
 
+  // Estado para modal de detalles del artículo
+  const [viewingArticle, setViewingArticle] = useState(null);
+
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -111,7 +114,8 @@ const Inventory = () => {
     }
   };
 
-  const handleEditClick = (art) => {
+  const handleEditClick = (art, e) => {
+    e.stopPropagation(); // Evitar que se abra el modal de detalles
     setEditingId(art.idArt);
     setEditedData({
       nombre: art.nombre,
@@ -124,6 +128,14 @@ const Inventory = () => {
       previewUrl: "",
       fotoActual: art.fotoArt
     });
+  };
+
+  const handleViewArticle = (art) => {
+    setViewingArticle(art);
+  };
+
+  const handleCloseViewModal = () => {
+    setViewingArticle(null);
   };
 
   const handleActualizarArticulo = async (e) => {
@@ -383,7 +395,8 @@ const Inventory = () => {
     }
   };
 
-  const handleDeleteArticle = async (idArt, nombreArt) => {
+  const handleDeleteArticle = async (idArt, nombreArt, e) => {
+    e.stopPropagation(); // Evitar que se abra el modal de detalles
     const confirmar = window.confirm(`¿Estás seguro de que deseas eliminar el artículo "${nombreArt}"?`);
 
     if (confirmar) {
@@ -496,7 +509,13 @@ const Inventory = () => {
 
         <div className="cards-container">
           {filteredArticulos.map((art) => (
-            <div key={art.idArt} className="player-card">
+            <div 
+              key={art.idArt} 
+              className="player-card"
+              onClick={() => handleViewArticle(art)}
+              style={{ cursor: 'pointer' }}
+              title="Click para ver detalles"
+            >
               <img
                 src={`http://localhost:8080${art.fotoArt}`}
                 alt={art.nombre}
@@ -509,14 +528,14 @@ const Inventory = () => {
               <p className="player-price">Precio: ${art.precioArt?.toLocaleString()}</p>
               <span
                 className="delete-icon"
-                onClick={() => handleDeleteArticle(art.idArt, art.nombre)}
+                onClick={(e) => handleDeleteArticle(art.idArt, art.nombre, e)}
                 title="Eliminar artículo"
               >
                 <FaTrash />
               </span>
               <span
                 className="edit-text"
-                onClick={() => handleEditClick(art)}
+                onClick={(e) => handleEditClick(art, e)}
               >
                 <FaPencilAlt />
               </span>
@@ -742,6 +761,99 @@ const Inventory = () => {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Modal para ver detalles del artículo */}
+        {viewingArticle && (
+          <div className="modal-overlay" onClick={handleCloseViewModal}>
+            <div className="modal modal-view-article" onClick={(e) => e.stopPropagation()}>
+              <button 
+                className="modal-close-btn"
+                onClick={handleCloseViewModal}
+                title="Cerrar"
+              >
+                ✕
+              </button>
+              
+              <div className="modal-view-content">
+                <div className="modal-view-image">
+                  <img
+                    src={`http://localhost:8080${viewingArticle.fotoArt}`}
+                    alt={viewingArticle.nombre}
+                  />
+                </div>
+                
+                <div className="modal-view-details">
+                  <h2 className="modal-view-title">{viewingArticle.nombre}</h2>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">ID del Artículo:</span>
+                    <span className="detail-value">#{viewingArticle.idArt}</span>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">Categoría:</span>
+                    <span className="detail-value">
+                      {categorias.find(cat => cat.idCate === viewingArticle.idCategoria)?.nomCate || 'Sin categoría'}
+                    </span>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">Género:</span>
+                    <span className="detail-value">{viewingArticle.generoArt}</span>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">Talla:</span>
+                    <span className="detail-value">{viewingArticle.tallaArt}</span>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">Color:</span>
+                    <span className="detail-value">{viewingArticle.colorArt}</span>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">Precio de Alquiler:</span>
+                    <span className="detail-value price-highlight">
+                      ${viewingArticle.precioArt?.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  <div className="detail-group">
+                    <span className="detail-label">Estado:</span>
+                    <span className={`detail-value status-badge ${viewingArticle.activo ? 'active' : 'inactive'}`}>
+                      {viewingArticle.activo ? '✓ Activo' : '✕ Inactivo'}
+                    </span>
+                  </div>
+                  
+                  <div className="modal-view-actions">
+                    <button 
+                      className="btn-edit-modal"
+                      onClick={(e) => {
+                        handleCloseViewModal();
+                        handleEditClick(viewingArticle, e);
+                      }}
+                    >
+                      <FaPencilAlt /> Editar
+                    </button>
+                    
+                    {user?.rol === 'ADMIN' && (
+                      <button 
+                        className="btn-delete-modal"
+                        onClick={(e) => {
+                          handleCloseViewModal();
+                          handleDeleteArticle(viewingArticle.idArt, viewingArticle.nombre, e);
+                        }}
+                      >
+                        <FaTrash /> Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
