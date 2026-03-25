@@ -5,6 +5,7 @@ import { actualizarArticulo, obtenerArticulo, crearArticulo, eliminarArticulo, a
 import { obtenerCategorias, crearCategoria, actualizarCategoria, eliminarCategoria } from "../../../api/categoriasApi";
 import { AuthContext } from "../../../context/AuthContextDefinition";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from "../../../config/api.config";
 
 const Inventory = () => {
   const [articulos, setArticulos] = useState([]);
@@ -217,7 +218,7 @@ const Inventory = () => {
 
       // Enviar al nuevo endpoint que soporta multipart
       const token = localStorage.getItem("sga_token");
-      const response = await fetch("http://localhost:8080/api/articulos/CrearConFoto", {
+      const response = await fetch(`${API_BASE_URL}/articulos/CrearConFoto`, {
         method: "POST",
         body: formData,
         headers: {
