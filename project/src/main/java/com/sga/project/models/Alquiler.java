@@ -56,6 +56,10 @@ public class Alquiler {
     @JoinColumn(name = "clienteDoc", nullable = false, foreignKey = @ForeignKey(name = "FK_alquiler_cliente"))
     private Clientes cliente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendedorDoc", nullable = true, foreignKey = @ForeignKey(name = "FK_alquiler_vendedor"))
+    private Usuario vendedor;
+
     @OneToMany(mappedBy = "alquiler")
     private List<AlquilerArticulos> asignacionAlq;
 

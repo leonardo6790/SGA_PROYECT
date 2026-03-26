@@ -46,3 +46,23 @@ export const eliminarUsuario = async (id) => {
     if (!res.ok) throw new Error("No se pudo eliminar el usuario");
     return;
 };
+
+export const obtenerVendedores = async () => {
+    try {
+        const res = await fetch(`${BASE_URL}/vendedores`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Error al obtener vendedores:', res.status, errorText);
+            throw new Error(`Error al obtener vendedores: ${res.status}`);
+        }
+        
+        return await res.json();
+    } catch (error) {
+        console.error('Error completo en obtenerVendedores:', error);
+        throw error;
+    }
+};

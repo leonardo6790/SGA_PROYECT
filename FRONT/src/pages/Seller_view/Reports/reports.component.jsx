@@ -940,6 +940,9 @@ const Reports = () => {
               <p><strong>Fecha de Alquiler:</strong> {viewingDetail.fechaAlquiler}</p>
               <p><strong>Fecha de Entrega:</strong> {viewingDetail.fechaEntrega}</p>
               <p><strong>Fecha de Retiro:</strong> {viewingDetail.fechaRetiro}</p>
+              {viewingDetail.nombreVendedor && (
+                <p><strong>Vendedor:</strong> {viewingDetail.nombreVendedor}</p>
+              )}
               <p><strong>Estado:</strong> <span className={`status-badge ${viewingDetail.estado === 'Completado' ? 'completed' : 'pending'}`}>{viewingDetail.estado}</span></p>
               <p><strong>Total:</strong> ${viewingDetail.totalAlquiler?.toLocaleString()}</p>
             </div>

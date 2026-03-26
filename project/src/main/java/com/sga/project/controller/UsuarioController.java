@@ -29,49 +29,49 @@ public class UsuarioController {
             // Validar que idRol no sea nulo (es obligatorio)
             if (usuarioDto.getIdRol() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "El rol (idRol) es obligatorio"));
+                        .body(Map.of("error", "El rol (idRol) es obligatorio"));
             }
-            
+
             // Validar que idBarrio no sea nulo (es obligatorio)
             if (usuarioDto.getIdBarrio() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "El barrio (idBarrio) es obligatorio"));
+                        .body(Map.of("error", "El barrio (idBarrio) es obligatorio"));
             }
-            
+
             // Validar que idTipoDoc no sea nulo (es obligatorio)
             if (usuarioDto.getIdTipoDoc() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "El tipo de documento (idTipoDoc) es obligatorio"));
+                        .body(Map.of("error", "El tipo de documento (idTipoDoc) es obligatorio"));
             }
-            
+
             UsuarioDto guardalo = us.saveUsuario(usuarioDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(guardalo);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al crear el usuario: " + e.getMessage()));
+                    .body(Map.of("error", "Error al crear el usuario: " + e.getMessage()));
         }
     }
-    
+
     @DeleteMapping("/borrar/{id}")
-    public ResponseEntity<Void> borrar(@PathVariable Integer id){
+    public ResponseEntity<Void> borrar(@PathVariable Integer id) {
         us.deleteUsuario(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     @GetMapping("ConsultarById/{id}")
-    public ResponseEntity<UsuarioDto> buscarporid(@PathVariable Integer id){
+    public ResponseEntity<UsuarioDto> buscarporid(@PathVariable Integer id) {
         UsuarioDto usuarioDto = us.getUsuario(id);
         return ResponseEntity.ok(usuarioDto);
     }
 
     @GetMapping("/ConsultarUsuarios")
-    public ResponseEntity<List<UsuarioDto>> listartodos(){
+    public ResponseEntity<List<UsuarioDto>> listartodos() {
         return ResponseEntity.ok(us.getUsuarios());
     }
-    
+
     @PutMapping("actualizar/{id}")
     public ResponseEntity<?> actualizar(@PathVariable Integer id, @Valid @RequestBody UsuarioDto usuarioDto) {
         try {
@@ -82,7 +82,7 @@ public class UsuarioController {
             System.err.println("❌ Error al actualizar usuario: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al actualizar usuario: " + e.getMessage()));
+                    .body(Map.of("error", "Error al actualizar usuario: " + e.getMessage()));
         }
     }
 
@@ -96,5 +96,11 @@ public class UsuarioController {
     public ResponseEntity<UsuarioDto> desactivarUsuario(@PathVariable Integer id) {
         UsuarioDto usuarioActualizado = us.toggleActivoUsuario(id, false);
         return ResponseEntity.ok(usuarioActualizado);
+    }
+
+    @GetMapping("/vendedores")
+    public ResponseEntity<List<UsuarioDto>> listarVendedores() {
+        List<UsuarioDto> vendedores = us.getVendedores();
+        return ResponseEntity.ok(vendedores);
     }
 }

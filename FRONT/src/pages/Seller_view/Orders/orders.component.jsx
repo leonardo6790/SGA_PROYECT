@@ -86,7 +86,9 @@ const Orders = () => {
                   totalAlquiler: alquiler.totalAlquiler, // Total del alquiler completo
                   estado: articulo.estado === true, // Convertir a boolean explícitamente
                   entregado: articulo.entregado === true, // Convertir a boolean explícitamente
-                  observaciones: articulo.observaciones
+                  observaciones: articulo.observaciones,
+                  vendedorDoc: alquiler.vendedorDoc, // Documento del vendedor
+                  nombreVendedor: alquiler.nombreVendedor // Nombre del vendedor
                 });
               });
             } else {
@@ -293,7 +295,9 @@ const Orders = () => {
                     totalAlquiler: alquiler.totalAlquiler, // Total actualizado
                     estado: articulo.estado === true,
                     entregado: articulo.entregado === true,
-                    observaciones: articulo.observaciones
+                    observaciones: articulo.observaciones,
+                    vendedorDoc: alquiler.vendedorDoc,
+                    nombreVendedor: alquiler.nombreVendedor
                   });
                 });
               } else {
@@ -311,7 +315,9 @@ const Orders = () => {
                   precio: 0,
                   totalAlquiler: alquiler.totalAlquiler,
                   estado: false,
-                  observaciones: ''
+                  observaciones: '',
+                  vendedorDoc: alquiler.vendedorDoc,
+                  nombreVendedor: alquiler.nombreVendedor
                 });
               }
             });
@@ -472,7 +478,9 @@ const Orders = () => {
                     totalAlquiler: alquiler.totalAlquiler,
                     estado: articulo.estado === true,
                     entregado: articulo.entregado === true,
-                    observaciones: articulo.observaciones
+                    observaciones: articulo.observaciones,
+                    vendedorDoc: alquiler.vendedorDoc,
+                    nombreVendedor: alquiler.nombreVendedor
                   });
                 });
               }
@@ -538,7 +546,9 @@ const Orders = () => {
                       totalAlquiler: alquiler.totalAlquiler,
                       estado: articulo.estado === true,
                       entregado: articulo.entregado === true,
-                      observaciones: articulo.observaciones
+                      observaciones: articulo.observaciones,
+                      vendedorDoc: alquiler.vendedorDoc,
+                      nombreVendedor: alquiler.nombreVendedor
                     });
                   });
                 } else {
@@ -556,7 +566,9 @@ const Orders = () => {
                     precio: 0,
                     totalAlquiler: alquiler.totalAlquiler,
                     estado: false,
-                    observaciones: ''
+                    observaciones: '',
+                    vendedorDoc: alquiler.vendedorDoc,
+                    nombreVendedor: alquiler.nombreVendedor
                   });
                 }
               });
@@ -976,6 +988,12 @@ const Orders = () => {
                 <span className="detail-label">Fecha Retiro:</span>
                 <span className="detail-value">{viewingOrder.fechaRetiro}</span>
               </div>
+              {viewingOrder.nombreVendedor && (
+                <div className="detail-row">
+                  <span className="detail-label">Vendedor:</span>
+                  <span className="detail-value">{viewingOrder.nombreVendedor}</span>
+                </div>
+              )}
               <div className="detail-row">
                 <span className="detail-label">Estado:</span>
                 <span className="detail-value">

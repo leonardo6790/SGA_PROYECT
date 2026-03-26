@@ -31,28 +31,32 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/setup/**").permitAll() // Endpoint de configuración
                         .requestMatchers("/uploads/**").permitAll() // Permitir acceso a imágenes sin autenticación
-                        
+
                         // Endpoints público de USUARIOS
-                        .requestMatchers(HttpMethod.GET, "/api/usu/ConsultarById/**").hasAnyRole("ADMIN", "VENDEDOR", "CLIENTE")
-                        .requestMatchers(HttpMethod.PUT, "/api/usu/actualizar/**").hasAnyRole("ADMIN", "VENDEDOR", "CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/usu/ConsultarById/**")
+                        .hasAnyRole("ADMIN", "VENDEDOR", "CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/usu/vendedores").hasAnyRole("ADMIN", "VENDEDOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/usu/actualizar/**")
+                        .hasAnyRole("ADMIN", "VENDEDOR", "CLIENTE")
                         // Resto de operaciones en usuarios solo para ADMIN
                         .requestMatchers("/api/usu/**").hasRole("ADMIN")
-                        
+
                         // ARTÍCULOS: Vendedor puede ver, crear y editar, pero NO eliminar
                         .requestMatchers(HttpMethod.GET, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.POST, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.PUT, "/api/articulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/articulos/**").hasRole("ADMIN")
-                        
+
                         // PAGOS: ADMIN y VENDEDOR pueden acceder (crear, consultar y actualizar)
                         .requestMatchers("/api/pagos/**").hasAnyRole("ADMIN", "VENDEDOR")
-                        
+
                         // Endpoints para ADMIN y VENDEDOR
                         .requestMatchers("/api/AlquilerArticulos/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/alquiler/**").hasAnyRole("ADMIN", "VENDEDOR")
@@ -61,7 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/categoria/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/barrio/**").hasAnyRole("ADMIN", "VENDEDOR")
                         .requestMatchers("/api/tipodoc/**").hasAnyRole("ADMIN", "VENDEDOR")
-                        
+
                         // Todos los demás endpoints requieren autenticación
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
@@ -69,13 +73,15 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(401);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"error\":\"No autorizado\",\"message\":\"No tienes permisos suficientes para realizar esta acción\",\"status\":401}");
+                            response.getWriter().write(
+                                    "{\"error\":\"No autorizado\",\"message\":\"No tienes permisos suficientes para realizar esta acción\",\"status\":401}");
                         })
                         // No autenticado (sin token o token inválido) -> 401
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"error\":\"No autenticado\",\"message\":\"Debes iniciar sesión para acceder a este recurso\",\"status\":401}");
+                            response.getWriter().write(
+                                    "{\"error\":\"No autenticado\",\"message\":\"Debes iniciar sesión para acceder a este recurso\",\"status\":401}");
                         }))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

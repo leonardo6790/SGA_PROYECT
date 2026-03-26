@@ -7,6 +7,7 @@ import emailjs from '@emailjs/browser';
 import { obtenerArticulo } from "../../../api/articulosApi";
 import { crearAlquiler } from "../../../api/alquilerApi";
 import { crearPago } from "../../../api/pagoApi";
+import { obtenerVendedores } from "../../../api/usuariosApi";
 
 export default function NewOrder() {
   const location = useLocation();
@@ -55,6 +56,10 @@ export default function NewOrder() {
   const [editingPayment, setEditingPayment] = useState(null);
   const [editPaymentAmount, setEditPaymentAmount] = useState("");
 
+  // Estados para vendedores
+  const [vendedores, setVendedores] = useState([]);
+  const [vendedorSeleccionado, setVendedorSeleccionado] = useState("");
+
   // Cargar artículos desde la base de datos
   useEffect(() => {
     const cargarArticulos = async () => {
@@ -80,6 +85,24 @@ export default function NewOrder() {
     };
 
     cargarArticulos();
+  }, []);
+
+  // Cargar vendedores desde la base de datos
+  useEffect(() => {
+    const cargarVendedores = async () => {
+      try {
+        const vendedoresData = await obtenerVendedores();
+        setVendedores(vendedoresData);
+        // Seleccionar el primer vendedor por defecto si hay alguno
+        if (vendedoresData.length > 0) {
+          setVendedorSeleccionado(vendedoresData[0].numDocumento);
+        }
+      } catch (error) {
+        console.error("Error al cargar vendedores:", error);
+      }
+    };
+
+    cargarVendedores();
   }, []);
 
   // Función para buscar artículos
@@ -338,12 +361,19 @@ export default function NewOrder() {
       return;
     }
 
+    // Validar que haya un vendedor seleccionado
+    if (!vendedorSeleccionado) {
+      alert("Debe seleccionar un vendedor");
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Crear el objeto de alquiler para enviar al backend
       const alquilerData = {
         clienteDoc: selectedCustomer.id,
+        vendedorDoc: parseInt(vendedorSeleccionado),
         fechaAlquiler: startDate,
         fechaEntrega: endDate,
         fechaRetiro: returnDate,
@@ -488,6 +518,21 @@ export default function NewOrder() {
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-field" />
             <label className="small-label">Fecha de devolución</label>
             <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="input-field" />
+            
+            <label className="small-label" style={{ marginTop: '15px' }}>Vendedor responsable</label>
+            <select 
+              value={vendedorSeleccionado} 
+              onChange={(e) => setVendedorSeleccionado(e.target.value)} 
+              className="input-field"
+              style={{ padding: '10px', marginBottom: '10px' }}
+            >
+              <option value="">Seleccione un vendedor</option>
+              {vendedores.map((vendedor) => (
+                <option key={vendedor.numDocumento} value={vendedor.numDocumento}>
+                  {vendedor.nombre1} {vendedor.apellido1} - {vendedor.nomRol}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

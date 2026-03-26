@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { obtenerArticulos } from '../api/articulosApi';
 import { crearAlquiler } from '../api/alquilerApi';
 import { crearPago } from '../api/pagoApi';

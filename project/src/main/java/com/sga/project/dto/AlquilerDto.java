@@ -14,21 +14,23 @@ import lombok.NoArgsConstructor;
 @Data
 public class AlquilerDto {
     private Integer id_alquiler;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaRetiro;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaEntrega;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaAlquiler;
-    
+
     private Integer totalAlquiler;
     private Integer clienteDoc;
+    private Integer vendedorDoc; // Documento del vendedor que realizó el alquiler
+    private String nombreVendedor; // Nombre del vendedor (calculado por el backend)
     private Boolean activo;
     private List<AlquilerArticulosDto> articulos;
     private List<PagoDto> pagos;
-    private Integer totalPagado;  // Calculado por el backend
-    private Integer saldoPendiente;  // Calculado por el backend
+    private Integer totalPagado; // Calculado por el backend
+    private Integer saldoPendiente; // Calculado por el backend
 }

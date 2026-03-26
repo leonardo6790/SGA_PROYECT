@@ -6,11 +6,18 @@ import com.sga.project.dto.UsuarioDto;
 
 public interface UsuarioService {
 
-public UsuarioDto getUsuario (Integer numDoc);
-public UsuarioDto saveUsuario (UsuarioDto usuarioDto);
-public List <UsuarioDto> getUsuarios ();
-public void deleteUsuario(Integer numDoc);
-public UsuarioDto updateUsuario (UsuarioDto usuarioDto);
-public UsuarioDto toggleActivoUsuario(Integer numDoc, Boolean activo);
+    public UsuarioDto getUsuario(Integer numDoc);
+
+    public UsuarioDto saveUsuario(UsuarioDto usuarioDto);
+
+    public List<UsuarioDto> getUsuarios();
+
+    public List<UsuarioDto> getVendedores();
+
+    public void deleteUsuario(Integer numDoc);
+
+    public UsuarioDto updateUsuario(UsuarioDto usuarioDto);
+
+    public UsuarioDto toggleActivoUsuario(Integer numDoc, Boolean activo);
 
 }

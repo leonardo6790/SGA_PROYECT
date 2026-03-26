@@ -26,13 +26,16 @@ class AlquilermapperImplement implements AlquilerMapper {
     private final ClientesRepository clienteRepo;
     private final AlquilerArticuloRepository alquilerArticuloRepo;
     private final PagoRepositoryes pagoRepo;
+    private final com.sga.project.repositoryes.UsuarioRepositoryes usuarioRepo;
 
-    public AlquilermapperImplement(ClientesRepository clienteRepo, 
-            AlquilerArticuloRepository alquilerArticuloRepo, 
-            PagoRepositoryes pagoRepo) {
+    public AlquilermapperImplement(ClientesRepository clienteRepo,
+            AlquilerArticuloRepository alquilerArticuloRepo,
+            PagoRepositoryes pagoRepo,
+            com.sga.project.repositoryes.UsuarioRepositoryes usuarioRepo) {
         this.clienteRepo = clienteRepo;
         this.alquilerArticuloRepo = alquilerArticuloRepo;
         this.pagoRepo = pagoRepo;
+        this.usuarioRepo = usuarioRepo;
     }
 
     @Override
@@ -51,6 +54,14 @@ class AlquilermapperImplement implements AlquilerMapper {
         Clientes cliente = clienteRepo.findById(alquilerDto.getClienteDoc())
                 .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado"));
         alquiler.setCliente(cliente);
+
+        // Asignar vendedor si está presente
+        if (alquilerDto.getVendedorDoc() != null) {
+            com.sga.project.models.Usuario vendedor = usuarioRepo.findById(alquilerDto.getVendedorDoc())
+                    .orElseThrow(() -> new EntityNotFoundException("Vendedor no encontrado"));
+            alquiler.setVendedor(vendedor);
+        }
+
         return alquiler;
     }
 
@@ -67,9 +78,9 @@ class AlquilermapperImplement implements AlquilerMapper {
         try {
             if (alquiler.getCliente() != null) {
                 Hibernate.initialize(alquiler.getCliente()); // Forzar inicialización
-                nombreCliente = (alquiler.getCliente().getNombre1() != null ? alquiler.getCliente().getNombre1() : "") + 
-                               " " + 
-                               (alquiler.getCliente().getApellido() != null ? alquiler.getCliente().getApellido() : "");
+                nombreCliente = (alquiler.getCliente().getNombre1() != null ? alquiler.getCliente().getNombre1() : "") +
+                        " " +
+                        (alquiler.getCliente().getApellido() != null ? alquiler.getCliente().getApellido() : "");
                 nombreCliente = nombreCliente.trim();
                 if (nombreCliente.isEmpty()) {
                     nombreCliente = "Cliente #" + alquiler.getCliente().getDocCliente();
@@ -140,7 +151,6 @@ class AlquilermapperImplement implements AlquilerMapper {
             System.err.println("Error al cargar documento del cliente: " + e.getMessage());
         }
 
-
         // Calcular el total sumando los precios de los artículos cargados
         Integer totalCalculado = articulosDto.stream()
                 .mapToInt(a -> a.getPrecio() != null ? a.getPrecio() : 0)
@@ -166,19 +176,41 @@ class AlquilermapperImplement implements AlquilerMapper {
                 .sum();
         Integer saldoPendiente = totalCalculado - totalPagado;
 
+        // Obtener información del vendedor
+        Integer vendedorDoc = null;
+        String nombreVendedor = null;
+        try {
+            if (alquiler.getVendedor() != null) {
+                Hibernate.initialize(alquiler.getVendedor());
+                vendedorDoc = alquiler.getVendedor().getNumDoc();
+                nombreVendedor = (alquiler.getVendedor().getNom1() != null ? alquiler.getVendedor().getNom1() : "") +
+                        " " +
+                        (alquiler.getVendedor().getApe1() != null ? alquiler.getVendedor().getApe1() : "");
+                nombreVendedor = nombreVendedor.trim();
+                if (nombreVendedor.isEmpty()) {
+                    nombreVendedor = "Vendedor #" + vendedorDoc;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error al cargar información del vendedor: " + e.getMessage());
+        }
+
         // Crear el DTO con todos los campos requeridos
-        return new AlquilerDto(
+        AlquilerDto dto = new AlquilerDto(
                 alquiler.getId(), // id_alquiler
                 alquiler.getFechaRet(), // fechaRetiro
                 alquiler.getFechaEnt(), // fechaEntrega
                 alquiler.getFechaAlq(), // fechaAlquiler
                 totalCalculado, // totalAlquiler
                 clienteDoc, // clienteDoc
+                vendedorDoc, // vendedorDoc
+                nombreVendedor, // nombreVendedor
                 alquiler.getActivo(), // activo
                 articulosDto, // articulos
                 pagosDto, // pagos
                 totalPagado, // totalPagado
                 saldoPendiente // saldoPendiente
         );
+        return dto;
     }
 }
